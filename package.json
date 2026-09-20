@@ -1,34 +1,20 @@
 {
   "name": "slash-editor",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
-  "homepage": "https://github.com/author/library#readme",
-  "bugs": {
-    "url": "https://github.com/author/library/issues"
-  },
+  "private": true,
+  "description": "Notion-style block editor for React: headless core, shadcn-native UI.",
   "license": "MIT",
-  "author": "Author Name <author.name@mail.com>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/author/library.git"
-  },
-  "files": [
-    "dist"
+  "workspaces": [
+    "packages/*",
+    "demo-react"
   ],
   "type": "module",
-  "exports": {
-    ".": "./dist/index.mjs",
-    "./package.json": "./package.json"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
-    "build": "vp pack",
-    "dev": "vp pack --watch",
+    "build": "vp run -F './packages/*' build",
+    "dev": "vp run -F demo-react dev",
+    "demo": "vp run -F demo-react dev",
     "test": "vp test",
     "check": "vp check",
-    "prepublishOnly": "vp run build",
     "prepare": "vp config"
   },
   "devDependencies": {

@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "react", "react-dom"],
+    "paths": {
+      "@slash-editor/core": ["../packages/core/src/index.ts"],
+      "@slash-editor/react": ["../packages/react/src/index.ts"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}
