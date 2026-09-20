@@ -6,7 +6,7 @@ Status legend: **Done** · **In progress** · **Not started**
 | --------------------------------- | -------------- |
 | M0 — Foundation                   | ✅ Done        |
 | M1 — Block UX                     | ✅ Done        |
-| M2 — Media & structure            | ⬜ Not started |
+| M2 — Media & structure            | ✅ Done        |
 | M3 — Mentions & AI                | ⬜ Not started |
 | M4 — Collaboration                | ⬜ Not started |
 | Distribution — registry & release | ⬜ Not started |
@@ -38,15 +38,27 @@ _Done when: a user can build a Notion-style page with the keyboard alone; automa
 - [x] **Bubble toolbar** — selection-anchored inline formatting
 - [x] **Browser-driven regression coverage** — Playwright in `demo-react` (`bun run test:e2e`): slash insert, gutter-handle reorder, drag-to-nest, paste normalization from representative Notion and Google Docs HTML
 
-## M2 — Media & structure ⬜
+## M2 — Media & structure ✅
 
 _Done when: the upload adapter contract is documented and the failure/retry path is verified end to end._
 
-- [ ] `UploadAdapter` contract (`status: uploading | ready | error`, retry command)
-- [ ] Image, file, video nodes
-- [ ] Embed node (bookmark / iframe)
-- [ ] Tables
-- [ ] Columns (container node, first non-list nesting surface)
+- [x] `UploadAdapter` contract (`status: uploading | ready | error`, retry command) — `UploadAdapter`,
+      `runUpload`/`retryUpload` orchestration, `PendingUploadRegistry` (the picked `File` never touches
+      doc attrs — it lives in per-node storage keyed by `BlockId`, so retry resends without re-picking)
+- [x] Image, file, video nodes — `Image`/`File`/`Video`, each with `setX`/`retryX` commands, an empty
+      placeholder state, and `status`/`error` living in doc attrs so completion re-renders through the
+      normal transaction pipeline, not a separate subscribe channel
+- [x] Embed node (bookmark / iframe) — `Embed`, direct `url`/`mode` attrs, no adapter (nothing async)
+- [x] Tables — `TableKit` from `@tiptap/extension-table`, resizable columns on by default
+- [x] Columns (container node, first non-list nesting surface) — `Columns`/`Column`,
+      `content: "column{2,}"` bakes the two-column floor into the schema itself
+
+_Landed:_ each M2 node is `false`-opt-out-able from `createBlockKit` like M1's `slash`/`blockId`/`drag`
+seams, so a host can supply a `NodeView`-augmented variant via `extend` without a duplicate schema
+registration (`Image.extend({ addNodeView: () => ReactNodeViewRenderer(...) })` — see `demo-react`'s
+`app.tsx` and `src/components/nodes/*`); slash items for all six nodes; Playwright coverage
+(`media-upload.spec.ts`, `structure.spec.ts`) exercising the real upload → error → retry → ready
+transition against a mock `UploadAdapter`, plus table/columns/embed insertion.
 
 ## M3 — Mentions & AI ⬜
 

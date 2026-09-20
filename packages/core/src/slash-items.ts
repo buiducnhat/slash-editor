@@ -72,6 +72,8 @@ export function filterSlashItems(items: SlashItem[], query: string, editor?: Edi
 }
 
 const BASIC = "Basic blocks";
+const MEDIA = "Media";
+const STRUCTURE = "Structure";
 
 function hasNode(editor: Editor, name: string): boolean {
   return editor.schema.nodes[name] !== undefined;
@@ -232,6 +234,89 @@ export const defaultSlashItems: SlashItem[] = [
     when: (editor) => hasNode(editor, "horizontalRule"),
     run: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
+    },
+  },
+  {
+    id: "image",
+    title: "Image",
+    group: MEDIA,
+    description: "Upload or embed an image",
+    aliases: ["image", "picture", "photo"],
+    keywords: ["img"],
+    icon: "image",
+    when: (editor) => hasNode(editor, "image"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setImage().run();
+    },
+  },
+  {
+    id: "file",
+    title: "File",
+    group: MEDIA,
+    description: "Upload or attach a file",
+    aliases: ["file", "attachment", "upload"],
+    keywords: ["doc", "pdf"],
+    icon: "paperclip",
+    when: (editor) => hasNode(editor, "file"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setFile().run();
+    },
+  },
+  {
+    id: "video",
+    title: "Video",
+    group: MEDIA,
+    description: "Upload or embed a video",
+    aliases: ["video", "movie"],
+    keywords: ["mp4"],
+    icon: "video",
+    when: (editor) => hasNode(editor, "video"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setVideo().run();
+    },
+  },
+  {
+    id: "embed",
+    title: "Embed",
+    group: MEDIA,
+    description: "Bookmark or iframe a link",
+    aliases: ["embed", "bookmark", "link", "iframe"],
+    keywords: ["url"],
+    icon: "link",
+    when: (editor) => hasNode(editor, "embed"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setEmbed().run();
+    },
+  },
+  {
+    id: "table",
+    title: "Table",
+    group: STRUCTURE,
+    description: "Rows and columns of cells",
+    aliases: ["table", "grid"],
+    keywords: ["spreadsheet"],
+    icon: "table",
+    when: (editor) => hasNode(editor, "table"),
+    run: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run();
+    },
+  },
+  {
+    id: "columns",
+    title: "Columns",
+    group: STRUCTURE,
+    description: "Side-by-side layout",
+    aliases: ["columns", "layout"],
+    keywords: ["split"],
+    icon: "columns",
+    when: (editor) => hasNode(editor, "columns"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setColumns(2).run();
     },
   },
 ];

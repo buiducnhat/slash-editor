@@ -255,4 +255,82 @@
   .slash-content [data-dragging] {
     @apply opacity-40;
   }
+
+  .slash-content img[data-type="image"] {
+    @apply max-w-full rounded-md;
+  }
+
+  .slash-content video[data-type="video"] {
+    @apply max-w-full rounded-md;
+  }
+
+  .slash-content [data-type="image"][data-status="error"],
+  .slash-content [data-type="video"][data-status="error"] {
+    @apply outline-destructive/50 outline;
+  }
+
+  .slash-content [data-type="file"] {
+    @apply block;
+  }
+
+  .slash-content [data-type="file"] > a {
+    @apply border-border bg-card hover:bg-muted/60 flex items-center gap-2 rounded-md border p-3 no-underline;
+  }
+
+  .slash-content a[data-type="embed"][data-mode="bookmark"] {
+    @apply border-border bg-card hover:bg-muted/60 block rounded-md border p-3 no-underline;
+  }
+
+  .slash-content iframe[data-type="embed"] {
+    @apply border-border aspect-video w-full rounded-md border;
+  }
+
+  .slash-content [data-type="columns"] {
+    @apply grid gap-6;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+
+  .slash-content [data-type="column"] {
+    @apply min-w-0;
+  }
+
+  .slash-content [data-type="column"] > * + * {
+    @apply mt-3;
+  }
+
+  .slash-content .tableWrapper {
+    @apply my-2 overflow-x-auto;
+  }
+
+  .slash-content table {
+    --default-cell-min-width: 6rem;
+    @apply w-full table-fixed border-collapse overflow-hidden;
+  }
+
+  .slash-content td,
+  .slash-content th {
+    @apply border-border relative border px-3 py-2 align-top;
+  }
+
+  .slash-content td:not([data-colwidth]):not(.column-resize-dragging),
+  .slash-content th:not([data-colwidth]):not(.column-resize-dragging) {
+    min-width: var(--default-cell-min-width);
+  }
+
+  .slash-content th {
+    @apply bg-muted text-left font-medium;
+  }
+
+  .slash-content .column-resize-handle {
+    @apply bg-ring pointer-events-none absolute top-0 -right-0.5 bottom-0 z-20 w-1;
+  }
+
+  .slash-content.resize-cursor {
+    cursor: col-resize;
+  }
+
+  .slash-content .selectedCell::after {
+    @apply bg-primary/20 pointer-events-none absolute inset-0 z-[2] content-[''];
+  }
 }

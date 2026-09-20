@@ -11,7 +11,10 @@ Current suites (`vp test`, Node environment, no DOM):
 | `packages/core/tests/block-kit.test.ts`      | schema node/mark inventory, doc JSON round trip, `extend` registration, `history: false`, heading levels, slash/bubble opt-out |
 | `packages/core/tests/block-nodes.test.ts`    | callout icon default, task item checked default, toggle (`details`) open default, JSON round trips for all three               |
 | `packages/core/tests/bubble-toolbar.test.ts` | default items per baseline mark, `when` gating, `isActive` reflecting the live selection                                       |
+| `packages/core/tests/media-nodes.test.ts`    | image/file/video/embed attribute defaults, JSON round trips, `false` opt-out                                                   |
 | `packages/core/tests/slash-items.test.ts`    | empty-query ordering, ranking precedence, keyword shorthands, no-match, `when` gating, tie stability                           |
+| `packages/core/tests/table-columns.test.ts`  | table/columns/column schema inventory, JSON round trip, `columns{2,}` minimum enforced by the schema, `false` opt-out          |
+| `packages/core/tests/upload.test.ts`         | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                      |
 
 Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function. Anything that needs a live `Editor` is verified in a browser instead of mocked.
 
@@ -19,13 +22,15 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 
 `demo-react/tests/e2e` (`vp run -F demo-react test:e2e`, config in `demo-react/playwright.config.ts`) drives the actual playground in Chromium — the automated counterpart to the manual checklist below, covering what unit tests structurally cannot: real pointer drags and real paste events.
 
-| File                        | Covers                                                                             |
-| --------------------------- | ---------------------------------------------------------------------------------- |
-| `insert.spec.ts`            | slash menu: alias insert, Escape leaves typed text, popover closes after selection |
-| `reorder.spec.ts`           | gutter-handle drag reorders a top-level block relative to a sibling                |
-| `nest.spec.ts`              | rightward drag past the indent threshold nests a block inside a list item          |
-| `paste-notion.spec.ts`      | representative Notion clipboard HTML normalizes into the block schema              |
-| `paste-google-docs.spec.ts` | representative Google Docs clipboard HTML: inline-style marks, guid wrapper unwrap |
+| File                        | Covers                                                                                                           |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `insert.spec.ts`            | slash menu: alias insert, Escape leaves typed text, popover closes after selection                               |
+| `reorder.spec.ts`           | gutter-handle drag reorders a top-level block relative to a sibling                                              |
+| `nest.spec.ts`              | rightward drag past the indent threshold nests a block inside a list item                                        |
+| `paste-notion.spec.ts`      | representative Notion clipboard HTML normalizes into the block schema                                            |
+| `paste-google-docs.spec.ts` | representative Google Docs clipboard HTML: inline-style marks, guid wrapper unwrap                               |
+| `media-upload.spec.ts`      | image placeholder → real upload → ready; failed upload → error → retry → ready, against the mock `UploadAdapter` |
+| `structure.spec.ts`         | table/columns/embed insertion via the slash menu, embed URL input → bookmark card                                |
 
 `tests/e2e/support.ts` holds the shared helpers:
 

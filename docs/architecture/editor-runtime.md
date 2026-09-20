@@ -61,6 +61,38 @@ The dragged block's `data-dragging` marker is a `props.decorations` entry on the
 
 Click vs. drag on the grip is resolved entirely in `useBlockDrag` (react): a press under 4px of movement sets `menuTarget` instead of calling `storage.setDragging`, opening the demo's Duplicate/Delete menu. This is DOM gesture disambiguation, not editor state, so it never touches core.
 
+## Media uploads
+
+`image`/`file`/`video` share one shape (`packages/core/src/upload.ts`): a node's `status`/`error`
+live in doc attrs — part of the document, so a completed or failed upload re-renders through the
+normal transaction pipeline, unlike the slash menu/bubble toolbar/block drag, which track ephemeral
+UI state through their own `storage.subscribe` pair instead. `setImage`/`setFile`/`setVideo` with no
+options insert an empty placeholder; with `{ file, adapter }` they insert `status: "uploading"` and
+kick off `adapter.upload()` in a microtask, so the async work starts strictly after the insert
+transaction has dispatched. `retryImage`/`retryFile`/`retryVideo` do the same deferral — dispatching
+their own "now uploading" transaction synchronously, from inside the very command Tiptap's own
+pipeline is still assembling a transaction for, throws `RangeError: Applying a mismatched
+transaction` once that pipeline's dispatch lands on top of it.
+
+The picked `File` never touches node attrs: attrs must stay JSON-serializable for Yjs (M4), so it
+lives in `PendingUploadRegistry`, a per-node-type map keyed by the node's `BlockId`. Retry resends
+that same `File` — or, via `retryImage(id, { file, adapter })`, a fresh one, the same path a
+`NodeView` uses to attach a file to a placeholder that has never had an upload attempt.
+
+`embed` has no upload step: nothing async, so its `NodeView` sets `url` directly through
+`updateAttributes` (built into every Tiptap `NodeView`), no adapter or retry contract involved.
+
+## Overriding a node's rendering
+
+Tiptap does not deduplicate two extensions sharing a name — both register, and the schema warns
+about (and effectively breaks on) the collision. So a host that wants a `NodeView` for `image` (or
+`file`/`video`/`embed`) does not add a second `Image`; it opts the baseline one out
+(`blockKit: { image: false }`) and appends its own `Image.extend({ addNodeView: () => … })` through
+`extend`, the same single-registration path M1 established for `slash`/`blockId`/`drag`/
+`bubbleToolbar`'s `false` seam. `demo-react/src/app.tsx` does this for all four upload-capable/embed
+nodes, rendering React `NodeView`s from `src/components/nodes/*` via `ReactNodeViewRenderer` —
+`table`/`columns` have no such override; their default rendering is interactive enough on its own.
+
 ## Lifecycle decisions in `useSlashEditor`
 
 - `immediatelyRender: false` — the same component renders under SSR (Next.js App Router) without hydration mismatch.

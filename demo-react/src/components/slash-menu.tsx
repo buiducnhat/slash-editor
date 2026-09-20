@@ -4,16 +4,22 @@ import type { Editor } from "@tiptap/core";
 import {
   ChevronRightIcon,
   CodeIcon,
+  ColumnsIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  ImageIcon,
+  LinkIcon,
   ListChecksIcon,
   ListIcon,
   ListOrderedIcon,
   MessageSquareIcon,
   MinusIcon,
+  PaperclipIcon,
   QuoteIcon,
+  TableIcon,
   TypeIcon,
+  VideoIcon,
 } from "lucide-react";
 import { useMemo } from "react";
 import {
@@ -29,16 +35,22 @@ import { Popover, PopoverContent } from "@/components/ui/popover";
 const ICONS: Record<string, typeof TypeIcon> = {
   "chevron-right": ChevronRightIcon,
   code: CodeIcon,
+  columns: ColumnsIcon,
   "heading-1": Heading1Icon,
   "heading-2": Heading2Icon,
   "heading-3": Heading3Icon,
+  image: ImageIcon,
+  link: LinkIcon,
   list: ListIcon,
   "list-checks": ListChecksIcon,
   "list-ordered": ListOrderedIcon,
   "message-square": MessageSquareIcon,
   minus: MinusIcon,
+  paperclip: PaperclipIcon,
   quote: QuoteIcon,
+  table: TableIcon,
   text: TypeIcon,
+  video: VideoIcon,
 };
 
 export function SlashMenu({ editor }: { editor: Editor }) {

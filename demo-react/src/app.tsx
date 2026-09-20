@@ -1,7 +1,13 @@
+import { Embed, File as FileNode, Image, Video } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
+import { EmbedNodeView } from "@/components/nodes/embed-node-view.tsx";
+import { FileNodeView } from "@/components/nodes/file-node-view.tsx";
+import { ImageNodeView } from "@/components/nodes/image-node-view.tsx";
+import { VideoNodeView } from "@/components/nodes/video-node-view.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -24,6 +30,20 @@ const INITIAL_CONTENT = `
 </details>
 <blockquote><p>Type <code>/</code> on an empty line to open the block menu.</p></blockquote>
 <pre><code>const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
+<h2>Media &amp; structure</h2>
+<p>Type <code>/image</code>, <code>/file</code>, or <code>/video</code> for an upload placeholder with retry on failure.</p>
+<a data-type="embed" data-mode="bookmark" href="https://tiptap.dev" data-title="Tiptap" data-description="The headless editor framework this project builds on.">Tiptap</a>
+<div data-type="columns">
+  <div data-type="column"><p>Columns are a container node: side-by-side content that still nests through the same drag/drop rules as lists.</p></div>
+  <div data-type="column"><p>Type <code>/columns</code> to insert a new side-by-side layout.</p></div>
+</div>
+<table>
+  <tbody>
+    <tr><th><p>Node</p></th><th><p>Adapter</p></th></tr>
+    <tr><td><p>Image / File / Video</p></td><td><p>UploadAdapter</p></td></tr>
+    <tr><td><p>Embed</p></td><td><p>None — direct URL</p></td></tr>
+  </tbody>
+</table>
 `;
 
 /** Rendered only once the editor exists, so the stats subscribe to a live instance. */
@@ -46,6 +66,18 @@ function DocumentStats({ editor }: { editor: Editor }) {
 export function App() {
   const editor = useSlashEditor({
     content: INITIAL_CONTENT,
+    blockKit: {
+      image: false,
+      file: false,
+      video: false,
+      embed: false,
+      extend: [
+        Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) }),
+        FileNode.extend({ addNodeView: () => ReactNodeViewRenderer(FileNodeView) }),
+        Video.extend({ addNodeView: () => ReactNodeViewRenderer(VideoNodeView) }),
+        Embed.extend({ addNodeView: () => ReactNodeViewRenderer(EmbedNodeView) }),
+      ],
+    },
     editorProps: {
       attributes: {
         class: "slash-content min-h-[60vh] pl-20 pr-10 py-8",

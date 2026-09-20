@@ -1,19 +1,28 @@
 # Directory Structure
 
 ```
-packages/core/                @slash-editor/core
-  src/index.ts                public exports
-  src/block-kit.ts            createBlockKit(): baseline extension set
-  src/bubble-toolbar.ts       BubbleToolbar extension, storage store, selection-driven visibility
-  src/callout.ts              Callout node: content block+, wrapIn/toggleWrap/lift commands
-  src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
-  src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
-  tests/block-kit.test.ts     schema inventory, JSON round trip, kit options
-  tests/block-nodes.test.ts   callout/task-item/details attribute defaults and JSON round trips
-  tests/bubble-toolbar.test.ts  default items, `when` gating, `isActive` per mark
-  tests/slash-items.test.ts   ranking, keyword shorthands, `when` gating
-  tests/tsconfig.json         type-checks tests without widening the build rootDir
-  tsconfig.json               build scope: src only
+packages/core/src/index.ts                public exports
+packages/core/src/block-kit.ts            createBlockKit(): baseline extension set
+packages/core/src/bubble-toolbar.ts       BubbleToolbar extension, storage store, selection-driven visibility
+packages/core/src/callout.ts              Callout node: content block+, wrapIn/toggleWrap/lift commands
+packages/core/src/columns.ts              Columns/Column container nodes, setColumns() command
+packages/core/src/embed.ts                Embed node: bookmark/iframe, setEmbed() command, no adapter
+packages/core/src/file.ts                 File node: upload/retry shape, download-link rendering
+packages/core/src/image.ts                Image node: upload/retry shape, empty-placeholder state
+packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
+packages/core/src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
+packages/core/src/table.ts                table(): configures @tiptap/extension-table's TableKit
+packages/core/src/upload.ts               UploadAdapter contract, runUpload/retryUpload, PendingUploadRegistry
+packages/core/src/video.ts                Video node: upload/retry shape
+packages/core/tests/block-kit.test.ts     schema inventory, JSON round trip, kit options
+packages/core/tests/block-nodes.test.ts   callout/task-item/details attribute defaults and JSON round trips
+packages/core/tests/bubble-toolbar.test.ts  default items, `when` gating, `isActive` per mark
+packages/core/tests/media-nodes.test.ts   image/file/video/embed attribute defaults and JSON round trips
+packages/core/tests/slash-items.test.ts   ranking, keyword shorthands, `when` gating
+packages/core/tests/table-columns.test.ts table/columns schema inventory, columns{2,} minimum
+packages/core/tests/upload.test.ts        findNodeById, PendingUploadRegistry
+packages/core/tests/tsconfig.json         type-checks tests without widening the build rootDir
+packages/core/tsconfig.json               build scope: src only
 
 packages/react/               @slash-editor/react
   src/index.ts                public exports + curated @tiptap/react re-exports
@@ -30,8 +39,14 @@ demo-react/                   playground, docs target, future registry host
   src/app.tsx                 page shell, editor, DocumentStats
   src/components/slash-menu.tsx  Command + Popover surface, icon-key mapping
   src/components/bubble-toolbar.tsx  Popover-anchored mark toggle row
+  src/components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video
+  src/components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image
+  src/components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File
+  src/components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video
+  src/components/nodes/embed-node-view.tsx   ReactNodeViewRenderer target for Embed: URL input, bookmark/iframe
   src/components/ui/*.tsx     shadcn components (added via CLI, owned by the repo)
   src/lib/utils.ts            re-exports cn from the `cn` package
+  src/lib/upload-adapter.ts   mockUploadAdapter: data-URL upload, `fail-`-prefixed names reject once
   src/styles.css              Tailwind v4 entry, theme tokens, .slash-content rules
   playwright.config.ts        Playwright config: testDir tests/e2e, webServer runs `bun run dev`
   tests/e2e/support.ts        dragBlock(), pasteHtml(), focusTrailingParagraph() helpers
@@ -40,6 +55,8 @@ demo-react/                   playground, docs target, future registry host
   tests/e2e/nest.spec.ts      rightward drag nests a block inside a list item
   tests/e2e/paste-notion.spec.ts        Notion clipboard HTML normalization
   tests/e2e/paste-google-docs.spec.ts   Google Docs clipboard HTML normalization
+  tests/e2e/media-upload.spec.ts        image upload: placeholder → uploading → ready, and error → retry → ready
+  tests/e2e/structure.spec.ts           table/columns/embed insertion via the slash menu
 
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases

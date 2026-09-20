@@ -4,7 +4,7 @@
 
 Bun workspace: `@slash-editor/core` (engine, no React/CSS) → `@slash-editor/react` (hooks) → `demo-react` (shadcn Base UI playground). Toolchain is Vite+ (`vp`) with TypeScript 7, Vitest, and Playwright for browser regression coverage.
 
-**Status:** M0 and M1 complete — block editing, slash menu, drag/nest, callout/toggle/task-list nodes, bubble toolbar, and a Playwright regression suite all ship. M2 (media & structure) not started. See [`project-pdr/milestones.md`](project-pdr/milestones.md).
+**Status:** M0, M1, and M2 complete — block editing, slash menu, drag/nest, callout/toggle/task-list nodes, bubble toolbar, image/file/video/embed with a pluggable `UploadAdapter` (upload/retry), tables, columns, and a Playwright regression suite all ship. M3 (mentions & AI) not started. See [`project-pdr/milestones.md`](project-pdr/milestones.md).
 
 ## Agent Context Guide
 

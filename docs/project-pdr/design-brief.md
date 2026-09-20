@@ -171,8 +171,19 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
 - **M1 — Block UX.** ✅ Done. BlockId, block kit nodes, markdown input rules, slash menu (core + hook + shadcn Command UI), drag handle, reorder, list nesting, bubble toolbar, browser regression coverage.
   _Done when:_ a user can build a Notion-style page with keyboard only; Playwright covers insert/reorder/nest.
   _Landed:_ slash menu (`slashCommand`, `useSlashMenu`, shadcn `Command`+`Popover`); `BlockId` (auto type derivation, insert/parse-only assignment, dedupe-on-paste, remote-skip); `BlockDrag` (pointer-driven hover/reorder/nest, `moveBlock`/`moveBlockUp`/`moveBlockDown`, `Alt-Shift-ArrowUp/Down`, gutter handle + drop indicator in the demo); block nodes (`Callout` custom node, `Details`/`DetailsSummary`/`DetailsContent` from `@tiptap/extension-details`, `TaskList`/`TaskItem` from `@tiptap/extension-list`, all wired into `createBlockKit` and `defaultSlashItems`); bubble toolbar (`BubbleToolbar` extension gating on a non-empty text selection via `onTransaction`/`onFocus`/`onBlur`, `useBubbleToolbar`, shadcn `Popover` rendering bold/italic/strike/code toggles); Playwright regression suite in `demo-react/tests/e2e` (`bun run test:e2e`) covering slash insert, gutter-handle reorder, drag-to-nest, and paste normalization from representative Notion and Google Docs clipboard HTML.
-- **M2 — Media & structure.** Image/file/video/embed with pluggable `UploadAdapter`, tables, columns.
+- **M2 — Media & structure.** ✅ Done. Image/file/video/embed with pluggable `UploadAdapter`, tables, columns.
   _Done when:_ upload adapter contract documented; failure/retry path e2e-tested.
+  _Landed:_ `UploadAdapter` contract plus `runUpload`/`retryUpload` orchestration and `PendingUploadRegistry`
+  (`packages/core/src/upload.ts` — the picked `File` lives in per-node storage keyed by `BlockId`, never in
+  doc attrs, so it stays Yjs-safe); `Image`/`File`/`Video` nodes sharing that upload/retry shape, each with
+  an empty placeholder state and `status`/`error` in doc attrs so completion re-renders through the normal
+  transaction pipeline; `Embed` (bookmark/iframe, no adapter — nothing async); `Columns`/`Column`
+  (`content: "column{2,}"`, the first non-list nesting surface); `TableKit` from `@tiptap/extension-table`
+  with resizable columns on by default; every M2 node is `false`-opt-out-able from `createBlockKit`, the
+  same seam M1 used for `slash`/`blockId`/`drag`, so `demo-react` supplies `NodeView`-augmented variants via
+  `extend` (`Image.extend({ addNodeView: () => ReactNodeViewRenderer(...) })`) without a duplicate schema
+  registration; Playwright coverage of the real upload → error → retry → ready transition against a mock
+  adapter, plus table/columns/embed insertion.
 - **M3 — Mentions & AI.** `@`-mentions with async provider, inline links, AI slash actions over a `StreamAdapter` (bring-your-own endpoint, SSE).
   _Done when:_ demo works against a local mock endpoint; no vendor SDK in deps.
 - **M4 — Collaboration.** Yjs + y-prosemirror, Hocuspocus self-host recipe, presence cursors, comment marks + thread store adapter.

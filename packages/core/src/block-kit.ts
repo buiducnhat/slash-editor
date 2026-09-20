@@ -6,7 +6,13 @@ import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
 import { bubbleToolbar, type BubbleToolbarOptions } from "./bubble-toolbar.ts";
 import { Callout } from "./callout.ts";
+import { column, columns, type ColumnsOptions } from "./columns.ts";
+import { embed, type EmbedOptions } from "./embed.ts";
+import { file, type FileOptions } from "./file.ts";
+import { image, type ImageOptions } from "./image.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
+import { table, type TableKitOptions } from "./table.ts";
+import { video, type VideoOptions } from "./video.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -57,6 +63,45 @@ export interface BlockKitOptions {
    * conflicting keymaps, so this is the seam for overriding defaults.
    */
   extend?: Extensions;
+  /**
+   * Image node configuration, or `false` to opt out and supply a
+   * `NodeView`-augmented variant via `extend` instead (see `Image`,
+   * exported for `.extend()`).
+   *
+   * @default {}
+   */
+  image?: Partial<ImageOptions> | false;
+  /**
+   * File attachment node configuration, or `false` to opt out.
+   *
+   * @default {}
+   */
+  file?: Partial<FileOptions> | false;
+  /**
+   * Video node configuration, or `false` to opt out.
+   *
+   * @default {}
+   */
+  video?: Partial<VideoOptions> | false;
+  /**
+   * Bookmark/iframe embed node configuration, or `false` to opt out.
+   *
+   * @default {}
+   */
+  embed?: Partial<EmbedOptions> | false;
+  /**
+   * Table kit configuration (resizable columns on by default), or `false`
+   * to opt out.
+   *
+   * @default { table: { resizable: true } }
+   */
+  table?: Partial<TableKitOptions> | false;
+  /**
+   * Columns container configuration, or `false` to opt out.
+   *
+   * @default {}
+   */
+  columns?: Partial<ColumnsOptions> | false;
 }
 
 const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
@@ -77,6 +122,12 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     blockId: blockIdOptions,
     drag,
     bubbleToolbar: bubbleToolbarOptions,
+    image: imageOptions,
+    file: fileOptions,
+    video: videoOptions,
+    embed: embedOptions,
+    table: tableOptions,
+    columns: columnsOptions,
     extend = [],
   } = options;
 
@@ -91,6 +142,12 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     Details.configure({ persist: true }),
     DetailsSummary,
     DetailsContent,
+    ...(imageOptions === false ? [] : [image(imageOptions)]),
+    ...(fileOptions === false ? [] : [file(fileOptions)]),
+    ...(videoOptions === false ? [] : [video(videoOptions)]),
+    ...(embedOptions === false ? [] : [embed(embedOptions)]),
+    ...(tableOptions === false ? [] : [table(tableOptions)]),
+    ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
     ...(slash === false ? [] : [slashCommand(slash)]),
     ...(blockIdOptions === false ? [] : [blockId(blockIdOptions)]),
     ...(drag === false ? [] : [blockDrag(drag)]),

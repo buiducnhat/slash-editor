@@ -24,6 +24,16 @@ test("baseline schema carries the block types the editor advertises", () => {
       "codeBlock",
       "horizontalRule",
       "hardBreak",
+      "image",
+      "file",
+      "video",
+      "embed",
+      "table",
+      "tableRow",
+      "tableHeader",
+      "tableCell",
+      "columns",
+      "column",
     ]),
   );
   expect(Object.keys(schema.marks)).toEqual(

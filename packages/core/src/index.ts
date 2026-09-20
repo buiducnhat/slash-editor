@@ -32,6 +32,33 @@ export {
 } from "./bubble-toolbar.ts";
 export { Callout, callout, type CalloutOptions } from "./callout.ts";
 export {
+  Column,
+  column,
+  type ColumnOptions,
+  Columns,
+  columns,
+  type ColumnsOptions,
+} from "./columns.ts";
+export { Embed, embed, type EmbedMode, type EmbedOptions, type SetEmbedOptions } from "./embed.ts";
+export {
+  File,
+  file,
+  type FileOptions,
+  type FileStorage,
+  type SetFileFromFile,
+  type SetFileFromSrc,
+  type SetFileOptions,
+} from "./file.ts";
+export {
+  Image,
+  image,
+  type ImageOptions,
+  type ImageStorage,
+  type SetImageFromFile,
+  type SetImageFromSrc,
+  type SetImageOptions,
+} from "./image.ts";
+export {
   SlashCommand,
   slashCommand,
   type SlashCommandOptions,
@@ -39,6 +66,29 @@ export {
   slashCommandPluginKey,
   type SlashMenuState,
 } from "./slash-command.ts";
+export { table, TableKit, type TableKitOptions } from "./table.ts";
+export {
+  type BlockLocation,
+  findNodeById,
+  PendingUploadRegistry,
+  retryUpload,
+  runUpload,
+  type RetryUploadOptions,
+  type RunUploadOptions,
+  type UploadAdapter,
+  type UploadContext,
+  type UploadResult,
+  type UploadStatus,
+} from "./upload.ts";
+export {
+  Video,
+  video,
+  type VideoOptions,
+  type VideoStorage,
+  type SetVideoFromFile,
+  type SetVideoFromSrc,
+  type SetVideoOptions,
+} from "./video.ts";
 export {
   defaultSlashItems,
   filterSlashItems,
