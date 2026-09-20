@@ -14,7 +14,13 @@ test("baseline schema carries the block types the editor advertises", () => {
       "bulletList",
       "orderedList",
       "listItem",
+      "taskList",
+      "taskItem",
       "blockquote",
+      "callout",
+      "details",
+      "detailsSummary",
+      "detailsContent",
       "codeBlock",
       "horizontalRule",
       "hardBreak",
@@ -62,23 +68,23 @@ test("documents survive a JSON round trip through the schema", () => {
 });
 
 test("extend registers custom nodes in the schema", () => {
-  const callout = Node.create({
-    name: "callout",
+  const note = Node.create({
+    name: "note",
     group: "block",
     content: "block+",
     parseHTML: () => [{ tag: "aside" }],
     renderHTML: () => ["aside", 0],
   });
 
-  const schema = getSchema(createBlockKit({ extend: [callout] }));
+  const schema = getSchema(createBlockKit({ extend: [note] }));
 
-  expect(schema.nodes.callout).toBeDefined();
+  expect(schema.nodes.note).toBeDefined();
   expect(
     schema.nodeFromJSON({
-      type: "callout",
+      type: "note",
       content: [{ type: "paragraph", content: [{ type: "text", text: "note" }] }],
     }).type.name,
-  ).toBe("callout");
+  ).toBe("note");
 });
 
 test("history: false disables undo/redo so a collaboration provider can own it", () => {
@@ -105,4 +111,18 @@ test("the slash menu ships with the kit and can be opted out or retriggered", ()
   );
 
   expect(slash?.options.char).toBe(";");
+});
+
+test("the bubble toolbar ships with the kit and can be opted out or reconfigured", () => {
+  const names = (options?: Parameters<typeof createBlockKit>[0]) =>
+    createBlockKit(options).map((extension) => extension.name);
+
+  expect(names()).toContain("bubbleToolbar");
+  expect(names({ bubbleToolbar: false })).not.toContain("bubbleToolbar");
+
+  const toolbar = createBlockKit({ bubbleToolbar: { items: [] } }).find(
+    (extension) => extension.name === "bubbleToolbar",
+  );
+
+  expect(toolbar?.options.items).toEqual([]);
 });

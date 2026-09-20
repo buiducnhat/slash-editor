@@ -21,8 +21,14 @@ test("title prefixes outrank alias and keyword matches", () => {
   expect(ids(filterSlashItems(defaultSlashItems, "code"))).toEqual(["code-block"]);
   // "h1" is an alias of Heading 1 and matches nothing else.
   expect(ids(filterSlashItems(defaultSlashItems, "h1"))).toEqual(["heading-1"]);
-  // Both list titles match on a word boundary, so registry order decides.
-  expect(ids(filterSlashItems(defaultSlashItems, "list"))).toEqual(["bullet-list", "ordered-list"]);
+  // "Bulleted list", "Numbered list", "To-do list", "Toggle list" all match on
+  // the trailing word, so registry order decides.
+  expect(ids(filterSlashItems(defaultSlashItems, "list"))).toEqual([
+    "bullet-list",
+    "ordered-list",
+    "task-list",
+    "toggle",
+  ]);
 });
 
 test("markdown shorthands reach their block through keywords", () => {
@@ -44,6 +50,15 @@ test("items are hidden when the editor schema cannot host them", () => {
     "heading-3",
   ]);
   expect(filterSlashItems(defaultSlashItems, "code", editor)).toEqual([]);
+});
+
+test("callout, toggle, and task-list are gated on their own node types", () => {
+  const editor = editorWith(["paragraph", "callout", "details", "taskList"]);
+
+  expect(ids(filterSlashItems(defaultSlashItems, "callout", editor))).toEqual(["callout"]);
+  expect(ids(filterSlashItems(defaultSlashItems, "toggle", editor))).toEqual(["toggle"]);
+  expect(ids(filterSlashItems(defaultSlashItems, "todo", editor))).toEqual(["task-list"]);
+  expect(filterSlashItems(defaultSlashItems, "callout", editorWith(["paragraph"]))).toEqual([]);
 });
 
 test("ranking is stable for equally scored items", () => {

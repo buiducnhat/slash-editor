@@ -21,6 +21,17 @@ export {
 } from "./block-id.ts";
 export { type BlockKitOptions, createBlockKit, type HeadingLevel } from "./block-kit.ts";
 export {
+  BubbleToolbar,
+  bubbleToolbar,
+  type BubbleToolbarItem,
+  type BubbleToolbarOptions,
+  type BubbleToolbarState,
+  type BubbleToolbarStorage,
+  defaultBubbleToolbarItems,
+  filterBubbleToolbarItems,
+} from "./bubble-toolbar.ts";
+export { Callout, callout, type CalloutOptions } from "./callout.ts";
+export {
   SlashCommand,
   slashCommand,
   type SlashCommandOptions,

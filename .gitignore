@@ -13,3 +13,9 @@ dist
 
 .agents/
 skills-lock.json
+
+# Playwright
+demo-react/test-results/
+demo-react/playwright-report/
+demo-react/blob-report/
+demo-react/.last-run.json

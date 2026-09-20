@@ -12,7 +12,7 @@ Notion-style block editor for React: headless core on Tiptap/ProseMirror, UI you
 
 ## Status
 
-M0 (foundation) complete; M1 (block UX) in progress — the slash menu ships today, block ids, drag handle, nesting, and the bubble toolbar are outstanding. Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+M0 (foundation) and M1 (block UX) complete — slash menu, block ids, drag handle, callout/toggle/task-list nodes, bubble toolbar, and a Playwright browser regression suite all ship. Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
 
 ## Documentation
 
@@ -24,6 +24,7 @@ Start at [`docs/SUMMARY.md`](docs/SUMMARY.md) — architecture, codebase map, co
 vp install            # install workspace dependencies
 vp run -F demo-react dev   # playground on http://localhost:5173
 vp test               # unit tests (headless, no DOM)
+vp run -F demo-react test:e2e   # browser regression suite (Playwright)
 vp check              # format, lint, typecheck
 vp run -F './packages/*' build
 ```
@@ -67,12 +68,12 @@ useSlashEditor({
       items: [
         ...defaultSlashItems,
         {
-          id: "callout",
-          title: "Callout",
+          id: "date-stamp",
+          title: "Date stamp",
           group: "Basic blocks",
-          aliases: ["note", "info"],
+          aliases: ["today", "date"],
           run: ({ editor, range }) =>
-            editor.chain().focus().deleteRange(range).setNode("callout").run(),
+            editor.chain().focus().insertContentAt(range, new Date().toLocaleDateString()).run(),
         },
       ],
     },

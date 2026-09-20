@@ -21,5 +21,12 @@
       "@slash-editor/react": ["./packages/react/src/index.ts"]
     }
   },
-  "include": ["packages/*/src", "packages/*/tests", "demo-react/src", "*.ts"]
+  "include": [
+    "packages/*/src",
+    "packages/*/tests",
+    "demo-react/src",
+    "demo-react/tests",
+    "demo-react/playwright.config.ts",
+    "*.ts"
+  ]
 }

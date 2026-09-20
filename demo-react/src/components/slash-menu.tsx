@@ -2,12 +2,15 @@ import { useSlashMenu } from "@slash-editor/react";
 import type { SlashItem } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import {
+  ChevronRightIcon,
   CodeIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  ListChecksIcon,
   ListIcon,
   ListOrderedIcon,
+  MessageSquareIcon,
   MinusIcon,
   QuoteIcon,
   TypeIcon,
@@ -24,12 +27,15 @@ import { Popover, PopoverContent } from "@/components/ui/popover";
 
 /** Icon keys are owned by the core registry; components are resolved here. */
 const ICONS: Record<string, typeof TypeIcon> = {
+  "chevron-right": ChevronRightIcon,
   code: CodeIcon,
   "heading-1": Heading1Icon,
   "heading-2": Heading2Icon,
   "heading-3": Heading3Icon,
   list: ListIcon,
+  "list-checks": ListChecksIcon,
   "list-ordered": ListOrderedIcon,
+  "message-square": MessageSquareIcon,
   minus: MinusIcon,
   quote: QuoteIcon,
   text: TypeIcon,

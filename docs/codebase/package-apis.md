@@ -13,9 +13,59 @@ interface BlockKitOptions {
   slash?: Partial<SlashCommandOptions> | false;
   blockId?: Partial<BlockIdOptions> | false; // default { types: "auto" }
   drag?: Partial<BlockDragOptions> | false; // default {}
+  bubbleToolbar?: Partial<BubbleToolbarOptions> | false; // default { items: defaultBubbleToolbarItems }
   extend?: Extensions;
 }
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+// Baseline schema also carries taskList/taskItem (@tiptap/extension-list, nested: true) and
+// details/detailsSummary/detailsContent (@tiptap/extension-details, persist: true) unconditionally,
+// the same way StarterKit's blockquote and codeBlock are unconditional — no BlockKitOptions seam.
+
+// callout.ts
+const Callout: Node<CalloutOptions>;
+function callout(options?: Partial<CalloutOptions>): Node;
+
+interface CalloutOptions {
+  defaultIcon: string; // default "💡"
+  HTMLAttributes: Record<string, unknown>;
+}
+// editor.commands.setCallout/toggleCallout/unsetCallout — wrapIn/toggleWrap/lift over "callout"
+
+// bubble-toolbar.ts
+const BubbleToolbar: Extension<BubbleToolbarOptions, BubbleToolbarStorage>;
+function bubbleToolbar(options?: Partial<BubbleToolbarOptions>): Extension;
+
+interface BubbleToolbarOptions {
+  items: BubbleToolbarItem[] | ((editor: Editor) => BubbleToolbarItem[]);
+}
+
+interface BubbleToolbarItem {
+  id: string;
+  label: string;
+  icon?: string; // icon *key*, resolved by the UI layer
+  isActive: (editor: Editor) => boolean;
+  run: (editor: Editor) => void;
+  when?: (editor: Editor) => boolean;
+}
+
+interface BubbleToolbarState {
+  open: boolean;
+  items: BubbleToolbarItem[]; // already filtered by `when`
+  getClientRect: (() => DOMRect | null) | null;
+}
+
+interface BubbleToolbarStorage {
+  // editor.storage.bubbleToolbar
+  state: BubbleToolbarState;
+  subscribe(listener: () => void): () => void;
+}
+
+function filterBubbleToolbarItems(items: BubbleToolbarItem[], editor: Editor): BubbleToolbarItem[];
+const defaultBubbleToolbarItems: BubbleToolbarItem[]; // ids: bold, italic, strike, code
+// Visibility is recomputed on onTransaction/onFocus/onBlur: open only for a non-empty
+// TextSelection in a focused, editable view. Rank/query don't apply here — unlike the
+// slash menu there's nothing to type, so filtering is just `when` gating.
 
 // block-id.ts
 const BlockId: Extension<BlockIdOptions>;
@@ -118,7 +168,9 @@ function filterSlashItems(items: SlashItem[], query: string, editor?: Editor): S
 const defaultSlashItems: SlashItem[];
 ```
 
-`defaultSlashItems` ids: `paragraph`, `heading-1`, `heading-2`, `heading-3`, `bullet-list`, `ordered-list`, `blockquote`, `code-block`, `horizontal-rule` — all in group `"Basic blocks"`, each gated on schema presence via `when`.
+`defaultSlashItems` ids: `paragraph`, `heading-1`, `heading-2`, `heading-3`, `bullet-list`,
+`ordered-list`, `task-list`, `blockquote`, `callout`, `toggle`, `code-block`, `horizontal-rule` —
+all in group `"Basic blocks"`, each gated on schema presence via `when`.
 
 The module augments `@tiptap/core`'s `Storage` interface so `editor.storage.slashCommand` is typed at every call site.
 
@@ -149,16 +201,23 @@ interface BlockDrag extends BlockDragState {
   closeMenu: () => void;
   handleProps: { onPointerDown: (event: React.PointerEvent) => void };
 }
+
+function useBubbleToolbar(editor: Editor | null): BubbleToolbar;
+interface BubbleToolbar extends BubbleToolbarState {
+  anchor: BubbleToolbarAnchor | null; // { getBoundingClientRect } virtual element
+}
 ```
 
 Re-exported from `@tiptap/react` so consumers need one import: `EditorContent`, `EditorContext`, `EditorProvider`, `useCurrentEditor`, `useEditorState`.
 
-`useSlashMenu` and `useBlockDrag` are both safe with a `null` editor (closed state, no-op callbacks), which matters because `useSlashEditor` returns `null` on the first render.
+`useSlashMenu`, `useBlockDrag`, and `useBubbleToolbar` are all safe with a `null` editor (closed state, no-op callbacks), which matters because `useSlashEditor` returns `null` on the first render.
 
 `useBlockDrag`'s click-vs-drag disambiguation lives entirely in the hook (not core): a grip press that stays within 4px opens `menuTarget`; past that it calls `storage.setDragging`. It is pure DOM gesture handling, not editor state.
 
 ## Demo surface
 
 `demo-react/src/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components.
+
+`demo-react/src/components/bubble-toolbar.tsx` is the reference toolbar: a `Popover` anchored to `useBubbleToolbar().anchor`, `open` fully controlled by `toolbar.open` (no `onOpenChange` — visibility is entirely selection-driven), rendering one `Button` per item with `onMouseDown={(e) => e.preventDefault()}` so a click never blurs the editor before `item.run` fires.
 
 `demo-react/src/components/block-handle.tsx` is the reference gutter: a hover group (insert-below + drag/click grip, both with `Tooltip`), the drop indicator, and a `DropdownMenu` (Duplicate/Delete) anchored at `menuAnchor` — all `position: fixed` or portal-rendered, positioned from `useBlockDrag`'s anchors, no markup in core. The dragged block's visual fade (`[data-dragging]` in `styles.css`) is a core-owned ProseMirror decoration, not a DOM mutation from the demo — PM's own view reconciliation strips foreign attributes set directly on its managed nodes.

@@ -157,6 +157,19 @@ export const defaultSlashItems: SlashItem[] = [
     },
   },
   {
+    id: "task-list",
+    title: "To-do list",
+    group: BASIC,
+    description: "Checklist with checkboxes",
+    aliases: ["todo", "checklist", "checkbox"],
+    keywords: ["[]", "[ ]"],
+    icon: "list-checks",
+    when: (editor) => hasNode(editor, "taskList"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  {
     id: "blockquote",
     title: "Quote",
     group: BASIC,
@@ -167,6 +180,32 @@ export const defaultSlashItems: SlashItem[] = [
     when: (editor) => hasNode(editor, "blockquote"),
     run: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBlockquote().run();
+    },
+  },
+  {
+    id: "callout",
+    title: "Callout",
+    group: BASIC,
+    description: "Highlighted aside",
+    aliases: ["note", "info", "tip"],
+    keywords: ["!"],
+    icon: "message-square",
+    when: (editor) => hasNode(editor, "callout"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setCallout().run();
+    },
+  },
+  {
+    id: "toggle",
+    title: "Toggle list",
+    group: BASIC,
+    description: "Collapsible content",
+    aliases: ["details", "collapse", "dropdown"],
+    keywords: ["toggle"],
+    icon: "chevron-right",
+    when: (editor) => hasNode(editor, "details"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setDetails().run();
     },
   },
   {

@@ -1,6 +1,7 @@
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
 import { BlockHandle } from "@/components/block-handle.tsx";
+import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -12,6 +13,15 @@ const INITIAL_CONTENT = `
   <li><p>Headings, lists, quotes, code, rules</p></li>
   <li><p>Markdown input rules: type <code># </code>, <code>- </code>, or <code>&gt; </code></p></li>
 </ul>
+<ul data-type="taskList">
+  <li data-type="taskItem" data-checked="true"><p>Ship the slash menu</p></li>
+  <li data-type="taskItem" data-checked="false"><p>Ship callout, toggle, and task-list nodes</p></li>
+</ul>
+<div data-type="callout" data-icon="💡"><p>Callouts wrap block content in a highlighted aside.</p></div>
+<details>
+  <summary>Toggle lists collapse content</summary>
+  <div data-type="detailsContent"><p>Type <code>/toggle</code> to insert one.</p></div>
+</details>
 <blockquote><p>Type <code>/</code> on an empty line to open the block menu.</p></blockquote>
 <pre><code>const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
 `;
@@ -61,6 +71,7 @@ export function App() {
           <EditorContent editor={editor} />
           {editor && <SlashMenu editor={editor} />}
           {editor && <BlockHandle editor={editor} />}
+          {editor && <BubbleToolbar editor={editor} />}
         </div>
       </div>
     </main>

@@ -2,14 +2,14 @@
 
 Status legend: **Done** · **In progress** · **Not started**
 
-| Milestone                         | Status                         |
-| --------------------------------- | ------------------------------ |
-| M0 — Foundation                   | ✅ Done                        |
-| M1 — Block UX                     | 🟡 In progress (5 of 7 slices) |
-| M2 — Media & structure            | ⬜ Not started                 |
-| M3 — Mentions & AI                | ⬜ Not started                 |
-| M4 — Collaboration                | ⬜ Not started                 |
-| Distribution — registry & release | ⬜ Not started                 |
+| Milestone                         | Status         |
+| --------------------------------- | -------------- |
+| M0 — Foundation                   | ✅ Done        |
+| M1 — Block UX                     | ✅ Done        |
+| M2 — Media & structure            | ⬜ Not started |
+| M3 — Mentions & AI                | ⬜ Not started |
+| M4 — Collaboration                | ⬜ Not started |
+| Distribution — registry & release | ⬜ Not started |
 
 ---
 
@@ -24,7 +24,7 @@ _Done when: `@slash-editor/core` and `/react` build and the demo renders a Tipta
 - [x] `vp check` / `vp test` / build wired across the workspace
 - [x] tsconfig scoping so declaration emit stays inside `dist/`
 
-## M1 — Block UX 🟡
+## M1 — Block UX ✅
 
 _Done when: a user can build a Notion-style page with the keyboard alone; automated coverage for insert / reorder / nest._
 
@@ -33,10 +33,10 @@ _Done when: a user can build a Notion-style page with the keyboard alone; automa
 - [x] **Menu surface** — shadcn `Command` inside an anchored `Popover`, mouse and keyboard parity
 - [x] **Markdown input rules** — inherited from StarterKit (`# `, `- `, `> `, ``` )
 - [x] **`BlockId` extension** — stable per-block ids, `data-block-id` / `data-block-type` rendering
-- [ ] **Block nodes** — callout, toggle (`details`), task list
+- [x] **Block nodes** — callout, toggle (`details`), task list
 - [x] **Drag handle** — hover target, block reorder, list nest/unnest
-- [ ] **Bubble toolbar** — selection-anchored inline formatting
-- [ ] **Browser-driven regression coverage** — insert / reorder / nest, paste normalization from Notion and Google Docs HTML
+- [x] **Bubble toolbar** — selection-anchored inline formatting
+- [x] **Browser-driven regression coverage** — Playwright in `demo-react` (`bun run test:e2e`): slash insert, gutter-handle reorder, drag-to-nest, paste normalization from representative Notion and Google Docs HTML
 
 ## M2 — Media & structure ⬜
 

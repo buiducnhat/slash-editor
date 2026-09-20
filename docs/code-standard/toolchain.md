@@ -1,12 +1,13 @@
 # Toolchain and Workflows
 
-| Tool                            | Version              | Role                                                             |
-| ------------------------------- | -------------------- | ---------------------------------------------------------------- |
-| Bun                             | 1.4.2 (`devEngines`) | Package manager, isolated linker (per-package `node_modules`)    |
-| Vite+ (`vp`)                    | 0.2.x                | Task runner, dev server, bundler, formatter, linter, test runner |
-| TypeScript                      | 7.0.x (`tsgo`)       | Type checking and declaration emit                               |
-| Vitest (via `vp test`)          | 4.x                  | Unit tests, Node environment                                     |
-| oxfmt / oxlint (via `vp check`) | bundled              | Formatting and linting, type-aware                               |
+| Tool                                     | Version              | Role                                                                 |
+| ---------------------------------------- | -------------------- | -------------------------------------------------------------------- |
+| Bun                                      | 1.4.2 (`devEngines`) | Package manager, isolated linker (per-package `node_modules`)        |
+| Vite+ (`vp`)                             | 0.2.x                | Task runner, dev server, bundler, formatter, linter, test runner     |
+| TypeScript                               | 7.0.x (`tsgo`)       | Type checking and declaration emit                                   |
+| Vitest (via `vp test`)                   | 4.x                  | Unit tests, Node environment                                         |
+| Playwright (via `demo-react` `test:e2e`) | 1.63.x               | Browser regression suite: insert, reorder, nest, paste normalization |
+| oxfmt / oxlint (via `vp check`)          | bundled              | Formatting and linting, type-aware                                   |
 
 ## Commands
 
@@ -14,7 +15,8 @@
 vp install                        # workspace install
 vp run -F demo-react dev          # playground
 vp run -F './packages/*' build    # build core then react (dependency order)
-vp test                           # all workspace tests
+vp test                           # unit tests (Vitest, Node, no DOM)
+vp run -F demo-react test:e2e     # browser regression suite (Playwright, Chromium)
 vp check          # format + lint + typecheck (read-only)
 vp check --fix    # same, writing formatting fixes
 ```

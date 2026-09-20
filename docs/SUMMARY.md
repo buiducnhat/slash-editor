@@ -2,9 +2,9 @@
 
 **slash-editor** — a Notion-style block editor for React: a headless core on Tiptap/ProseMirror, React bindings, and shadcn-native UI you own. MIT end to end, no paid tier and no hosted dependency.
 
-Bun workspace: `@slash-editor/core` (engine, no React/CSS) → `@slash-editor/react` (hooks) → `demo-react` (shadcn Base UI playground). Toolchain is Vite+ (`vp`) with TypeScript 7 and Vitest.
+Bun workspace: `@slash-editor/core` (engine, no React/CSS) → `@slash-editor/react` (hooks) → `demo-react` (shadcn Base UI playground). Toolchain is Vite+ (`vp`) with TypeScript 7, Vitest, and Playwright for browser regression coverage.
 
-**Status:** M0 complete; M1 in progress — slash menu shipped, block ids / drag handle / nesting / bubble toolbar outstanding. See [`project-pdr/milestones.md`](project-pdr/milestones.md).
+**Status:** M0 and M1 complete — block editing, slash menu, drag/nest, callout/toggle/task-list nodes, bubble toolbar, and a Playwright regression suite all ship. M2 (media & structure) not started. See [`project-pdr/milestones.md`](project-pdr/milestones.md).
 
 ## Agent Context Guide
 

@@ -1,7 +1,11 @@
 import type { Extensions } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
+import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
+import { bubbleToolbar, type BubbleToolbarOptions } from "./bubble-toolbar.ts";
+import { Callout } from "./callout.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -43,6 +47,12 @@ export interface BlockKitOptions {
    */
   drag?: Partial<BlockDragOptions> | false;
   /**
+   * Selection-anchored inline formatting toolbar, or `false` to opt out.
+   *
+   * @default { items: defaultBubbleToolbarItems }
+   */
+  bubbleToolbar?: Partial<BubbleToolbarOptions> | false;
+  /**
    * Extensions appended after the baseline set. Later extensions win on
    * conflicting keymaps, so this is the seam for overriding defaults.
    */
@@ -53,7 +63,8 @@ const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
 
 /**
  * The baseline block schema: document, text, paragraph, headings, lists,
- * blockquote, code block, horizontal rule, hard break, and the inline marks.
+ * task lists, blockquote, callout, toggle (details), code block, horizontal
+ * rule, hard break, and the inline marks.
  *
  * Emits no class names. UI layers style content through element selectors and
  * the `data-*` attributes rendered by slash-editor nodes.
@@ -65,6 +76,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     slash,
     blockId: blockIdOptions,
     drag,
+    bubbleToolbar: bubbleToolbarOptions,
     extend = [],
   } = options;
 
@@ -73,9 +85,16 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
       heading: { levels: headingLevels },
       undoRedo: history ? {} : false,
     }),
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    Callout,
+    Details.configure({ persist: true }),
+    DetailsSummary,
+    DetailsContent,
     ...(slash === false ? [] : [slashCommand(slash)]),
     ...(blockIdOptions === false ? [] : [blockId(blockIdOptions)]),
     ...(drag === false ? [] : [blockDrag(drag)]),
+    ...(bubbleToolbarOptions === false ? [] : [bubbleToolbar(bubbleToolbarOptions)]),
     ...extend,
   ];
 }

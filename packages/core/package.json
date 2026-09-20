@@ -19,6 +19,8 @@
     "dev": "vp pack --watch"
   },
   "dependencies": {
+    "@tiptap/extension-details": "^3.31.3",
+    "@tiptap/extension-list": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
     "@tiptap/suggestion": "^3.31.3"
   },
