@@ -30,15 +30,22 @@ test("documents survive a JSON round trip through the schema", () => {
   const doc = {
     type: "doc",
     content: [
-      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Title" }] },
+      {
+        type: "heading",
+        attrs: { id: null, level: 2 },
+        content: [{ type: "text", text: "Title" }],
+      },
       {
         type: "bulletList",
+        attrs: { id: null },
         content: [
           {
             type: "listItem",
+            attrs: { id: null },
             content: [
               {
                 type: "paragraph",
+                attrs: { id: null },
                 content: [
                   { type: "text", marks: [{ type: "bold" }], text: "bold" },
                   { type: "text", text: " tail" },

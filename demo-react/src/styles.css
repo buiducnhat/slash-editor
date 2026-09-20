@@ -190,4 +190,8 @@
   .slash-content a {
     @apply text-primary underline underline-offset-4;
   }
+
+  .slash-content [data-dragging] {
+    @apply opacity-40;
+  }
 }

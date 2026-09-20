@@ -1,3 +1,24 @@
+export {
+  BlockDrag,
+  blockDrag,
+  blockDragPluginKey,
+  type BlockDragOptions,
+  type BlockDragState,
+  type BlockDragStorage,
+  type BlockRect,
+  type BlockTarget,
+  canAppendChild,
+  type DropMode,
+  type DropTarget,
+  resolveDropTarget,
+} from "./block-drag.ts";
+export {
+  BLOCK_ID_REMOTE_META,
+  BlockId,
+  blockId,
+  type BlockIdOptions,
+  blockIdPluginKey,
+} from "./block-id.ts";
 export { type BlockKitOptions, createBlockKit, type HeadingLevel } from "./block-kit.ts";
 export {
   SlashCommand,

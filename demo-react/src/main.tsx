@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app.tsx";
+import { TooltipProvider } from "./components/ui/tooltip.tsx";
 import "./styles.css";
 
 const container = document.querySelector("#root");
@@ -13,6 +14,8 @@ if (!container) {
 // do not survive remount.
 createRoot(container).render(
   <StrictMode>
-    <App />
+    <TooltipProvider delay={400}>
+      <App />
+    </TooltipProvider>
   </StrictMode>,
 );

@@ -5,7 +5,7 @@ Status legend: **Done** · **In progress** · **Not started**
 | Milestone                         | Status                         |
 | --------------------------------- | ------------------------------ |
 | M0 — Foundation                   | ✅ Done                        |
-| M1 — Block UX                     | 🟡 In progress (1 of 7 slices) |
+| M1 — Block UX                     | 🟡 In progress (5 of 7 slices) |
 | M2 — Media & structure            | ⬜ Not started                 |
 | M3 — Mentions & AI                | ⬜ Not started                 |
 | M4 — Collaboration                | ⬜ Not started                 |
@@ -32,9 +32,9 @@ _Done when: a user can build a Notion-style page with the keyboard alone; automa
 - [x] **`useSlashMenu`** — store subscription via `useSyncExternalStore`, caret anchor, focus stays in the editor
 - [x] **Menu surface** — shadcn `Command` inside an anchored `Popover`, mouse and keyboard parity
 - [x] **Markdown input rules** — inherited from StarterKit (`# `, `- `, `> `, ``` )
-- [ ] **`BlockId` extension** — stable per-block ids, `data-block-id` / `data-block-type` rendering
+- [x] **`BlockId` extension** — stable per-block ids, `data-block-id` / `data-block-type` rendering
 - [ ] **Block nodes** — callout, toggle (`details`), task list
-- [ ] **Drag handle** — hover target, block reorder, list nest/unnest
+- [x] **Drag handle** — hover target, block reorder, list nest/unnest
 - [ ] **Bubble toolbar** — selection-anchored inline formatting
 - [ ] **Browser-driven regression coverage** — insert / reorder / nest, paste normalization from Notion and Google Docs HTML
 

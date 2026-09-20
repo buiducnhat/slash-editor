@@ -15,10 +15,12 @@
 
 ## Structure
 
-- `src/app.tsx` — page shell, seeded document, `DocumentStats` (rendered only once the editor exists, so `useEditorState` subscribes to a live instance), and `<SlashMenu>`.
+- `src/app.tsx` — page shell, seeded document, `DocumentStats` (rendered only once the editor exists, so `useEditorState` subscribes to a live instance), `<SlashMenu>`, and `<BlockHandle>`.
 - `src/components/slash-menu.tsx` — the slash surface; the only place icons and markup for the menu are decided.
-- `src/components/ui/` — shadcn output. Local modification: `popover.tsx` forwards an `anchor` prop to `Popover.Positioner`, required to anchor the menu at the caret instead of a trigger element.
+- `src/components/block-handle.tsx` — the gutter surface: hover handle (insert-below + drag/click grip), drop indicator, and the block context menu (Duplicate/Delete) opened by a grip click that stays under the drag threshold.
+- `src/components/ui/` — shadcn output. Local modifications: `popover.tsx` and `dropdown-menu.tsx` both forward an `anchor` prop to their `Positioner`, required to anchor a surface at the caret or a block's rect instead of a trigger element.
 - `src/styles.css` — preset theme tokens plus a `.slash-content` component layer that styles editor output with plain element selectors.
+- `src/main.tsx` — wraps `<App>` in `TooltipProvider` (`delay={400}`), required by every icon-only button in the gutter.
 
 ## Aliases
 

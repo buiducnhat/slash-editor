@@ -1,5 +1,7 @@
 import type { Extensions } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
+import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
+import { blockId, type BlockIdOptions } from "./block-id.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -27,6 +29,20 @@ export interface BlockKitOptions {
    */
   slash?: Partial<SlashCommandOptions> | false;
   /**
+   * Stable per-block id configuration, or `false` to opt out. Drag
+   * targeting and the future comment/collaboration surfaces depend on it.
+   *
+   * @default { types: "auto" }
+   */
+  blockId?: Partial<BlockIdOptions> | false;
+  /**
+   * Block gutter drag handle: reorder and list nesting. Requires
+   * `blockId`, since drag targets are addressed by id.
+   *
+   * @default {}
+   */
+  drag?: Partial<BlockDragOptions> | false;
+  /**
    * Extensions appended after the baseline set. Later extensions win on
    * conflicting keymaps, so this is the seam for overriding defaults.
    */
@@ -43,7 +59,14 @@ const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
  * the `data-*` attributes rendered by slash-editor nodes.
  */
 export function createBlockKit(options: BlockKitOptions = {}): Extensions {
-  const { headingLevels = DEFAULT_HEADING_LEVELS, history = true, slash, extend = [] } = options;
+  const {
+    headingLevels = DEFAULT_HEADING_LEVELS,
+    history = true,
+    slash,
+    blockId: blockIdOptions,
+    drag,
+    extend = [],
+  } = options;
 
   return [
     StarterKit.configure({
@@ -51,6 +74,8 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
       undoRedo: history ? {} : false,
     }),
     ...(slash === false ? [] : [slashCommand(slash)]),
+    ...(blockIdOptions === false ? [] : [blockId(blockIdOptions)]),
+    ...(drag === false ? [] : [blockDrag(drag)]),
     ...extend,
   ];
 }

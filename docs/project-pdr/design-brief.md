@@ -170,7 +170,7 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
   _Done when:_ `@slash-editor/core` and `/react` build and the demo renders a bare Tiptap doc.
 - **M1 — Block UX.** BlockId, block kit nodes, markdown input rules, slash menu (core + hook + shadcn Command UI), drag handle, reorder, list nesting, bubble toolbar.
   _Done when:_ a user can build a Notion-style page with keyboard only; Playwright covers insert/reorder/nest.
-  _Landed:_ slash menu — `slashCommand` extension with ranked registry and keyboard state machine in core, `useSlashMenu` in react, shadcn Base UI `Command` + `Popover` surface in the demo. Remaining: BlockId, callout/toggle/task nodes, drag handle, reorder/nest, bubble toolbar.
+  _Landed:_ slash menu (`slashCommand`, `useSlashMenu`, shadcn `Command`+`Popover`); `BlockId` (auto type derivation, insert/parse-only assignment, dedupe-on-paste, remote-skip); `BlockDrag` (pointer-driven hover/reorder/nest, `moveBlock`/`moveBlockUp`/`moveBlockDown`, `Alt-Shift-ArrowUp/Down`, gutter handle + drop indicator in the demo). Remaining: callout/toggle/task nodes, bubble toolbar, browser-driven regression suite.
 - **M2 — Media & structure.** Image/file/video/embed with pluggable `UploadAdapter`, tables, columns.
   _Done when:_ upload adapter contract documented; failure/retry path e2e-tested.
 - **M3 — Mentions & AI.** `@`-mentions with async provider, inline links, AI slash actions over a `StreamAdapter` (bring-your-own endpoint, SSE).

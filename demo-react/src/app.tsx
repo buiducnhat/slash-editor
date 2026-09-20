@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
+import { BlockHandle } from "@/components/block-handle.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -37,7 +38,7 @@ export function App() {
     content: INITIAL_CONTENT,
     editorProps: {
       attributes: {
-        class: "slash-content min-h-[60vh] px-10 py-8",
+        class: "slash-content min-h-[60vh] pl-20 pr-10 py-8",
         "aria-label": "Document",
       },
     },
@@ -59,6 +60,7 @@ export function App() {
         >
           <EditorContent editor={editor} />
           {editor && <SlashMenu editor={editor} />}
+          {editor && <BlockHandle editor={editor} />}
         </div>
       </div>
     </main>
