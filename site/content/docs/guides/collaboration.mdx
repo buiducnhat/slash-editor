@@ -1,0 +1,55 @@
+---
+title: Collaboration
+description: Real-time collaboration over Yjs — self-hosted, no paid tier.
+---
+
+`collaboration` wraps Tiptap's official `Collaboration`/`CollaborationCaret` extensions over
+`y-prosemirror`. It has no default and forces `history: false` once set (Yjs owns undo/redo):
+
+<AutoTypeTable path="../packages/core/src/collaboration.ts" name="CollaborationOptions" />
+
+```tsx
+import * as Y from "yjs";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+
+const document = new Y.Doc();
+const provider = new HocuspocusProvider({ url: "ws://localhost:1234", name: room, document });
+
+useSlashEditor({
+  blockKit: {
+    collaboration: {
+      document,
+      provider, // enables CollaborationCaret presence carets
+      user: { name: "Ada Lovelace", color: "#94A3B8" },
+    },
+  },
+});
+```
+
+## Provider contract
+
+`CollaborationProvider` is duck-typed against the shared-awareness surface —
+`HocuspocusProvider`, `WebsocketProvider`, and `WebrtcProvider` all satisfy it without an
+adapter:
+
+```ts
+interface CollaborationProvider {
+  awareness: {
+    setLocalStateField(field: string, value: unknown): void;
+    getStates(): Map<number, Record<string, unknown>>;
+    on(event: "update" | "change", listener: () => void): void;
+    off(event: "update" | "change", listener: () => void): void;
+  };
+}
+```
+
+Remote carets render as `data-collab-caret`/`data-collab-caret-label`/`data-collab-selection` —
+the core emits no class names, so style them directly. See
+[Presence Avatars](/docs/components/presence-avatars) for reading the same awareness instance
+into a UI list of connected collaborators.
+
+## Self-hosting
+
+There is no hosted collaboration backend to pay for. The self-host recipe is a Hocuspocus
+server — see `server/collab-server.ts` in the repository for the reference implementation the
+playground's own `?collab=<room>` mode runs against.

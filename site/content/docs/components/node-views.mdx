@@ -1,0 +1,32 @@
+---
+title: Media & AI Node Views
+description: ReactNodeViewRenderer targets for image, file, video, embed, and an AI block — upload/retry chrome shared across image/file/video.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { NodeViewsDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+Type `/image`, `/file`, `/video`, or `/embed` in the preview to try one.
+
+<ComponentPreview name="node-views">
+  <NodeViewsDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="node-views" />
+
+## Usage
+
+The adapter is always a prop, never a hardcoded mock — wire your own `UploadAdapter`:
+
+```tsx
+image.extend({
+  addNodeView: () =>
+    ReactNodeViewRenderer((props) => <ImageNodeView {...props} adapter={yourUploadAdapter} />),
+});
+```
+
+See the [upload adapter guide](/docs/guides/upload-adapter) for the full `UploadAdapter`
+contract, including retry.

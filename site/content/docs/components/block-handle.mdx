@@ -1,0 +1,19 @@
+---
+title: Block Handle
+description: Gutter hover handle for insert-below, drag-to-reorder, and the block context menu. Requires a TooltipProvider ancestor.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { BlockHandleDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ComponentPreview name="block-handle">
+  <BlockHandleDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="block-handle" />
+
+This component renders icon-only buttons and needs a `TooltipProvider` ancestor (`delay={400}`
+is what the playground itself uses).

@@ -9,16 +9,16 @@ Bun workspace with two publishable packages and one private app.
 @slash-editor/react  packages/react   React bindings: hooks over @tiptap/react
         ▲
         │ workspace:*
-demo-react           demo-react       playground: shadcn Base UI components + Tailwind v4
+site                 site             app: shadcn Base UI components + Tailwind v4 — rendering, playground, docs
 ```
 
 ## Layer contract
 
-| Layer        | Owns                                                                        | Never contains               |
-| ------------ | --------------------------------------------------------------------------- | ---------------------------- |
-| `core`       | Node/mark schema, commands, slash registry, ranking, keyboard state machine | React, JSX, CSS, class names |
-| `react`      | Editor lifecycle, store subscriptions, caret anchors                        | Styling, markup decisions    |
-| `demo-react` | Rendered surfaces (`Command`, `Popover`), icon mapping, Tailwind tokens     | Editing logic                |
+| Layer   | Owns                                                                                      | Never contains               |
+| ------- | ----------------------------------------------------------------------------------------- | ---------------------------- |
+| `core`  | Node/mark schema, commands, slash registry, ranking, keyboard state machine               | React, JSX, CSS, class names |
+| `react` | Editor lifecycle, store subscriptions, caret anchors                                      | Styling, markup decisions    |
+| `site`  | Rendered surfaces (`Command`, `Popover`), icon mapping, Tailwind tokens, playground, docs | Editing logic                |
 
 The rule that keeps the layers honest: **core computes, react coordinates, registry renders.** Core emits no class names; UI layers select on elements and `data-*` attributes.
 
@@ -26,7 +26,7 @@ The rule that keeps the layers honest: **core computes, react coordinates, regis
 
 - `@tiptap/core`, `@tiptap/pm`, `@tiptap/react`, `react`, `react-dom` are **peer dependencies** of both packages. Two copies of `prosemirror-model`/`prosemirror-state` in one app produce schema mismatches that fail at runtime, so the host app owns those versions.
 - `@tiptap/starter-kit` and `@tiptap/suggestion` are regular dependencies of `core`; both declare the ProseMirror packages as peers, so they deduplicate against the host.
-- `demo-react` aliases `@slash-editor/*` to package **sources** in `vite.config.ts`, so HMR covers the whole workspace during development.
+- `site` aliases `@slash-editor/*` to package **sources** via `next.config.mjs`'s `outputFileTracingRoot` and `tsconfig.json` path aliases (`@slash-editor/core`/`@slash-editor/react` → `../packages/*/src/index.ts`), so HMR covers the whole workspace during development.
 
 ## Build graph
 

@@ -1,0 +1,142 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "slash-editor",
+  "homepage": "https://github.com/buiducnhat/slash-editor",
+  "items": [
+    {
+      "name": "slash-menu",
+      "type": "registry:component",
+      "title": "Slash Menu",
+      "description": "Command-palette surface for the '/' block-insert menu: shadcn Command inside an anchored Popover, driven by useSlashMenu.",
+      "registryDependencies": ["command", "@slash-editor/popover"],
+      "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react"],
+      "files": [{ "path": "registry/components/slash-menu.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "bubble-toolbar",
+      "type": "registry:component",
+      "title": "Bubble Toolbar",
+      "description": "Selection-anchored inline formatting toolbar (bold/italic/strike/code) rendered in a Popover, driven by useBubbleToolbar.",
+      "registryDependencies": ["button", "@slash-editor/popover"],
+      "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react"],
+      "files": [{ "path": "registry/components/bubble-toolbar.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "block-handle",
+      "type": "registry:component",
+      "title": "Block Handle",
+      "description": "Gutter overlay: hover handle for insert-below/drag/click grip, drop indicator, and the block context menu. Requires a TooltipProvider ancestor.",
+      "registryDependencies": ["button", "@slash-editor/dropdown-menu", "tooltip"],
+      "dependencies": ["@slash-editor/react", "@tiptap/core", "lucide-react"],
+      "files": [{ "path": "registry/components/block-handle.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "mention-menu",
+      "type": "registry:component",
+      "title": "Mention Menu",
+      "description": "Async '@'-mention search surface: shadcn Command inside a Popover, driven by useMention.",
+      "registryDependencies": ["command", "@slash-editor/popover"],
+      "dependencies": ["@slash-editor/react", "@tiptap/core", "lucide-react"],
+      "files": [{ "path": "registry/components/mention-menu.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "link-editor-popover",
+      "type": "registry:component",
+      "title": "Link Editor Popover",
+      "description": "Inline link create/edit popover: href input plus open/remove actions, driven by useLinkEditor.",
+      "registryDependencies": ["button", "input", "@slash-editor/popover", "separator"],
+      "dependencies": ["@slash-editor/react", "@tiptap/core", "lucide-react"],
+      "files": [
+        { "path": "registry/components/link-editor-popover.tsx", "type": "registry:component" }
+      ]
+    },
+    {
+      "name": "comment-panel",
+      "type": "registry:component",
+      "title": "Comment Panel",
+      "description": "Sidebar comment surface composing useComments (document anchors) with a host-provided CommentThreadStore (thread bodies).",
+      "registryDependencies": ["button", "textarea"],
+      "dependencies": [
+        "@slash-editor/core",
+        "@slash-editor/react",
+        "@tiptap/core",
+        "@tiptap/react"
+      ],
+      "files": [{ "path": "registry/components/comment-panel.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "presence-avatars",
+      "type": "registry:component",
+      "title": "Presence Avatars",
+      "description": "Row of colored initials for connected collaborators, driven by usePresence against any awareness-shaped provider.",
+      "registryDependencies": ["tooltip"],
+      "dependencies": ["@slash-editor/react"],
+      "files": [
+        { "path": "registry/components/presence-avatars.tsx", "type": "registry:component" }
+      ]
+    },
+    {
+      "name": "node-views",
+      "type": "registry:component",
+      "title": "Media & AI Node Views",
+      "description": "ReactNodeViewRenderer targets for image/file/video (shared upload/retry chrome, adapter passed as a prop — never a hardcoded mock), embed, and aiBlock. Wire with `<Type>.extend({ addNodeView: () => ReactNodeViewRenderer((props) => <XNodeView {...props} adapter={yourAdapter} />) })`.",
+      "registryDependencies": ["button", "input"],
+      "dependencies": ["@slash-editor/core", "@tiptap/react", "lucide-react"],
+      "files": [
+        {
+          "path": "registry/components/nodes/uploadable-node-view.tsx",
+          "type": "registry:component"
+        },
+        { "path": "registry/components/nodes/image-node-view.tsx", "type": "registry:component" },
+        { "path": "registry/components/nodes/file-node-view.tsx", "type": "registry:component" },
+        { "path": "registry/components/nodes/video-node-view.tsx", "type": "registry:component" },
+        { "path": "registry/components/nodes/embed-node-view.tsx", "type": "registry:component" },
+        { "path": "registry/components/nodes/ai-block-node-view.tsx", "type": "registry:component" }
+      ]
+    },
+    {
+      "name": "popover",
+      "type": "registry:ui",
+      "title": "Popover (anchor-aware)",
+      "description": "shadcn Popover with an `anchor` prop forwarded to the Positioner, so a surface can anchor to the caret or a block's rect instead of a trigger element. Overrides the default shadcn `popover` — every slash-editor surface that anchors off-element depends on this, not the stock component.",
+      "files": [{ "path": "registry/components/ui/popover.tsx", "type": "registry:ui" }]
+    },
+    {
+      "name": "dropdown-menu",
+      "type": "registry:ui",
+      "title": "Dropdown Menu (anchor-aware)",
+      "description": "shadcn Dropdown Menu with an `anchor` prop forwarded to the Positioner, for the same reason as the anchor-aware Popover. Overrides the default shadcn `dropdown-menu`.",
+      "files": [{ "path": "registry/components/ui/dropdown-menu.tsx", "type": "registry:ui" }]
+    },
+    {
+      "name": "slash-editor-kit",
+      "type": "registry:block",
+      "title": "slash-editor Kit",
+      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, link editor, comment panel, presence avatars, and media/AI node views.",
+      "registryDependencies": [
+        "@slash-editor/slash-menu",
+        "@slash-editor/bubble-toolbar",
+        "@slash-editor/block-handle",
+        "@slash-editor/mention-menu",
+        "@slash-editor/link-editor-popover",
+        "@slash-editor/comment-panel",
+        "@slash-editor/presence-avatars",
+        "@slash-editor/node-views"
+      ],
+      "css": {
+        ".slash-content [data-placeholder]::before": {
+          "content": "attr(data-placeholder)",
+          "color": "var(--color-muted-foreground)",
+          "pointer-events": "none",
+          "float": "left",
+          "height": "0"
+        },
+        ".slash-content [data-decoration-id].is-empty::after": {
+          "content": "attr(data-decoration-content)",
+          "color": "var(--color-muted-foreground)",
+          "pointer-events": "none"
+        }
+      }
+    }
+  ]
+}

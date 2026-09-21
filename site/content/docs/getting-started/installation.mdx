@@ -1,0 +1,48 @@
+---
+title: Installation
+description: Install the headless packages, their peer dependencies, and the .slash-content styling every editor instance needs.
+---
+
+## Packages
+
+```bash
+bun add @slash-editor/core @slash-editor/react
+```
+
+`@tiptap/core`, `@tiptap/pm`, and `@tiptap/react` are peer dependencies — install them in your
+own app so you never end up with two ProseMirror instances:
+
+```bash
+bun add @tiptap/core @tiptap/pm @tiptap/react
+```
+
+## UI components
+
+The rendered UI (slash menu, bubble toolbar, node views, …) is not part of `@slash-editor/react`.
+It's a real [shadcn](https://ui.shadcn.com) registry — you install the source into your own app
+and own it outright. See [Components](/docs/components/slash-menu) for the full catalog, or
+jump straight to the [registry setup](/docs/getting-started/registry).
+
+## Styling
+
+Every registry component expects an ancestor with the `.slash-content` class — that's the only
+class name the editor core itself relies on; everything else targets plain ProseMirror-rendered
+elements (`h1`, `blockquote`, `[data-type="callout"]`, …), so you fully own the CSS. Installing
+the `slash-editor-kit` block also adds two placeholder rules `.slash-content` needs for the
+empty-block and empty-decoration markers Tiptap renders:
+
+```css
+.slash-content [data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: theme(colors.muted.foreground);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.slash-content [data-decoration-id].is-empty::after {
+  content: attr(data-decoration-content);
+  color: theme(colors.muted.foreground);
+  pointer-events: none;
+}
+```

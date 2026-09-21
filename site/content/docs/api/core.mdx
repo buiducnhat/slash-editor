@@ -1,0 +1,87 @@
+---
+title: "@slash-editor/core"
+description: Extensions, schema, commands, and serializers. No React, no CSS.
+---
+
+The engine: Tiptap/ProseMirror extensions, the baseline schema, and the commands each extension
+adds. Nothing here touches React or renders a class name — the UI layer (a registry component,
+or your own) owns markup and styling entirely.
+
+## createBlockKit
+
+```ts
+createBlockKit(options?: BlockKitOptions): Extensions
+```
+
+The baseline schema `useSlashEditor`'s `blockKit` option configures. See the
+[block kit guide](/docs/guides/block-kit) for the full option reference and the opt-out pattern
+for custom `NodeView`s.
+
+## Slash commands
+
+```ts
+defaultSlashItems: SlashItem[]
+filterSlashItems(items: SlashItem[], query: string, editor?: Editor): SlashItem[]
+```
+
+See the [slash items guide](/docs/guides/slash-items).
+
+## Upload contract
+
+```ts
+interface UploadAdapter<TResult extends UploadResult = UploadResult> {
+  upload(file: File, context: UploadContext): Promise<TResult>;
+}
+runUpload(options): void
+retryUpload(options): boolean
+```
+
+Shared by `image`, `file`, and `video`. See the [upload adapter guide](/docs/guides/upload-adapter).
+
+## AI stream contract
+
+```ts
+interface StreamAdapter {
+  stream(request: AiRequest, context: StreamContext): AsyncIterable<string>;
+}
+defaultAiSlashActions: AiSlashAction[]
+createAiSlashItems(options): SlashItem[]
+```
+
+See the [AI stream adapter guide](/docs/guides/ai-stream-adapter).
+
+## Collaboration
+
+```ts
+collaboration(options: CollaborationOptions): Extensions
+```
+
+Wraps Tiptap's official `Collaboration`/`CollaborationCaret` over `y-prosemirror`. See the
+[collaboration guide](/docs/guides/collaboration).
+
+## Comments
+
+```ts
+comment(options?: Partial<CommentOptions>): Mark
+activeThreadIds(state: EditorState): string[]
+```
+
+The mark anchors a thread id only — thread bodies live in a host-provided
+`CommentThreadStore`. See the [comments guide](/docs/guides/comments).
+
+## Mentions
+
+```ts
+mention(options: Partial<MentionOptions> & Pick<MentionOptions, "items">): Node
+```
+
+See the [mentions guide](/docs/guides/mentions).
+
+## Baseline nodes and marks
+
+`Callout`, `Toggle` (Tiptap's `Details` plus a heading level and Notion shorthands `>` /
+`# >`/`## >`/`### >`), `Quote` (blockquote whose shorthand is `"`, freeing `>` for the toggle),
+`Image`, `File`, `Video`, `Embed`, `TableKit`, `Column`/`Columns`, `Placeholder`,
+`BlockId`, `BlockDrag`, `BubbleToolbar`, `LinkEditor`, `SlashCommand` — each individually
+opt-out-able from `createBlockKit` via `false`, and each exported directly for direct extension
+(`Image.extend({ ... })`) when you need a custom `NodeView`.

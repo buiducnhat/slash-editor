@@ -47,49 +47,65 @@ packages/react/               @slash-editor/react
   src/use-presence.ts         usePresence(): awareness state -> peer list, cached/event-driven
   tsconfig.json               resolves core via ../core/dist/index.d.mts
 
-demo-react/                   playground, docs site, and registry host
-  server/collab-server.ts     Hocuspocus self-host recipe: Hocuspocus class bridged to Bun.serve via crossws
-  server/tsconfig.json        Bun types scope, separate from the browser app's tsconfig
-  index.html                  entry, `class="dark"` on <html>
-  vite.config.ts              react + tailwind plugins, workspace source aliases
-  components.json             shadcn config: base UI, nova preset, lucide icons
-  src/main.tsx                React root, StrictMode on
-  src/app.tsx                 page shell: SoloApp (default) / CollabApp (`?collab=<room>` opt-in)
-  src/components/slash-menu.tsx  Command + Popover surface, icon-key mapping
-  src/components/bubble-toolbar.tsx  Popover-anchored mark toggle row
-  src/components/comment-panel.tsx   sidebar: useComments + CommentThreadStore, compose/resolve/reopen
-  src/components/presence-avatars.tsx  usePresence() as a row of colored initials with a Tooltip
-  src/components/mention-menu.tsx    Command + Popover surface for @-mentions, loading row
-  src/components/link-editor-popover.tsx  Input-driven popover: href, Open/Remove when editing
-  src/components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video; `adapter` passed as a prop, never imported
-  src/components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image; takes `adapter` as a prop
-  src/components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File; takes `adapter` as a prop
-  src/components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video; takes `adapter` as a prop
-  src/components/nodes/embed-node-view.tsx   ReactNodeViewRenderer target for Embed: URL input, bookmark/iframe
-  src/components/nodes/ai-block-node-view.tsx  ReactNodeViewRenderer target for AiBlock: stream/Keep/Discard/Try again
-  src/components/top-nav.tsx          Playground/Docs links, active-route highlighting
-  src/components/install-command.tsx  copy-paste `shadcn add <url>` box, shared by the overview and item pages
-  src/components/ui/*.tsx     shadcn components (added via CLI, owned by the repo)
-  src/routes/docs-app.tsx     `/docs` + `/docs/:item` shell: sidebar nav, 404 fallback for an unknown slug
-  src/routes/docs-overview.tsx  install-everything command + the full item list
-  src/routes/docs-item.tsx    one live, isolated demo editor per registry item (`DEMOS` slug lookup)
-  src/lib/utils.ts            re-exports cn from the `cn` package
-  src/lib/router.tsx          usePathname()/navigate()/Link: pushState routing, no new dependency
-  src/lib/registry-items.ts   docs-facing item metadata + registryUrl()/installCommand()
-  src/lib/node-view-extensions.tsx  nodeViewExtensions(): the one place `mockUploadAdapter` is wired into image/file/video
-  src/lib/use-demo-editor.ts  useSlashEditor + playground defaults: the lucide chevron for every toggle
-  src/lib/fake-presence.ts    createFakePresenceProvider(): static awareness for the presence-avatars docs page
-  src/lib/collaboration.ts    createDemoCollaboration(): shared Y.Doc + HocuspocusProvider per room
-  src/lib/comment-store.ts    createMockCommentThreadStore(): in-memory CommentThreadStore
-  src/lib/upload-adapter.ts   mockUploadAdapter: data-URL upload, `fail-`-prefixed names reject once
-  src/lib/mention-provider.ts mockMentionProvider: filters an in-memory directory after a delay
-  src/lib/stream-adapter.ts   mockStreamAdapter: per-action canned response, `trigger-ai-error` fails once
-  src/styles.css              Tailwind v4 entry, theme tokens, .slash-content rules
-  playwright.config.ts        Playwright config: testDir tests/e2e, webServer runs `bun run dev` + `collab:server`
-  tests/e2e/support.ts        dragBlock(), pasteHtml(), focusTrailingParagraph() helpers
-  tests/e2e/insert.spec.ts    slash menu: alias insert, Escape, popover close
-  tests/e2e/reorder.spec.ts   gutter-handle drag reorders a sibling
-  tests/e2e/nest.spec.ts      rightward drag nests a block inside a list item
+site/                          the one app: playground, docs site, landing page, and the shadcn registry host (Next.js + Fumadocs)
+  next.config.mjs              fumadocs-mdx plugin
+  source.config.ts             Config API: `docs` collection over `content/docs`, persisted to `.source/` so `tsc` sees real page types outside a live `next dev`/`next build`
+  tsconfig.json                `@/*` → `./registry/*` (registry component internals resolve unchanged), `~/*` → `./*` (site's own modules)
+  components.json              shadcn config: base UI, nova preset, lucide icons — `tailwind.css: app/globals.css`
+  registry.json                shadcn registry manifest: granular items + `slash-editor-kit` umbrella block, file paths under `registry/`
+  scripts/prebuild.ts          `shadcn build` into `public/r/`; runs via `build:prepare` before `next build`
+  registry/                    the registry component source `shadcn build`/`shadcn add` ships — this repo's UI, owned and edited directly
+    components/slash-menu.tsx  Command + Popover surface, icon-key mapping
+    components/bubble-toolbar.tsx  Popover-anchored mark toggle row
+    components/block-handle.tsx    gutter hover handle, drag/click grip, drop indicator, block context menu
+    components/comment-panel.tsx   sidebar: useComments + CommentThreadStore, compose/resolve/reopen
+    components/presence-avatars.tsx  usePresence() as a row of colored initials with a Tooltip
+    components/mention-menu.tsx    Command + Popover surface for @-mentions, loading row
+    components/link-editor-popover.tsx  Input-driven popover: href, Open/Remove when editing
+    components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video; `adapter` passed as a prop, never imported
+    components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image; takes `adapter` as a prop
+    components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File; takes `adapter` as a prop
+    components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video; takes `adapter` as a prop
+    components/nodes/embed-node-view.tsx   ReactNodeViewRenderer target for Embed: URL input, bookmark/iframe
+    components/nodes/ai-block-node-view.tsx  ReactNodeViewRenderer target for AiBlock: stream/Keep/Discard/Try again
+    components/ui/*.tsx        shadcn components (added via CLI, owned by the repo); `popover.tsx`/`dropdown-menu.tsx` forward `anchor` for caret/block-rect positioning
+    lib/utils.ts               re-exports cn from the `cn` package
+    lib/node-view-extensions.tsx  nodeViewExtensions(): the one place `mockUploadAdapter` is wired into image/file/video
+    lib/use-demo-editor.ts     useSlashEditor + shared editor defaults: the lucide chevron for every toggle
+    lib/fake-presence.ts       createFakePresenceProvider(): static awareness for the presence-avatars demo
+    lib/collaboration.ts       createDemoCollaboration(): shared Y.Doc + HocuspocusProvider per room
+    lib/comment-store.ts       createMockCommentThreadStore(): in-memory CommentThreadStore
+    lib/upload-adapter.ts      mockUploadAdapter: data-URL upload, `fail-`-prefixed names reject once
+    lib/mention-provider.ts    mockMentionProvider: filters an in-memory directory after a delay
+    lib/stream-adapter.ts      mockStreamAdapter: per-action canned response, `trigger-ai-error` fails once
+    theme.css                  Nova design tokens: base scale, dark-mode overrides, `@theme inline` mapping
+    slash-content.css          `.slash-content` component layer — the only class name the editor core relies on
+  server/collab-server.ts      Hocuspocus self-host recipe: Hocuspocus class bridged to Bun.serve via crossws
+  server/tsconfig.json         Bun types scope, separate from the app's own tsconfig
+  app/layout.tsx                RootProvider + TooltipProvider (registry components need a Tooltip ancestor)
+  app/globals.css               Tailwind v4 entry: fumadocs preset, then `registry/theme.css` + `registry/slash-content.css`
+  app/(home)/layout.tsx         HomeLayout (shared nav: Docs/Playground/GitHub, search, theme toggle) for landing + playground
+  app/(home)/page.tsx           landing page: hero with a live `SlashMenuDemo`, feature grid, install snippet
+  app/(home)/playground/page.tsx  the playground route: solo editor, or `?collab=<room>` via `RoomJoinForm`
+  app/docs/layout.tsx           DocsLayout: sidebar/TOC from `lib/source.ts`'s page tree
+  app/docs/[[...slug]]/page.tsx MDX page renderer
+  app/api/search/route.ts       Fumadocs search endpoint
+  lib/source.ts                 `loader()` over the generated `docs` collection
+  lib/layout.shared.tsx         shared nav links: Docs, Playground, GitHub
+  components/mdx.tsx            MDX component defaults: Tabs, AutoTypeTable (ts-morph generator)
+  components/registry/component-preview.tsx  `<ComponentPreview name="…">`: reads `registry/components/*` from disk for the Code tab, `children` is the live Preview
+  components/registry/install-command.tsx    `<InstallCommand item="…">` and `<RegistrySnippet />`
+  components/demo/registry-demos.tsx          one demo per registry item, wiring the same editor defaults the playground uses
+  components/demo/registry-demos.preview.tsx  `next/dynamic(…, { ssr: false })` wrapper per demo — ProseMirror needs a real DOM
+  components/playground/playground-editor.tsx  SoloEditor / CollabEditor, ported from the former standalone app's `app.tsx`
+  components/playground/playground-editor.preview.tsx  `ssr: false` wrapper — same DOM-globals constraint as the demo previews
+  components/landing/feature-grid.tsx         landing page feature cards
+  content/docs/**/*.mdx         getting-started/, components/ (one per registry item + the kit), guides/, api/
+  playwright.config.ts          testDir tests/e2e, webServer runs `bun run dev` + `collab:server`
+  tests/e2e/support.ts          dragBlock(), pasteHtml(), focusTrailingParagraph() helpers
+  tests/e2e/insert.spec.ts      slash menu: alias insert, Escape, popover close
+  tests/e2e/reorder.spec.ts     gutter-handle drag reorders a sibling
+  tests/e2e/nest.spec.ts        rightward drag nests a block inside a list item
   tests/e2e/paste-notion.spec.ts        Notion clipboard HTML normalization
   tests/e2e/paste-google-docs.spec.ts   Google Docs clipboard HTML normalization
   tests/e2e/media-upload.spec.ts        image upload: placeholder → uploading → ready, and error → retry → ready
@@ -99,24 +115,33 @@ demo-react/                   playground, docs site, and registry host
   tests/e2e/ai-actions.spec.ts          slash action → stream → keep/discard, and error → retry
   tests/e2e/toggle-blocks.spec.ts       `>`/`"` shorthands, toggle headings, level survives open/close
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
-demo-react/registry.json      shadcn registry manifest: granular items + `slash-editor-kit` umbrella block
 .github/workflows/release.yml tag-triggered (`v*`) publish: build, `vp check`, registry schema gate, `bun publish` core then react
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases
-vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, vitest excludes demo-react/tests/e2e
+vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, vitest excludes site/tests/e2e
 ```
 
 ## Entry points
 
-| Purpose          | Path                                                       |
-| ---------------- | ---------------------------------------------------------- |
-| Core public API  | `packages/core/src/index.ts`                               |
-| React public API | `packages/react/src/index.ts`                              |
-| Demo application | `demo-react/src/main.tsx` → `src/app.tsx`                  |
-| Toolchain config | `vite.config.ts` (root), `demo-react/vite.config.ts` (app) |
+| Purpose                   | Path                                                          |
+| ------------------------- | ------------------------------------------------------------- |
+| Core public API           | `packages/core/src/index.ts`                                  |
+| React public API          | `packages/react/src/index.ts`                                 |
+| Playground                | `site/app/layout.tsx` → `app/(home)/playground/page.tsx`      |
+| Docs site + landing       | `site/app/layout.tsx` → `app/(home)/page.tsx` / `app/docs/**` |
+| Registry component source | `site/registry/components/*`                                  |
+| Toolchain config          | `vite.config.ts` (root), `site/next.config.mjs`               |
 
 ## Generated and ignored
 
-`dist/` in each package (built by `vp pack`), `node_modules/` (bun isolated linker: packages have their own `node_modules`), `demo-react/public/r/*.json` (built by `shadcn build` from `demo-react/registry.json`, served as the live registry). Nothing else is generated into the tree — declarations must never appear beside `packages/core/src/*.ts`; if they do, a build resolved core through the source alias.
+`dist/` in each package (built by `vp pack`), `node_modules/` (bun isolated linker: packages have
+their own `node_modules`), `site/public/r/*.json` (built by `shadcn build` from `site/registry.json`
 
-`demo-react/test-results/`, `demo-react/playwright-report/`, `demo-react/.last-run.json` (Playwright run artifacts, gitignored).
+- `site/registry/**`, run by `site/scripts/prebuild.ts`) — gitignored, never edit directly.
+  `site/.source/` and `site/.next/` are fumadocs-mdx/Next build artifacts.
+
+Nothing else is generated into the tree — declarations must never appear beside
+`packages/core/src/*.ts`; if they do, a build resolved core through the source alias.
+
+`site/test-results/`, `site/playwright-report/`, `site/.last-run.json` (Playwright run artifacts,
+gitignored).

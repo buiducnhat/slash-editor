@@ -1,0 +1,54 @@
+---
+title: Quick Start
+description: Wire up a minimal editor with the slash menu in a few lines.
+---
+
+`createBlockKit()` — the default the `blockKit` option falls back to — registers the slash menu
+automatically. The core ranks items and owns the keyboard state machine; `useSlashMenu(editor)`
+exposes that state plus a caret anchor, and the UI layer renders it.
+
+```tsx
+import { EditorContent, useSlashEditor, useSlashMenu } from "@slash-editor/react";
+import { SlashMenu } from "@/components/slash-menu"; // from the registry
+
+export function Editor() {
+  const editor = useSlashEditor({
+    content: "<p>Hello</p>",
+    editorProps: { attributes: { class: "slash-content" } },
+  });
+
+  return (
+    <>
+      <EditorContent editor={editor} />
+      {editor && <SlashMenu editor={editor} />}
+    </>
+  );
+}
+```
+
+## Custom slash items
+
+Custom items are plain objects. `run` receives the editor and the range covering `/query`:
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    slash: {
+      items: [
+        ...defaultSlashItems,
+        {
+          id: "date-stamp",
+          title: "Date stamp",
+          group: "Basic blocks",
+          aliases: ["today", "date"],
+          run: ({ editor, range }) =>
+            editor.chain().focus().insertContentAt(range, new Date().toLocaleDateString()).run(),
+        },
+      ],
+    },
+  },
+});
+```
+
+See the [slash items guide](/docs/guides/slash-items) for ranking, aliases, and groups, or the
+[block kit guide](/docs/guides/block-kit) for every `createBlockKit()` option.

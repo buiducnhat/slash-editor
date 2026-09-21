@@ -1,0 +1,12 @@
+{
+  "title": "Guides",
+  "pages": [
+    "slash-items",
+    "block-kit",
+    "upload-adapter",
+    "mentions",
+    "ai-stream-adapter",
+    "collaboration",
+    "comments"
+  ]
+}

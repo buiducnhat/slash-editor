@@ -1,0 +1,122 @@
+---
+title: "@slash-editor/react"
+description: Hooks and headless primitives over @tiptap/react.
+---
+
+Every hook here composes a core extension's `editor.storage` (subscribe/state) with the
+extension's own commands — none owns behavior the core doesn't already expose.
+
+## useSlashEditor
+
+```tsx
+useSlashEditor(options?: UseSlashEditorOptions): Editor | null
+```
+
+Extends `@tiptap/react`'s `useEditor` options with two fields:
+
+| Option        | Type                       | Description                                                                                                                                                            |
+| ------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blockKit?`   | `BlockKitOptions \| false` | Baseline block schema options, or `false` to start from an empty schema and supply everything through `extensions`. See the [block kit guide](/docs/guides/block-kit). |
+| `extensions?` | `Extensions`               | Extensions appended after the block kit.                                                                                                                               |
+
+Every other option passes through to `useEditor`. Two defaults differ: `immediatelyRender: false`
+(so the same component renders under SSR without a hydration mismatch), and extensions are
+resolved once per editor instance — ProseMirror cannot swap a schema on a live document, so later
+changes to `blockKit`/`extensions` are ignored rather than silently half-applied.
+
+## useSlashMenu
+
+```tsx
+useSlashMenu(editor: Editor | null): SlashMenu
+```
+
+Exposes the slash command's ranked state plus a caret anchor:
+
+```ts
+interface SlashMenu {
+  open: boolean;
+  query: string;
+  items: SlashItem[];
+  activeIndex: number;
+  activeItem: SlashItem | null;
+  anchor: SlashMenuAnchor | null;
+  setActiveIndex: (index: number) => void;
+  select: (index?: number) => void;
+  close: () => void;
+}
+```
+
+## useBubbleToolbar
+
+```tsx
+useBubbleToolbar(editor: Editor | null): BubbleToolbar
+```
+
+Selection-anchored formatting state — `items` already filtered by each item's `when`.
+
+## useMention
+
+```tsx
+useMention(editor: Editor | null): MentionMenu
+```
+
+Same `subscribe`/`setActiveIndex`/`select`/`close` shape as `useSlashMenu`, plus `loading` while
+the async provider's promise for the current query is in flight. See the
+[mentions guide](/docs/guides/mentions).
+
+## useLinkEditor
+
+```tsx
+useLinkEditor(editor: Editor | null): LinkEditor
+```
+
+Owns only visibility and a draft `href` — applying or removing the link calls the `link` mark's
+own `setLink`/`unsetLink` directly.
+
+## useComments
+
+```tsx
+useComments(editor: Editor | null, options?: UseCommentsOptions): Comments
+```
+
+<AutoTypeTable path="../packages/react/src/use-comments.ts" name="UseCommentsOptions" />
+
+See the [comments guide](/docs/guides/comments) for the `CommentThreadStore` contract `store`
+expects.
+
+## usePresence
+
+```tsx
+usePresence(provider: PresenceProvider | null): PresencePeer[]
+```
+
+Reads any awareness-shaped provider — the same duck-typed surface
+[collaboration](/docs/guides/collaboration) uses — into a plain array of connected peers.
+
+## useActiveItemScroll
+
+```tsx
+useActiveItemScroll(options: ActiveItemScrollOptions): void
+```
+
+<AutoTypeTable
+  path="../packages/react/src/use-active-item-scroll.ts"
+  name="ActiveItemScrollOptions"
+/>
+
+Keeps a menu's active row scrolled into view as `activeIndex` changes — used by both
+[Slash Menu](/docs/components/slash-menu) and [Mention Menu](/docs/components/mention-menu).
+
+## useBlockDrag
+
+```tsx
+useBlockDrag(editor: Editor | null): BlockDrag
+```
+
+Drag/insert-handle state consumed by [Block Handle](/docs/components/block-handle).
+
+## Re-exported from @tiptap/react
+
+`EditorContent`, `EditorContext`, `EditorProvider`, `useCurrentEditor`, `useEditorState` —
+unchanged, re-exported so a consumer never needs a direct `@tiptap/react` import for the common
+path.

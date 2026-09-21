@@ -340,7 +340,7 @@ Every M2 node is `false`-opt-out-able from `createBlockKit`, the same seam M1 us
 `slash`/`blockId`/`drag`/`bubbleToolbar`. A host that needs a `NodeView` (e.g. React) opts the
 baseline node out and supplies its own via `extend`, keeping a single schema registration:
 `Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) })` — see
-`demo-react/src/app.tsx` and `src/components/nodes/*`.
+`site/components/playground/playground-editor.tsx` and `site/registry/components/nodes/*`.
 
 ```ts
 // mention.ts — @-mention node built on @tiptap/suggestion's native async provider support.
@@ -660,13 +660,13 @@ outside the editor (an avatar row, an "N online" badge).
 
 ## Demo surface
 
-`demo-react/src/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components, with a fallback icon so an unmapped key can never render a blank slot. Each row is one line — icon, title, `shortcut` — and `description` becomes the row's `title` tooltip.
+`site/registry/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components, with a fallback icon so an unmapped key can never render a blank slot. Each row is one line — icon, title, `shortcut` — and `description` becomes the row's `title` tooltip.
 
-`demo-react/src/components/bubble-toolbar.tsx` is the reference toolbar: a `Popover` anchored to `useBubbleToolbar().anchor`, `open` fully controlled by `toolbar.open` (no `onOpenChange` — visibility is entirely selection-driven), rendering one `Button` per item with `onMouseDown={(e) => e.preventDefault()}` so a click never blurs the editor before `item.run` fires.
+`site/registry/components/bubble-toolbar.tsx` is the reference toolbar: a `Popover` anchored to `useBubbleToolbar().anchor`, `open` fully controlled by `toolbar.open` (no `onOpenChange` — visibility is entirely selection-driven), rendering one `Button` per item with `onMouseDown={(e) => e.preventDefault()}` so a click never blurs the editor before `item.run` fires.
 
-`demo-react/src/components/block-handle.tsx` is the reference gutter: a hover group (insert-below + drag/click grip, both with `Tooltip`), the drop indicator, and a `DropdownMenu` (Duplicate/Delete) anchored at `menuAnchor` — all `position: fixed` or portal-rendered, positioned from `useBlockDrag`'s anchors, no markup in core. The dragged block's visual fade (`[data-dragging]` in `styles.css`) is a core-owned ProseMirror decoration, not a DOM mutation from the demo — PM's own view reconciliation strips foreign attributes set directly on its managed nodes.
+`site/registry/components/block-handle.tsx` is the reference gutter: a hover group (insert-below + drag/click grip, both with `Tooltip`), the drop indicator, and a `DropdownMenu` (Duplicate/Delete) anchored at `menuAnchor` — all `position: fixed` or portal-rendered, positioned from `useBlockDrag`'s anchors, no markup in core. The dragged block's visual fade (`[data-dragging]` in `styles.css`) is a core-owned ProseMirror decoration, not a DOM mutation from the demo — PM's own view reconciliation strips foreign attributes set directly on its managed nodes.
 
-`demo-react/src/components/nodes/*` are the M2 `NodeView`s, wired into `app.tsx`'s
+`site/registry/components/nodes/*` are the M2 `NodeView`s, wired into `app.tsx`'s
 `useSlashEditor({ blockKit: { image: false, …, extend: [Image.extend({ addNodeView: … }), …] } })`:
 `uploadable-node-view.tsx` is the shared placeholder/progress/error chrome for `image`/`file`/`video`,
 parameterized by an `accept` filter, an icon, and the bound `retry<Type>` command; `image-node-view.tsx`/
@@ -676,22 +676,22 @@ parameterized by an `accept` filter, an icon, and the bound `retry<Type>` comman
 resolves to a data URL after a simulated delay, rejecting once for a `fail-`-prefixed file name so the
 retry affordance (and `tests/e2e/media-upload.spec.ts`) has a real error to recover from.
 
-`demo-react/src/components/mention-menu.tsx` is the reference mention UI: `Popover` + `Command`,
+`site/registry/components/mention-menu.tsx` is the reference mention UI: `Popover` + `Command`,
 the same `shouldFilter={false}`/controlled-`value` shape as `slash-menu.tsx`, plus a loading row for
-`mention.loading`. `demo-react/src/components/link-editor-popover.tsx` renders `useLinkEditor`'s state:
+`mention.loading`. `site/registry/components/link-editor-popover.tsx` renders `useLinkEditor`'s state:
 an `Input` bound to `href`/`setHref` (Enter calls `confirm`), and, only when `editing`, "Open link"/
 "Remove link" buttons — unlike the slash menu and bubble toolbar, this popover's input needs real DOM
 focus to type a URL, so it does not pass `initialFocus={false}`.
 
-`demo-react/src/lib/mention-provider.ts` (`mockMentionProvider`) filters a five-person in-memory
+`site/registry/lib/mention-provider.ts` (`mockMentionProvider`) filters a five-person in-memory
 directory after a simulated delay — a real deployment would fetch from a user-search endpoint instead,
 a distinction `Mention.items` (`(query, { signal }) => Promise<MentionItem[]>`) is agnostic to.
 
-`demo-react/src/components/nodes/ai-block-node-view.tsx` is the `NodeView` for `AiBlock`, wired into
+`site/registry/components/nodes/ai-block-node-view.tsx` is the `NodeView` for `AiBlock`, wired into
 `app.tsx`'s `blockKit: { ai: { adapter: mockStreamAdapter, node: false }, extend: [AiBlock.extend({ addNodeView: … }), …] }`
 — the same opt-out-and-`extend` seam M2 established, generalized to an opt-in node: renders the
 streaming text with a spinner, then Keep (`acceptAiAction`)/Try again (`retryAiAction`)/Discard
-(`discardAiAction`) once `status` settles. `demo-react/src/lib/stream-adapter.ts` (`mockStreamAdapter`)
+(`discardAiAction`) once `status` settles. `site/registry/lib/stream-adapter.ts` (`mockStreamAdapter`)
 yields a canned per-action response word by word after a simulated per-token delay; a context containing
 `"trigger-ai-error"` fails once mid-stream, mirroring `mockUploadAdapter`'s `fail-`-prefixed names.
 

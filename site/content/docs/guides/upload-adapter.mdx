@@ -1,0 +1,32 @@
+---
+title: Upload Adapter
+description: The UploadAdapter contract shared by image, file, and video nodes — plus retry.
+---
+
+`image`, `file`, and `video` share one upload contract. It's a single method:
+
+<AutoTypeTable path="../packages/core/src/upload.ts" name="UploadAdapter" />
+
+```ts
+interface UploadContext {
+  signal: AbortSignal;
+}
+interface UploadResult {
+  url: string;
+}
+```
+
+## Wiring it in
+
+The adapter is always a prop passed to your own `NodeView` — never hardcoded into the registry
+component. See [Media & AI Node Views](/docs/components/node-views) for the full
+`ReactNodeViewRenderer` wiring; the node view itself calls the core's `runUpload`/`retryUpload`
+helpers, which track in-flight/failed uploads in a `PendingUploadRegistry` keyed by block id (not
+position) so retry resends the original `File` without the user picking again.
+
+## Retry
+
+`retryUpload` (re)starts from the last `File` passed to `runUpload` for that block id, or from an
+explicit `override` — the same path covers "attach a file to an empty placeholder" when nothing
+has been attempted yet. A completed upload dispatches with `addToHistory: false`, so it never
+becomes a separate undo step.

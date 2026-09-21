@@ -1,0 +1,21 @@
+---
+title: Comment Panel
+description: Sidebar comment threads anchored to a selection, backed by a host-provided CommentThreadStore.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { CommentPanelDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ComponentPreview name="comment-panel">
+  <CommentPanelDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="comment-panel" />
+
+## Usage
+
+`useComments` owns document anchors; you own thread bodies through a `CommentThreadStore` —
+this demo uses an in-memory mock, but the interface is small enough to back with any store.

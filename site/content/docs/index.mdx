@@ -1,0 +1,29 @@
+---
+title: Introduction
+description: Notion-style block editor for React, headless core on Tiptap/ProseMirror, UI you own.
+---
+
+import { SlashMenuDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+**slash-editor** is a Notion-style block editor for React: a headless core built on
+Tiptap/ProseMirror, React bindings, and shadcn-native UI you own outright. MIT end to end — no
+paid tier, no hosted dependency.
+
+Type `/` on an empty line to open the block menu:
+
+<SlashMenuDemo />
+
+## Workspace
+
+| Package                                      | Role                                                         |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| [`@slash-editor/core`](/docs/api/core)       | Extensions, schema, commands, serializers. No React, no CSS. |
+| [`@slash-editor/react`](/docs/api/react)     | Hooks and headless primitives over `@tiptap/react`.          |
+| [UI components](/docs/components/slash-menu) | A real shadcn registry — install any piece on its own.       |
+
+## Next steps
+
+<Cards>
+  <Card title="Installation" href="/docs/getting-started/installation" />
+  <Card title="Quick start" href="/docs/getting-started/quick-start" />
+</Cards>

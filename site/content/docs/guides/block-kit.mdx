@@ -1,0 +1,37 @@
+---
+title: Block Kit
+description: Every createBlockKit() option — what ships by default, and how to opt a block out.
+---
+
+`createBlockKit(options?)` is what `useSlashEditor`'s `blockKit` option configures. Every M1/M2
+block is individually opt-out-able with `false`, the same seam throughout:
+
+<AutoTypeTable path="../packages/core/src/block-kit.ts" name="BlockKitOptions" />
+
+## Opting a block out for a custom NodeView
+
+A host that needs a real `NodeView` (React, Vue, …) opts the baseline node out and supplies its
+own via `extend`, keeping a single schema registration:
+
+```tsx
+import { Image } from "@slash-editor/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { ImageNodeView } from "@/components/nodes/image-node-view";
+
+useSlashEditor({
+  blockKit: {
+    image: false,
+    extend: [Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) })],
+  },
+});
+```
+
+The [Media & AI Node Views](/docs/components/node-views) component ships exactly this pattern —
+`adapter` is always a prop, never a hardcoded mock.
+
+## No-default options
+
+`mention`, `ai`, and `collaboration` have no default provider/adapter, so they stay unregistered
+until you pass one — see the [mentions](/docs/guides/mentions),
+[AI stream adapter](/docs/guides/ai-stream-adapter), and
+[collaboration](/docs/guides/collaboration) guides.

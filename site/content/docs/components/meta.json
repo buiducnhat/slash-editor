@@ -1,0 +1,14 @@
+{
+  "title": "Components",
+  "pages": [
+    "slash-menu",
+    "bubble-toolbar",
+    "block-handle",
+    "mention-menu",
+    "link-editor-popover",
+    "comment-panel",
+    "presence-avatars",
+    "node-views",
+    "slash-editor-kit"
+  ]
+}

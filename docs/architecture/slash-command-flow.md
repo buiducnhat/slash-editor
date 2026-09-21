@@ -12,7 +12,7 @@ keystroke "/"
       state = { open, query, items, activeIndex, getClientRect }
       listeners.forEach(notify)
   → useSlashMenu(editor)  [useSyncExternalStore]      (packages/react)
-  → <SlashMenu>: Popover(anchor=caret rect) + Command  (demo-react)
+  → <SlashMenu>: Popover(anchor=caret rect) + Command  (site/registry)
 ```
 
 Selection runs the reverse path: `storage.select(index)` → suggestion `command({ editor, range, props: item })` → `item.run({ editor, range })`, which deletes the `/query` range and applies its block in one chain.

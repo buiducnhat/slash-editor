@@ -19,8 +19,8 @@ export default defineConfig({
   },
   fmt: {},
   test: {
-    // Playwright owns `demo-react/tests/e2e/**`; its `test()` fixture isn't
+    // Playwright owns `site/tests/e2e/**`; its `test()` fixture isn't
     // Vitest's, and the two must never share a test runner pass.
-    exclude: ["**/node_modules/**", "**/demo-react/tests/e2e/**"],
+    exclude: ["**/node_modules/**", "**/site/tests/e2e/**"],
   },
 });

@@ -1,0 +1,40 @@
+---
+title: Comments
+description: The comment mark plus a bring-your-own CommentThreadStore.
+---
+
+The `comment` mark anchors a thread id to a text range — nothing else. Thread bodies, authors,
+and resolution state never live in the document:
+
+<AutoTypeTable path="../packages/core/src/comment.ts" name="CommentThreadStore" />
+
+```ts
+interface CommentThread {
+  id: string;
+  status: "open" | "resolved";
+  messages: CommentMessage[];
+}
+interface CommentMessage {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: number;
+}
+```
+
+## Why a store, not a prop
+
+Core never calls `CommentThreadStore` itself — `@slash-editor/react`'s `useComments` composes it
+with the mark's own `setComment`/`unsetComment` commands, the same way `useLinkEditor` composes
+the `link` mark's own commands rather than owning link application itself. `unsetComment` removes
+only that `threadId`'s mark instances from the selection: ProseMirror's built-in `unsetMark` would
+strip every distinct thread anchored there, since the mark type sets `excludes: ""` so overlapping
+threads can coexist.
+
+```tsx
+const store = createYourCommentThreadStore();
+const comments = useComments(editor, { store });
+```
+
+See [Comment Panel](/docs/components/comment-panel) for the rendered sidebar surface — selection
+anchoring, thread list, and reply composer.

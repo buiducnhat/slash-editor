@@ -1,0 +1,50 @@
+---
+title: Slash Items
+description: Custom slash commands, ranking, aliases, and groups.
+---
+
+A `SlashItem` is a plain object — no registration step, no class to extend:
+
+<AutoTypeTable path="../packages/core/src/slash-items.ts" name="SlashItem" />
+
+## Adding items
+
+Spread `defaultSlashItems` and append your own:
+
+```tsx
+import { defaultSlashItems } from "@slash-editor/core";
+import { useSlashEditor } from "@slash-editor/react";
+
+useSlashEditor({
+  blockKit: {
+    slash: {
+      items: [
+        ...defaultSlashItems,
+        {
+          id: "date-stamp",
+          title: "Date stamp",
+          group: "Basic blocks",
+          aliases: ["today", "date"],
+          run: ({ editor, range }) =>
+            editor.chain().focus().insertContentAt(range, new Date().toLocaleDateString()).run(),
+        },
+      ],
+    },
+  },
+});
+```
+
+## Ranking
+
+`run` receives `{ editor, range }` — `range` covers `/query`, including the trigger character.
+`filterSlashItems(items, query, editor)` (also exported, if you want to drive a custom menu UI)
+ranks `title` and `aliases`; `keywords` widen matching without ever being displayed. `when` gates
+an item on schema presence — the baseline items each check their node/mark is registered before
+showing up, so opting a block out of `createBlockKit` also removes its slash entry.
+
+## Groups
+
+`group` is a plain string used only for visual sectioning by the UI layer — the baseline items
+use `"Basic blocks"`, `"Advanced blocks"`, `"Media"`, and `"Structure"`. Groups you invent render
+in whatever order your UI encounters them; the [Slash Menu](/docs/components/slash-menu)
+component preserves insertion order.

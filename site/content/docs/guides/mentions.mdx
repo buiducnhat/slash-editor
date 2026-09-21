@@ -1,0 +1,26 @@
+---
+title: Mentions
+description: Wiring an async @-mention provider.
+---
+
+`mention` has no default — it stays unregistered until you pass `items`:
+
+<AutoTypeTable path="../packages/core/src/mention.ts" name="MentionItem" />
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    mention: {
+      items: (query, { signal }) => yourMentionProvider(query, signal),
+    },
+  },
+});
+```
+
+`items` is built on `@tiptap/suggestion`'s native async provider support: it accepts
+`MentionItem[] | Promise<MentionItem[]>`, and a stale in-flight call is aborted the moment a
+newer keystroke supersedes it — the `signal` argument is that abort. A rejection is caught into
+`onError` and an empty result set, rather than leaving the menu stuck loading.
+
+See the [Mention Menu](/docs/components/mention-menu) component for the rendered async search
+surface, including its loading state.

@@ -24,7 +24,7 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 
 ## Browser regression suite (Playwright)
 
-`demo-react/tests/e2e` (`vp run -F demo-react test:e2e`, config in `demo-react/playwright.config.ts`) drives the actual playground in Chromium — the automated counterpart to the manual checklist below, covering what unit tests structurally cannot: real pointer drags and real paste events.
+`site/tests/e2e` (`vp run -F site test:e2e`, config in `site/playwright.config.ts`) drives the actual playground in Chromium — the automated counterpart to the manual checklist below, covering what unit tests structurally cannot: real pointer drags and real paste events.
 
 | File                        | Covers                                                                                                                                                    |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -62,7 +62,7 @@ Gotchas that cost time getting this suite green, worth knowing before touching i
 For behavior the Playwright suite doesn't cover yet, or while developing a new interaction before it earns a spec: drive the running playground directly.
 
 ```bash
-vp run -F demo-react dev
+vp run -F site dev
 ```
 
 Then either surface:

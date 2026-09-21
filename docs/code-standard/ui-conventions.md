@@ -4,7 +4,7 @@ The project's selling point is UI you own that still looks native to a shadcn ap
 
 ## shadcn usage
 
-- The demo is configured for **Base UI** (`base`), preset `nova`, icon library `lucide`. Check `demo-react/components.json` before assuming an API — Base UI uses `render` props and `Popover.Positioner`, not Radix's `asChild`/`PopoverAnchor`.
+- The demo is configured for **Base UI** (`base`), preset `nova`, icon library `lucide`. Check `site/components.json` before assuming an API — Base UI uses `render` props and `Popover.Positioner`, not Radix's `asChild`/`PopoverAnchor`.
 - Add components with the CLI, never by hand-copying files: `bunx --bun shadcn@latest add <component>`.
 - Read added files afterwards. Fix registry imports that do not match this project's aliases, and swap icon imports to `lucide-react`.
 - Local edits to `src/components/ui/*` are allowed (we own the code) but must be minimal and commented. Current example: `popover.tsx` forwards `anchor` to `Popover.Positioner` for caret anchoring.

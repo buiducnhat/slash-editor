@@ -1,0 +1,28 @@
+---
+title: shadcn Registry
+description: Add the slash-editor registry once, then install any UI piece with shadcn add.
+---
+
+import { RegistrySnippet } from "~/components/registry/install-command.tsx";
+
+The rendered UI is a real shadcn registry, built from this repo's own source. Install any piece
+on its own, or everything at once with the [kit](/docs/components/slash-editor-kit).
+
+## 1. Add the registry (once per project)
+
+Several components depend on this repo's own anchor-aware `popover`/`dropdown-menu` overrides —
+add the registry namespace to `components.json` so `shadcn add` can resolve them. A raw
+`shadcn add <url>` install has no registry context to resolve those cross-references against,
+and 404s.
+
+<RegistrySnippet />
+
+## 2. Install a component
+
+```bash
+bunx --bun shadcn@latest add @slash-editor/slash-menu
+```
+
+Each [component page](/docs/components/slash-menu) has its own install command. Installed files
+land under `src/components/`, alongside the `popover`/`dropdown-menu` overrides they depend on —
+they're yours to edit from there.

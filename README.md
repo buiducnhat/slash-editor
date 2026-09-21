@@ -4,17 +4,18 @@ Notion-style block editor for React: headless core on Tiptap/ProseMirror, UI you
 
 ## Workspace
 
-| Path             | Package               | Role                                                         |
-| ---------------- | --------------------- | ------------------------------------------------------------ |
-| `packages/core`  | `@slash-editor/core`  | Extensions, schema, commands, serializers. No React, no CSS. |
-| `packages/react` | `@slash-editor/react` | Hooks and headless primitives over `@tiptap/react`.          |
-| `demo-react`     | —                     | Playground, docs target, and registry host.                  |
+| Path             | Package               | Role                                                                          |
+| ---------------- | --------------------- | ----------------------------------------------------------------------------- |
+| `packages/core`  | `@slash-editor/core`  | Extensions, schema, commands, serializers. No React, no CSS.                  |
+| `packages/react` | `@slash-editor/react` | Hooks and headless primitives over `@tiptap/react`.                           |
+| `site`           | —                     | The app: playground, docs site, landing page, shadcn registry host (Next.js). |
 
 ## Status
 
-M0–M5 complete — slash menu, block ids, drag handle, media/upload, mentions/AI, real-time
-collaboration, and distribution (npm packages, shadcn registry, docs site) all ship. Full
-breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+M0–M7 complete — slash menu, block ids, drag handle, media/upload, mentions/AI, real-time
+collaboration, distribution (npm packages, shadcn registry), and a single Fumadocs/Next.js app —
+docs site, landing page, and playground — all ship. Full breakdown:
+[`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
 
 ## Installation
 
@@ -30,7 +31,8 @@ own app so you never end up with two ProseMirror instances.
 The rendered UI (slash menu, bubble toolbar, node views, …) is a real shadcn registry, built
 from this repo's own source and hosted at **https://slash-editor-eta.vercel.app** — install any
 piece on its own, or everything at once. Browse live examples and copy-paste commands at
-[`/docs`](https://slash-editor-eta.vercel.app/docs).
+[`/docs`](https://slash-editor-eta.vercel.app/docs), or try the whole thing at
+[`/playground`](https://slash-editor-eta.vercel.app/playground).
 
 Add the registry once, in your project's `components.json`:
 
@@ -60,11 +62,11 @@ Start at [`docs/SUMMARY.md`](docs/SUMMARY.md) — architecture, codebase map, co
 ## Development
 
 ```bash
-vp install            # install workspace dependencies
-vp run -F demo-react dev   # playground on http://localhost:5173
-vp test               # unit tests (headless, no DOM)
-vp run -F demo-react test:e2e   # browser regression suite (Playwright)
-vp check              # format, lint, typecheck
+vp install                  # install workspace dependencies
+vp run -F site dev          # playground + docs site + landing page on http://localhost:3000
+vp test                     # unit tests (headless, no DOM)
+vp run -F site test:e2e     # browser regression suite (Playwright)
+vp check                    # format, lint, typecheck (packages; site has its own `bun run types:check`)
 vp run -F './packages/*' build
 ```
 
@@ -90,7 +92,7 @@ export function Editor() {
 
 `createBlockKit()` registers the slash menu by default. The core ranks items and owns the
 keyboard state machine; `useSlashMenu(editor)` exposes that state plus a caret anchor, and the
-UI layer renders it — see `demo-react/src/components/slash-menu.tsx` for a shadcn
+UI layer renders it — see `site/registry/components/slash-menu.tsx` for a shadcn
 `Command` + `Popover` implementation.
 
 ```tsx
@@ -120,14 +122,17 @@ useSlashEditor({
 });
 ```
 
-## Working on the demo app
+## Working on `site`
 
-`demo-react` (this repo's own playground/docs/registry host, not something you install) is
+`site` (this repo's own playground, docs, and registry host — not something you install) is
 initialized with shadcn **Base UI** (`--base base`) and the `nova` preset. To add a _stock_
 shadcn primitive to it (distinct from installing `@slash-editor` components into your own app —
 see [Installation](#installation) above):
 
 ```bash
-cd demo-react
+cd site
 bunx --bun shadcn@latest add <component>
 ```
+
+The registry component source lives at `site/registry/components/` — see
+[`docs/codebase/directory-structure.md`](docs/codebase/directory-structure.md) for the full map.

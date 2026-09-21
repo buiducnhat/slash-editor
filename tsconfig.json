@@ -24,9 +24,8 @@
   "include": [
     "packages/*/src",
     "packages/*/tests",
-    "demo-react/src",
-    "demo-react/tests",
-    "demo-react/playwright.config.ts",
+    "site/tests",
+    "site/playwright.config.ts",
     "*.ts"
   ]
 }

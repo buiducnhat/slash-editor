@@ -91,8 +91,8 @@ about (and effectively breaks on) the collision. So a host that wants a `NodeVie
 `file`/`video`/`embed`) does not add a second `Image`; it opts the baseline one out
 (`blockKit: { image: false }`) and appends its own `Image.extend({ addNodeView: () => … })` through
 `extend`, the same single-registration path M1 established for `slash`/`blockId`/`drag`/
-`bubbleToolbar`'s `false` seam. `demo-react/src/app.tsx` does this for all four upload-capable/embed
-nodes, rendering React `NodeView`s from `src/components/nodes/*` via `ReactNodeViewRenderer` —
+`bubbleToolbar`'s `false` seam. `site/components/playground/playground-editor.tsx` does this for all four upload-capable/embed
+nodes, rendering React `NodeView`s from `site/registry/components/nodes/*` via `ReactNodeViewRenderer` —
 `table`/`columns` have no such override; their default rendering is interactive enough on its own.
 
 ## Collaboration
@@ -119,11 +119,11 @@ awareness states directly for chrome outside the document (an avatar row), duck-
 awareness shape `collaboration()`'s `CollaborationProvider` option accepts so this package never
 depends on `yjs`/`y-protocols` types.
 
-`demo-react`'s self-host recipe (`server/collab-server.ts`) bridges Hocuspocus's runtime-agnostic
+`site`'s self-host recipe (`server/collab-server.ts`) bridges Hocuspocus's runtime-agnostic
 `Hocuspocus` class to `Bun.serve` via `crossws`'s Bun adapter: `@hocuspocus/server`'s convenience
-`Server` class assumes Node's `node:http` and throws if it detects the `Bun` global. The demo's
-`?collab=<room>` opt-in path (`CollabApp` in `app.tsx`) is a separate component from the default
-`SoloApp`, so no existing spec ever opens a websocket, and `Y.Doc`/`HocuspocusProvider` creation is
+`Server` class assumes Node's `node:http` and throws if it detects the `Bun` global. The playground's
+`?collab=<room>` opt-in path (`CollabEditor` in `playground-editor.tsx`) is a separate component from the default
+`SoloEditor`, so no existing spec ever opens a websocket, and `Y.Doc`/`HocuspocusProvider` creation is
 guarded by a ref (`collabRef.current ??= …`, mirroring `useSlashEditor`'s own extension-latching
 guard) rather than torn down on unmount — like any other browser tab leaving a room, the connection
 closes when the page does.
@@ -158,4 +158,4 @@ calls `CommentThreadStore` itself.
 
 ## Styling seam
 
-Core never emits class names. The demo styles content through `.slash-content` element selectors in `demo-react/src/styles.css`, and menu surfaces come from shadcn components using semantic tokens (`bg-popover`, `text-muted-foreground`). `data-block-type` / `data-block-id` render on every block-capable node via `BlockId`; the drag gutter and drop indicator are `position: fixed` overlays positioned from `useBlockDrag`'s anchors, entirely outside the editor DOM.
+Core never emits class names. The demo styles content through `.slash-content` element selectors in `site/registry/slash-content.css`, and menu surfaces come from shadcn components using semantic tokens (`bg-popover`, `text-muted-foreground`). `data-block-type` / `data-block-id` render on every block-capable node via `BlockId`; the drag gutter and drop indicator are `position: fixed` overlays positioned from `useBlockDrag`'s anchors, entirely outside the editor DOM.

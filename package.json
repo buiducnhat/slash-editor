@@ -10,15 +10,15 @@
   },
   "workspaces": [
     "packages/*",
-    "demo-react"
+    "site"
   ],
   "type": "module",
   "scripts": {
     "build": "vp run -F './packages/*' build",
-    "dev": "vp run -F demo-react dev",
-    "demo": "vp run -F demo-react dev",
+    "dev": "vp run -F site dev",
+    "demo": "vp run -F site dev",
     "test": "vp test",
-    "test:e2e": "vp run -F demo-react test:e2e",
+    "test:e2e": "vp run -F site test:e2e",
     "check": "vp check",
     "release": "bumpp package.json packages/core/package.json packages/react/package.json --execute \"bun install\" --all --commit --tag --push",
     "prepare": "vp config"
@@ -31,6 +31,7 @@
     "vite-plus": "^0.2.4"
   },
   "overrides": {
+    "fumadocs-core": "16.15.12",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"
   },
   "devEngines": {

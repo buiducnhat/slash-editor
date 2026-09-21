@@ -1,0 +1,48 @@
+---
+title: Slash Menu
+description: The '/' block-insert command palette — shadcn Command in an anchored Popover, driven by useSlashMenu.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { SlashMenuDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ComponentPreview name="slash-menu">
+  <SlashMenuDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="slash-menu" />
+
+## Usage
+
+The core ranks items and owns the keyboard state machine; `useSlashMenu(editor)` exposes that
+state plus a caret anchor, and this component renders it.
+
+```tsx
+const menu = useSlashMenu(editor);
+// { open, query, items, activeIndex, activeItem, anchor, setActiveIndex, select, close }
+```
+
+Custom items are plain objects — `run` receives the editor and the range covering `/query`:
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    slash: {
+      items: [
+        ...defaultSlashItems,
+        {
+          id: "date-stamp",
+          title: "Date stamp",
+          group: "Basic blocks",
+          aliases: ["today", "date"],
+          run: ({ editor, range }) =>
+            editor.chain().focus().insertContentAt(range, new Date().toLocaleDateString()).run(),
+        },
+      ],
+    },
+  },
+});
+```

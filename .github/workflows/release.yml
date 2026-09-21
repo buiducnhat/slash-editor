@@ -47,8 +47,8 @@ jobs:
         run: bunx vp check
 
       - name: Validate registry schema
-        working-directory: demo-react
-        run: bun run registry:build
+        working-directory: site
+        run: bunx --bun shadcn build
 
       # `bun pm pack` strips the `workspace:*` protocol and resolves it to a real
       # version — plain `npm publish` from a directory doesn't understand that

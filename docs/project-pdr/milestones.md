@@ -10,6 +10,8 @@ Status legend: **Done** · **In progress** · **Not started**
 | M3 — Mentions & AI     | ✅ Done |
 | M4 — Collaboration     | ✅ Done |
 | M5 — Distribution      | ✅ Done |
+| M6 — Docs site         | ✅ Done |
+| M7 — Single app        | ✅ Done |
 
 ---
 
@@ -127,8 +129,9 @@ _Done when: `shadcn add` installs the menu into a scratch Vite and Next app and 
 - [x] shadcn registry: `demo-react/registry.json`, granular `registry:component` items per editor UI
       piece plus a `slash-editor-kit` umbrella `registry:block`, built via `shadcn build` into
       `public/r/*.json`
-- [x] Docs site built into `demo-react` (`/docs` overview, `/docs/:item` live pages), no new
-      framework dependency
+- [x] ~~Docs site built into `demo-react` (`/docs` overview, `/docs/:item` live pages), no new
+      framework dependency~~ — superseded by M6: replaced with a dedicated Fumadocs/Next.js `site`
+      workspace
 - [x] Release flow: lockstep `bumpp` (root + core + react), tag-triggered GitHub Actions publish
 
 _Landed:_ `registry.json` ships 8 granular items plus the `slash-editor-kit` umbrella block; two of
@@ -168,6 +171,79 @@ stale across three releases (`0.0.1`/`0.0.4`/`0.0.5`, each shipping `@slash-edit
 --all` before the commit), so the resynced lockfile is never left out of the release commit
 again. The broken intermediate versions were unpublished; `0.0.6` is the first release built
 with the fix and is `latest` for both packages.
+
+## M6 — Docs site ✅
+
+_Done when: `/docs` has MDX prose, generated navigation/search, live demos that import the real
+registry components, and API tables generated from source — replacing the hand-rolled
+`demo-react` routes from M5._
+
+- [x] New `site` workspace: Next.js App Router + Fumadocs (`fumadocs-ui`/`core`/`mdx`), Tailwind
+      v4, nova tokens shared with `demo-react` via `theme.css`/`slash-content.css`
+- [x] Alias bridge: `site`'s `@/*` → `demo-react/src/*` (inverse of the usual convention), so
+      registry components resolve verbatim with zero edits
+- [x] `content/docs/**/*.mdx`: getting-started, one page per registry item + the kit, 7 guides,
+      2 API reference pages — sidebar/TOC generated from the file tree, Cmd-K search built in
+- [x] `<ComponentPreview>`: Preview/Code tabs per registry item, Code tab reading
+      `demo-react/src/components/*` from disk so a demo can never drift from the shipped source
+- [x] `<AutoTypeTable>` (`fumadocs-typescript`, Config API + persisted `.source/` types) generates
+      prop tables from `packages/core`/`packages/react` source directly
+- [x] Landing page: hero with a live `SlashMenuDemo`, feature grid, install snippet
+- [x] `demo-react/src/routes/`, `lib/registry-items.ts`, `lib/router.tsx`,
+      `components/install-command.tsx` deleted — `/docs` has one owner
+- [x] `site/scripts/prebuild.ts`: builds the playground (`--base=/playground/`) and the shadcn
+      registry, copies both into `site/public/`; `/playground` and `/r/:name.json` verified
+      byte-identical in behavior against a real `next build`
+
+_Landed:_ The registry and playground don't move — `/r/:name.json` (a hard constraint: published
+`components.json` files already point at it) and `/playground` are pre-built static output
+copied into `site/public/` by `site/scripts/prebuild.ts`, unchanged behavior. Every live demo
+(`components/demo/registry-demos.tsx`) is wrapped `next/dynamic(..., { ssr: false })`
+(`registry-demos.preview.tsx`) — a real ProseMirror `Editor` needs a DOM, and
+`@slash-editor/react` touches DOM globals (`DOMRect`) at module scope, so SSR-ing any demo
+throws. `site/source.config.ts` uses fumadocs-mdx's Config API rather than the Macro API used in
+every upstream example: the Macro API's typed rewrite only exists inside a live
+webpack/Turbopack bundle graph, so a standalone `tsc --noEmit` (this repo's `vp check` convention)
+saw a generic, untyped `PageData` until collections were declared in `source.config.ts` and
+consumed from the generated `.source/` output instead — the same "build artifacts before
+typecheck" shape `packages/react` already requires of `packages/core`. Deploying requires one
+manual step outside version control: the linked Vercel project's Root Directory must be set to
+`site` for Next.js zero-config framework detection — not expressible in `vercel.json` for a
+monorepo subdirectory app. Full design: [`project-pdr/docs-site-design-brief.md`](docs-site-design-brief.md),
+topology: [`architecture/site-topology.md`](../architecture/site-topology.md).
+
+## M7 — Single app ✅
+
+_Done when: `demo-react` no longer exists — the playground is a native route inside `site`,
+sharing its nav, theme, and build pipeline, and the registry component source lives inside
+`site` directly._
+
+- [x] Registry component source (`components/`, `lib/`, `theme.css`, `slash-content.css`) moved
+      from `demo-react/src` into `site/registry/`, same internal structure — `@/*` now resolves
+      locally instead of across a workspace boundary
+- [x] `registry.json` + `components.json` moved into `site/`; `shadcn build` runs directly from
+      `site` with no cross-workspace copy step
+- [x] Playground rebuilt as `app/(home)/playground/page.tsx`: same `SoloEditor`/`CollabEditor`
+      behavior, now under the shared `HomeLayout` nav (Docs/Playground/GitHub, search, theme
+      toggle) instead of a bespoke `TopNav`
+- [x] `?collab=<room>` gains a real join affordance (`RoomJoinForm`) instead of a raw query
+      string being the only entry point; a "Leave room" control returns to the solo editor
+- [x] `demo-react/server/collab-server.ts` moved to `site/server/collab-server.ts`;
+      `site/package.json` gains `collab:server`
+- [x] Playwright suite (13 spec files, `support.ts`) moved to `site/tests/e2e`;
+      `playwright.config.ts` baseURL → `:3000`, every spec's `page.goto("/")` → `/playground`
+- [x] `demo-react` directory deleted; root `package.json` workspaces/scripts, `tsconfig.json`
+      include, `vite.config.ts` vitest excludes, `.gitignore`, and
+      `.github/workflows/release.yml`'s registry-schema-validation step all repointed at `site`
+
+_Landed:_ Two adaptations the straight file-move didn't cover: `lib/collaboration.ts` read
+`import.meta.env.VITE_COLLAB_SERVER_URL` (Vite-only syntax, undefined under Next.js/Turbopack)
+— fixed to `process.env.NEXT_PUBLIC_COLLAB_SERVER_URL`; and a stale `site/public/playground/`
+directory from the old prebuild-copy step would have silently shadowed the new native route,
+caught before it shipped. All 32 Playwright specs pass against the merged app, including the
+two-browser collaboration test against the relocated `collab-server.ts` — the regression suite
+never had to be weakened to land the merge. Full topology:
+[`architecture/site-topology.md`](../architecture/site-topology.md).
 
 ---
 

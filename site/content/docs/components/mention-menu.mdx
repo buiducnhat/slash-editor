@@ -1,0 +1,28 @@
+---
+title: Mention Menu
+description: Async '@'-mention search surface — shadcn Command in a Popover, driven by useMention.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { MentionMenuDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ComponentPreview name="mention-menu">
+  <MentionMenuDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="mention-menu" />
+
+## Usage
+
+Wire an async provider through `blockKit.mention.items`:
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    mention: { items: (query, { signal }) => yourMentionProvider(query, signal) },
+  },
+});
+```

@@ -1,0 +1,42 @@
+---
+title: AI Stream Adapter
+description: The StreamAdapter contract behind AI slash actions.
+---
+
+`ai` has no default adapter — it stays unregistered until you pass one:
+
+<AutoTypeTable path="../packages/core/src/ai-block.ts" name="StreamAdapter" />
+
+```ts
+interface AiRequest {
+  action: string; // the triggering slash action id, e.g. "continue-writing"
+  prompt: string;
+  context: string; // plain-text context the prompt operates on
+}
+interface StreamContext {
+  signal: AbortSignal; // aborted on retry or discard
+}
+```
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    ai: { adapter: yourStreamAdapter },
+  },
+});
+```
+
+## Default actions
+
+`defaultAiSlashActions` ships four items: `continue-writing`, `summarize`, `brainstorm-ideas`,
+`fix-spelling-grammar`. Every generated slash item's `context` is the document text up to the
+slash trigger — an AI slash command never carries a real user text selection the way a bubble
+toolbar action does.
+
+## Lifecycle
+
+`runAiAction` inserts a transient node and starts streaming; `retryAiAction(id)` replays the last
+request from scratch; `acceptAiAction(id)` replaces the node with real paragraph(s) built from
+the streamed text; `discardAiAction(id)` removes the node and aborts any in-flight stream. Unlike
+upload's registry, `PendingAiRegistry` keeps successful entries around (for "try again") and only
+drops them on discard or accept.
