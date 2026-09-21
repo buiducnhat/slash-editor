@@ -1,5 +1,5 @@
 import type { CommentThreadStore } from "@slash-editor/core";
-import { EditorContent, useSlashEditor } from "@slash-editor/react";
+import { EditorContent } from "@slash-editor/react";
 import { useRef } from "react";
 import { Link } from "@/lib/router.tsx";
 import { BlockHandle } from "@/components/block-handle.tsx";
@@ -16,6 +16,7 @@ import { mockMentionProvider } from "@/lib/mention-provider.ts";
 import { nodeViewExtensions } from "@/lib/node-view-extensions.tsx";
 import { addCommand, type RegistryItemMeta } from "@/lib/registry-items.ts";
 import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
+import { useDemoEditor } from "@/lib/use-demo-editor.ts";
 import { cn } from "@/lib/utils.ts";
 
 const EDITOR_CLASS = "slash-content min-h-40 pl-20 pr-10 py-8";
@@ -25,7 +26,7 @@ const CARD_CLASS = cn(
 );
 
 function SlashMenuDemo() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content: "<p>Type <code>/</code> on an empty line to open the menu.</p>",
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
@@ -41,7 +42,7 @@ function SlashMenuDemo() {
 }
 
 function BubbleToolbarDemo() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content: "<p>Select this sentence to see the bubble toolbar appear above it.</p>",
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
@@ -57,7 +58,7 @@ function BubbleToolbarDemo() {
 }
 
 function BlockHandleDemo() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content:
       "<p>Hover just left of a block for the drag/insert handle.</p><p>Try dragging this paragraph above the one before it.</p>",
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
@@ -74,7 +75,7 @@ function BlockHandleDemo() {
 }
 
 function MentionMenuDemo() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content: "<p>Type <code>@</code> to mention a teammate.</p>",
     blockKit: { mention: { items: (query, { signal }) => mockMentionProvider(query, signal) } },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
@@ -91,7 +92,7 @@ function MentionMenuDemo() {
 }
 
 function LinkEditorDemo() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content: '<p>Click this <a href="https://prosemirror.net">link</a> to edit or remove it.</p>',
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
@@ -109,7 +110,7 @@ function LinkEditorDemo() {
 function CommentPanelDemo() {
   const storeRef = useRef<CommentThreadStore | null>(null);
   storeRef.current ??= createMockCommentThreadStore();
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content: "<p>Select some text in this paragraph, then add a comment from the panel.</p>",
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
@@ -141,7 +142,7 @@ function PresenceAvatarsDemo() {
 }
 
 function NodeViewsDemo() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content:
       "<p>Type <code>/image</code>, <code>/file</code>, <code>/video</code>, or <code>/embed</code> to try one.</p>",
     blockKit: {

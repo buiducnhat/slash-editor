@@ -53,6 +53,7 @@
       "name": "@slash-editor/core",
       "version": "0.0.7",
       "dependencies": {
+        "@tiptap/extension-blockquote": "^3.31.3",
         "@tiptap/extension-collaboration": "^3.31.3",
         "@tiptap/extension-collaboration-caret": "^3.31.3",
         "@tiptap/extension-details": "^3.31.3",

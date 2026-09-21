@@ -18,7 +18,10 @@ export type PlaceholderKey =
   | "taskItem"
   | "blockquote"
   | "callout"
-  | "details";
+  | "details"
+  | "toggleHeading1"
+  | "toggleHeading2"
+  | "toggleHeading3";
 
 export interface PlaceholderContext {
   editor: Editor;
@@ -50,6 +53,9 @@ export const defaultPlaceholderText: Record<PlaceholderKey, string> = {
   blockquote: "Quote",
   callout: "Callout",
   details: "Toggle",
+  toggleHeading1: "Toggle heading 1",
+  toggleHeading2: "Toggle heading 2",
+  toggleHeading3: "Toggle heading 3",
 };
 
 const PARENT_KEYS: Record<string, PlaceholderKey> = {
@@ -75,7 +81,11 @@ export function placeholderKeyFor(node: Node, parent: Node | null): PlaceholderK
   }
 
   if (name === "detailsSummary") {
-    return "details";
+    const level = parent?.attrs.level;
+
+    return level === 1 || level === 2 || level === 3
+      ? (`toggleHeading${level}` as PlaceholderKey)
+      : "details";
   }
 
   if (name !== "paragraph") {

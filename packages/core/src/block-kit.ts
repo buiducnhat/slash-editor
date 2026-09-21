@@ -1,6 +1,6 @@
 import type { Extensions } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
-import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
+import { DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import {
   aiBlock,
@@ -21,9 +21,11 @@ import { image, type ImageOptions } from "./image.ts";
 import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
 import { mention, type MentionOptions } from "./mention.ts";
 import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
+import { quote } from "./quote.ts";
 import { defaultSlashItems, type SlashItem } from "./slash-items.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 import { table, type TableKitOptions } from "./table.ts";
+import { toggle, type ToggleOptions } from "./toggle.ts";
 import { video, type VideoOptions } from "./video.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -157,6 +159,14 @@ export interface BlockKitOptions {
    * @default {}
    */
   comment?: Partial<CommentOptions> | false;
+  /**
+   * Toggle (details) node configuration. Options only — the node itself is
+   * unconditional, like blockquote. This is the seam a UI layer uses to
+   * render its own disclosure marker via `renderToggleButton`.
+   *
+   * @default { persist: true }
+   */
+  toggle?: Partial<ToggleOptions>;
 }
 
 const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
@@ -189,6 +199,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ai: aiOptions,
     collaboration: collaborationOptions,
     comment: commentOptions,
+    toggle: toggleOptions,
     extend = [],
   } = options;
 
@@ -207,11 +218,15 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
       // Editing wants clicking a link to select it (feeding LinkEditor's
       // auto-open), never to navigate away mid-edit.
       link: { openOnClick: false, enableClickSelection: true },
+      // `>` belongs to the toggle; quote() re-registers blockquote with the
+      // `"` shorthand instead.
+      blockquote: false,
     }),
+    quote(),
     TaskList,
     TaskItem.configure({ nested: true }),
     Callout,
-    Details.configure({ persist: true }),
+    toggle({ persist: true, ...toggleOptions }),
     DetailsSummary,
     DetailsContent,
     ...(imageOptions === false ? [] : [image(imageOptions)]),

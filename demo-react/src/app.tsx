@@ -1,6 +1,6 @@
 import type { CommentThreadStore } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
-import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
+import { EditorContent, useEditorState } from "@slash-editor/react";
 import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
@@ -16,6 +16,7 @@ import { mockMentionProvider } from "@/lib/mention-provider.ts";
 import { nodeViewExtensions } from "@/lib/node-view-extensions.tsx";
 import { usePathname } from "@/lib/router.tsx";
 import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
+import { useDemoEditor } from "@/lib/use-demo-editor.ts";
 import { cn } from "@/lib/utils.ts";
 import { DocsApp } from "@/routes/docs-app.tsx";
 
@@ -25,7 +26,7 @@ const INITIAL_CONTENT = `
 <h2>Baseline schema</h2>
 <ul>
   <li><p>Headings, lists, quotes, code, rules</p></li>
-  <li><p>Markdown input rules: type <code># </code>, <code>- </code>, or <code>&gt; </code></p></li>
+  <li><p>Markdown input rules: type <code># </code>, <code>- </code>, <code>&gt; </code> for a toggle, or <code>" </code> for a quote</p></li>
 </ul>
 <ul data-type="taskList">
   <li data-type="taskItem" data-checked="true"><p>Ship the slash menu</p></li>
@@ -34,7 +35,11 @@ const INITIAL_CONTENT = `
 <div data-type="callout" data-icon="💡"><p>Callouts wrap block content in a highlighted aside.</p></div>
 <details>
   <summary>Toggle lists collapse content</summary>
-  <div data-type="detailsContent"><p>Type <code>/toggle</code> to insert one.</p></div>
+  <div data-type="detailsContent"><p>Type <code>&gt; </code> or <code>/toggle</code> to insert one.</p></div>
+</details>
+<details data-level="2">
+  <summary>Toggle headings collapse a section</summary>
+  <div data-type="detailsContent"><p>Type <code># </code> then <code>&gt; </code>, or <code>## </code> inside a toggle's title.</p></div>
 </details>
 <blockquote><p>Type <code>/</code> on an empty line to open the block menu.</p></blockquote>
 <pre><code>const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
@@ -76,7 +81,7 @@ function DocumentStats({ editor }: { editor: Editor }) {
 }
 
 function SoloApp() {
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     content: INITIAL_CONTENT,
     blockKit: {
       image: false,
@@ -147,7 +152,7 @@ function CollabApp({ room }: { room: string }) {
   storeRef.current ??= createMockCommentThreadStore(collab.user.name);
   const store = storeRef.current;
 
-  const editor = useSlashEditor({
+  const editor = useDemoEditor({
     blockKit: {
       image: false,
       file: false,

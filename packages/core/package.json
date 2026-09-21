@@ -24,6 +24,7 @@
     "dev": "vp pack --watch"
   },
   "dependencies": {
+    "@tiptap/extension-blockquote": "^3.31.3",
     "@tiptap/extension-collaboration": "^3.31.3",
     "@tiptap/extension-collaboration-caret": "^3.31.3",
     "@tiptap/extension-details": "^3.31.3",

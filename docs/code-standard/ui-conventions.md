@@ -18,6 +18,8 @@ The project's selling point is UI you own that still looks native to a shadcn ap
 - Never set `z-index` on overlay components; Dialog/Popover manage their own stacking.
 - Icons inside components get no sizing classes — the component sizes them. Icons in buttons use `data-icon="inline-start" | "inline-end"`.
 - Editor content is styled through the `.slash-content` layer with plain element selectors, because the core emits no class names.
+- Block markers (the toggle chevron, the to-do checkbox) size themselves to the line box with `h-[1lh]` and never with `mt-*` nudges: a toggle heading changes the font size, and fixed offsets drift with it. Per-level typography goes on the toggle's wrapper (`[data-type="details"][data-level="N"]`) so the summary inherits it and the sibling button matches.
+- Editor surfaces in the playground are created through `useDemoEditor`, not `useSlashEditor` directly — that is where the shared toggle chevron (`blockKit.toggle.renderToggleButton`) is wired, so every demo renders the same marker.
 
 ## Composition
 

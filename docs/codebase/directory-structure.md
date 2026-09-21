@@ -17,6 +17,8 @@ packages/core/src/mention.ts              Mention node, async Suggestion provide
 packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
 packages/core/src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
 packages/core/src/table.ts                table(): configures @tiptap/extension-table's TableKit
+packages/core/src/quote.ts                Blockquote with the `"` shorthand (StarterKit's `>` rule is disabled)
+packages/core/src/toggle.ts               Toggle node: Details + `level` attr, `>` and `# >` shorthands, setToggle()
 packages/core/src/upload.ts               UploadAdapter contract, runUpload/retryUpload, PendingUploadRegistry
 packages/core/src/video.ts                Video node: upload/retry shape
 packages/core/tests/ai-block.test.ts      schema defaults/JSON round trip, opt-in wiring, createAiSlashItems
@@ -75,6 +77,7 @@ demo-react/                   playground, docs site, and registry host
   src/lib/router.tsx          usePathname()/navigate()/Link: pushState routing, no new dependency
   src/lib/registry-items.ts   docs-facing item metadata + registryUrl()/installCommand()
   src/lib/node-view-extensions.tsx  nodeViewExtensions(): the one place `mockUploadAdapter` is wired into image/file/video
+  src/lib/use-demo-editor.ts  useSlashEditor + playground defaults: the lucide chevron for every toggle
   src/lib/fake-presence.ts    createFakePresenceProvider(): static awareness for the presence-avatars docs page
   src/lib/collaboration.ts    createDemoCollaboration(): shared Y.Doc + HocuspocusProvider per room
   src/lib/comment-store.ts    createMockCommentThreadStore(): in-memory CommentThreadStore
@@ -94,6 +97,7 @@ demo-react/                   playground, docs site, and registry host
   tests/e2e/mention.spec.ts             async filter, chip insertion, empty state, Escape
   tests/e2e/link-editor.spec.ts         create over a selection, click-to-edit, remove
   tests/e2e/ai-actions.spec.ts          slash action → stream → keep/discard, and error → retry
+  tests/e2e/toggle-blocks.spec.ts       `>`/`"` shorthands, toggle headings, level survives open/close
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
 demo-react/registry.json      shadcn registry manifest: granular items + `slash-editor-kit` umbrella block
 .github/workflows/release.yml tag-triggered (`v*`) publish: build, `vp check`, registry schema gate, `bun publish` core then react

@@ -17,6 +17,7 @@
 
 - `src/app.tsx` — page shell, seeded document, `DocumentStats` (rendered only once the editor exists, so `useEditorState` subscribes to a live instance), `<SlashMenu>`, `<BlockHandle>`, `<TopNav>`, and the router switch (`App`) between the playground (`/`, `?collab=<room>`) and the docs site (`/docs`).
 - `src/lib/router.tsx` — `usePathname`/`navigate`/`Link`: a small pushState router, no new dependency.
+- `src/lib/use-demo-editor.ts` — `useDemoEditor()`: `useSlashEditor` plus the playground's shared block-kit defaults. Every demo editor goes through it, which is what keeps the toggle's lucide chevron (`blockKit.toggle.renderToggleButton`, plain DOM — no React root per toggle) identical across the playground and the docs pages.
 - `src/routes/` — the docs site: `docs-app.tsx` (sidebar shell), `docs-overview.tsx` (install-everything + item list), `docs-item.tsx` (one live, isolated demo editor per registry item).
 - `demo-react/registry.json` + `src/lib/registry-items.ts` — the former is `shadcn build`'s input (`registry:build` script → `public/r/*.json`); the latter is docs-page copy, kept separate on purpose (see the file's own comment).
 - `src/components/slash-menu.tsx` — the slash surface; the only place icons and markup for the menu are decided.

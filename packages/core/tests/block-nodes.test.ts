@@ -64,7 +64,7 @@ test("toggle (details) defaults closed and persists its open state", () => {
     content: [
       {
         type: "details",
-        attrs: { id: null, open: true },
+        attrs: { id: null, open: true, level: 2 },
         content: [
           { type: "detailsSummary", content: [{ type: "text", text: "More" }] },
           {
@@ -83,4 +83,14 @@ test("toggle (details) defaults closed and persists its open state", () => {
     ],
   };
   expect(schema.nodeFromJSON(doc).toJSON()).toEqual(doc);
+});
+
+test("a toggle is a plain toggle list until it is given a heading level", () => {
+  const schema = getSchema(createBlockKit());
+  const details = schema.nodes.details!.create(null, [
+    schema.nodes.detailsSummary!.create(),
+    schema.nodes.detailsContent!.createAndFill()!,
+  ]);
+
+  expect(details.attrs.level).toBe(0);
 });

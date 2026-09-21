@@ -26,13 +26,15 @@ interface BlockKitOptions {
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
   collaboration?: CollaborationOptions | false; // no default; forces history:false when set
   comment?: Partial<CommentOptions> | false; // default {}
+  toggle?: Partial<ToggleOptions>; // options only; default { persist: true }
   extend?: Extensions;
 }
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 // Baseline schema also carries taskList/taskItem (@tiptap/extension-list, nested: true) and
-// details/detailsSummary/detailsContent (@tiptap/extension-details, persist: true) unconditionally,
-// the same way StarterKit's blockquote and codeBlock are unconditional — no BlockKitOptions seam.
+// details/detailsSummary/detailsContent unconditionally, the same way codeBlock is — no
+// `false` seam. Blockquote is registered by quote() instead of StarterKit, which is disabled
+// for it, so `>` is free for the toggle.
 
 // callout.ts
 const Callout: Node<CalloutOptions>;
@@ -43,6 +45,23 @@ interface CalloutOptions {
   HTMLAttributes: Record<string, unknown>;
 }
 // editor.commands.setCallout/toggleCallout/unsetCallout — wrapIn/toggleWrap/lift over "callout"
+
+// toggle.ts — Tiptap's Details plus a heading level and the Notion shorthands
+const Toggle: Node<ToggleOptions>; // extends @tiptap/extension-details
+function toggle(options?: Partial<ToggleOptions>): Node;
+type ToggleOptions = DetailsOptions; // persist, openClassName, renderToggleButton, …
+type ToggleLevel = 0 | 1 | 2 | 3; // 0 = plain toggle list
+const toggleInputRegex: RegExp; // /^>\s$/
+const toggleHeadingInputRegex: RegExp; // /^(#{1,3})\s$/, only inside a toggle title
+// details gains attr `level` (0-3), rendered as `data-level` on the wrapper and omitted at 0.
+// editor.commands.setToggle(level?) — converts the current block, or re-levels the toggle
+// holding the selection; setToggleLevel(level) — re-levels only.
+
+// quote.ts — blockquote whose shorthand is `"`, not `>`
+const Quote: Node<QuoteOptions>; // extends @tiptap/extension-blockquote
+function quote(options?: Partial<QuoteOptions>): Node;
+type QuoteOptions = BlockquoteOptions;
+const quoteInputRegex: RegExp; // /^\s*"\s$/
 
 // bubble-toolbar.ts
 const BubbleToolbar: Extension<BubbleToolbarOptions, BubbleToolbarStorage>;
@@ -184,12 +203,13 @@ const defaultSlashItems: SlashItem[];
 
 `defaultSlashItems` ids: `paragraph`, `heading-1`, `heading-2`, `heading-3`, `bullet-list`,
 `ordered-list`, `task-list`, `blockquote`, `callout`, `toggle`, `code-block`, `horizontal-rule`
-(group `"Basic blocks"`), `image`, `file`, `video`, `embed` (group `"Media"`), `table`, `columns`
-(group `"Structure"`) — each gated on schema presence via `when`.
+(group `"Basic blocks"`), `toggle-heading-1`, `toggle-heading-2`, `toggle-heading-3`
+(group `"Advanced blocks"`), `image`, `file`, `video`, `embed` (group `"Media"`), `table`,
+`columns` (group `"Structure"`) — each gated on schema presence via `when`.
 
 Items whose block has a markdown input rule also carry `shortcut`, rendered on the right of the
-row: `#`/`##`/`###`, `-`, `1.`, `[]`, `>`, ` ``` `, `---`. It is display only — ranking reads
-`keywords`.
+row: `#`/`##`/`###`, `-`, `1.`, `[]`, `"`, `>`, `# >`/`## >`/`### >`, ` ``` `, `---`. It is
+display only — ranking reads `keywords`.
 
 ```ts
 // placeholder.ts
@@ -206,7 +226,10 @@ type PlaceholderKey =
   | "taskItem"
   | "blockquote"
   | "callout"
-  | "details";
+  | "details"
+  | "toggleHeading1"
+  | "toggleHeading2"
+  | "toggleHeading3";
 
 interface PlaceholderOptions {
   text?: Partial<Record<PlaceholderKey, string>>; // per-slot overrides
@@ -218,7 +241,9 @@ function placeholderKeyFor(node: Node, parent: Node | null): PlaceholderKey | nu
 
 Only the empty block holding the caret is decorated, with `data-placeholder` and no class names.
 Slots are resolved from the node _and_ its parent, because the empty node inside a list item, task
-item, quote or callout is always a `paragraph`. Code blocks are never decorated.
+item, quote or callout is always a `paragraph`. A toggle's summary names its own heading level
+(`toggleHeading1`-`3`) by reading the parent `details` node's `level`. Code blocks are never
+decorated.
 
 The module augments `@tiptap/core`'s `Storage` interface so `editor.storage.slashCommand` is typed at every call site.
 

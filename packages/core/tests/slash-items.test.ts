@@ -56,7 +56,12 @@ test("callout, toggle, and task-list are gated on their own node types", () => {
   const editor = editorWith(["paragraph", "callout", "details", "taskList"]);
 
   expect(ids(filterSlashItems(defaultSlashItems, "callout", editor))).toEqual(["callout"]);
-  expect(ids(filterSlashItems(defaultSlashItems, "toggle", editor))).toEqual(["toggle"]);
+  expect(ids(filterSlashItems(defaultSlashItems, "toggle", editor))).toEqual([
+    "toggle",
+    "toggle-heading-1",
+    "toggle-heading-2",
+    "toggle-heading-3",
+  ]);
   expect(ids(filterSlashItems(defaultSlashItems, "todo", editor))).toEqual(["task-list"]);
   expect(filterSlashItems(defaultSlashItems, "callout", editorWith(["paragraph"]))).toEqual([]);
 });

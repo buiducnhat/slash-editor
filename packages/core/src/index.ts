@@ -118,6 +118,7 @@ export {
   type PlaceholderOptions,
   placeholderPluginKey,
 } from "./placeholder.ts";
+export { Quote, quote, type QuoteOptions, quoteInputRegex } from "./quote.ts";
 export {
   SlashCommand,
   slashCommand,
@@ -127,6 +128,14 @@ export {
   type SlashMenuState,
 } from "./slash-command.ts";
 export { table, TableKit, type TableKitOptions } from "./table.ts";
+export {
+  Toggle,
+  toggle,
+  toggleHeadingInputRegex,
+  toggleInputRegex,
+  type ToggleLevel,
+  type ToggleOptions,
+} from "./toggle.ts";
 export {
   type BlockLocation,
   findNodeById,

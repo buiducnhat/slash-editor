@@ -199,21 +199,38 @@
     content: attr(data-icon);
   }
 
+  /*
+   * Toggle. Level typography sits on the wrapper so the summary inherits it
+   * and the disclosure button — a sibling of the summary, not a child — can
+   * size itself to the same line box with `1lh`. Markers then centre on the
+   * first line at any heading size instead of being nudged with margins.
+   */
   .slash-content [data-type="details"] {
     @apply flex items-start gap-1;
   }
 
+  .slash-content [data-type="details"][data-level="1"] {
+    @apply mt-8 text-3xl leading-9 font-semibold tracking-tight;
+  }
+
+  .slash-content [data-type="details"][data-level="2"] {
+    @apply mt-6 text-2xl leading-8 font-semibold tracking-tight;
+  }
+
+  .slash-content [data-type="details"][data-level="3"] {
+    @apply mt-5 text-xl leading-7 font-semibold tracking-tight;
+  }
+
   .slash-content [data-type="details"] > button {
-    @apply text-muted-foreground hover:text-foreground mt-1 flex size-5 shrink-0 cursor-pointer items-center justify-center rounded;
+    @apply text-muted-foreground hover:text-foreground hover:bg-accent flex h-[1lh] w-[1lh] shrink-0 cursor-pointer items-center justify-center rounded;
   }
 
-  .slash-content [data-type="details"] > button::before {
-    content: "▶";
-    font-size: 0.65em;
+  .slash-content [data-type="details"] > button > svg {
+    @apply size-[0.75em] transition-transform duration-150;
   }
 
-  .slash-content [data-type="details"].is-open > button::before {
-    content: "▼";
+  .slash-content [data-type="details"] > button[data-state="open"] > svg {
+    @apply rotate-90;
   }
 
   .slash-content [data-type="details"] > div {
@@ -221,11 +238,12 @@
   }
 
   .slash-content [data-type="details"] summary {
-    @apply block cursor-pointer py-0.5 font-medium select-none;
+    @apply block cursor-pointer select-none;
   }
 
+  /* The body is ordinary content again, whatever the title's level. */
   .slash-content [data-type="detailsContent"] {
-    @apply border-border mt-1 border-l-2 pl-4;
+    @apply border-border text-foreground mt-1 border-l-2 pl-4 text-base leading-7 font-normal tracking-normal;
   }
 
   .slash-content ul[data-type="taskList"] {
@@ -239,7 +257,41 @@
 
   .slash-content li[data-type="taskItem"] > label,
   .slash-content li[data-block-type="taskItem"] > label {
-    @apply mt-1.5 flex items-center;
+    @apply flex h-[1lh] items-center;
+  }
+
+  /*
+   * The checkbox is the node view's own <input>, so it is restyled rather
+   * than replaced: same box, border, and check mark as shadcn's Checkbox.
+   */
+  .slash-content li[data-type="taskItem"] input[type="checkbox"],
+  .slash-content li[data-block-type="taskItem"] input[type="checkbox"] {
+    @apply border-input bg-background size-4 shrink-0 cursor-pointer appearance-none rounded-[4px] border shadow-xs transition-[background-color,border-color];
+  }
+
+  .slash-content li[data-type="taskItem"] input[type="checkbox"]:checked,
+  .slash-content li[data-block-type="taskItem"] input[type="checkbox"]:checked {
+    @apply bg-primary border-primary;
+  }
+
+  /*
+   * The tick is a mask, not a coloured SVG: a data URL cannot read a theme
+   * token, and masking paints it in `primary-foreground` in both modes.
+   */
+  .slash-content li[data-type="taskItem"] input[type="checkbox"]:checked::before,
+  .slash-content li[data-block-type="taskItem"] input[type="checkbox"]:checked::before {
+    content: "";
+    @apply block size-full;
+    background-color: var(--color-primary-foreground);
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6 9 17l-5-5'/></svg>");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 0.7rem;
+  }
+
+  .slash-content li[data-type="taskItem"] input[type="checkbox"]:focus-visible,
+  .slash-content li[data-block-type="taskItem"] input[type="checkbox"]:focus-visible {
+    @apply ring-ring/50 outline-none ring-[3px];
   }
 
   .slash-content li[data-type="taskItem"] > div,

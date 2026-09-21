@@ -78,6 +78,7 @@ export function filterSlashItems(items: SlashItem[], query: string, editor?: Edi
 }
 
 const BASIC = "Basic blocks";
+const ADVANCED = "Advanced blocks";
 const MEDIA = "Media";
 const STRUCTURE = "Structure";
 
@@ -189,8 +190,8 @@ export const defaultSlashItems: SlashItem[] = [
     group: BASIC,
     description: "Capture a quotation",
     aliases: ["quote", "citation"],
-    keywords: [">"],
-    shortcut: ">",
+    keywords: ['"'],
+    shortcut: '"',
     icon: "quote",
     when: (editor) => hasNode(editor, "blockquote"),
     run: ({ editor, range }) => {
@@ -217,6 +218,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Collapsible content",
     aliases: ["details", "collapse", "dropdown"],
     keywords: ["toggle"],
+    shortcut: ">",
     icon: "chevron-right",
     when: (editor) => hasNode(editor, "details"),
     run: ({ editor, range }) => {
@@ -249,6 +251,48 @@ export const defaultSlashItems: SlashItem[] = [
     when: (editor) => hasNode(editor, "horizontalRule"),
     run: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
+    },
+  },
+  {
+    id: "toggle-heading-1",
+    title: "Toggle heading 1",
+    group: ADVANCED,
+    description: "Collapsible large title",
+    aliases: ["th1", "toggleheading1"],
+    keywords: ["collapsible", "details"],
+    shortcut: "# >",
+    icon: "heading-1",
+    when: (editor) => hasNode(editor, "details"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setToggle(1).run();
+    },
+  },
+  {
+    id: "toggle-heading-2",
+    title: "Toggle heading 2",
+    group: ADVANCED,
+    description: "Collapsible medium title",
+    aliases: ["th2", "toggleheading2"],
+    keywords: ["collapsible", "details"],
+    shortcut: "## >",
+    icon: "heading-2",
+    when: (editor) => hasNode(editor, "details"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setToggle(2).run();
+    },
+  },
+  {
+    id: "toggle-heading-3",
+    title: "Toggle heading 3",
+    group: ADVANCED,
+    description: "Collapsible small title",
+    aliases: ["th3", "toggleheading3"],
+    keywords: ["collapsible", "details"],
+    shortcut: "### >",
+    icon: "heading-3",
+    when: (editor) => hasNode(editor, "details"),
+    run: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setToggle(3).run();
     },
   },
   {

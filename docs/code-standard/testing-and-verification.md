@@ -10,7 +10,7 @@ Current suites (`vp test`, Node environment, no DOM):
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/core/tests/ai-block.test.ts`       | opt-in wiring (no `StreamAdapter` -> no `aiBlock`), `node: false` opt-out, `createAiSlashItems` action list, schema defaults/JSON round trip, `when` gating |
 | `packages/core/tests/block-kit.test.ts`      | schema node/mark inventory, doc JSON round trip, `extend` registration, `history: false`, heading levels, slash/bubble opt-out                              |
-| `packages/core/tests/block-nodes.test.ts`    | callout icon default, task item checked default, toggle (`details`) open default, JSON round trips for all three                                            |
+| `packages/core/tests/block-nodes.test.ts`    | callout icon default, task item checked default, toggle (`details`) open/`level` defaults, JSON round trips                                                 |
 | `packages/core/tests/bubble-toolbar.test.ts` | default items per baseline mark, `when` gating, `isActive` reflecting the live selection                                                                    |
 | `packages/core/tests/link-editor.test.ts`    | `canOpenLinkEditor` gating (mark presence, editability, selection/active-link), kit opt-out, `link` mark editing config                                     |
 | `packages/core/tests/media-nodes.test.ts`    | image/file/video/embed attribute defaults, JSON round trips, `false` opt-out                                                                                |
@@ -38,6 +38,7 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 | `mention.spec.ts`           | async directory search → chip insertion, empty-result state, Escape leaves typed text                                                                     |
 | `link-editor.spec.ts`       | drafting a link over a selection, click-to-edit an existing link, remove                                                                                  |
 | `ai-actions.spec.ts`        | slash action → real stream → Keep (paragraph)/Discard, and error → retry, against the mock `StreamAdapter`                                                |
+| `toggle-blocks.spec.ts`     | `>` makes a toggle and `"` a quote; `# ` + `> ` and in-title `##` set the level; level and block id survive open/close; Advanced blocks slash rows        |
 | `slash-menu-ux.spec.ts`     | arrow-key scrolling keeps the highlight in view, one-line rows with icons, a shown `shortcut` really converts the block, per-block placeholders, `/` hint |
 
 `tests/e2e/support.ts` holds the shared helpers:

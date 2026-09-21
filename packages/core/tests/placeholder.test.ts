@@ -31,8 +31,11 @@ test("code blocks stay blank, because a hint there reads as source", () => {
   expect(placeholderKeyFor(node("codeBlock"), node("doc"))).toBeNull();
 });
 
-test("a toggle's summary line gets its own slot", () => {
+test("a toggle's summary line names its heading level", () => {
   expect(placeholderKeyFor(node("detailsSummary"), node("details"))).toBe("details");
+  expect(placeholderKeyFor(node("detailsSummary"), node("details", { level: 2 }))).toBe(
+    "toggleHeading2",
+  );
 });
 
 test("placeholder: false removes the extension from the kit", () => {
