@@ -1,8 +1,13 @@
 {
   "name": "@slash-editor/react",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Headless React bindings for slash-editor: provider, hooks, unstyled primitives.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buiducnhat/slash-editor.git",
+    "directory": "packages/react"
+  },
   "files": [
     "dist"
   ],

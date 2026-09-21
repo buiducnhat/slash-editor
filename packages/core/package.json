@@ -1,8 +1,13 @@
 {
   "name": "@slash-editor/core",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Headless block-editor core: ProseMirror/Tiptap extensions, schema, commands.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buiducnhat/slash-editor.git",
+    "directory": "packages/core"
+  },
   "files": [
     "dist"
   ],

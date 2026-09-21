@@ -1,9 +1,13 @@
 {
   "name": "slash-editor",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "description": "Notion-style block editor for React: headless core, shadcn-native UI.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buiducnhat/slash-editor.git"
+  },
   "workspaces": [
     "packages/*",
     "demo-react"
