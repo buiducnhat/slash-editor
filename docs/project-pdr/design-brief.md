@@ -194,8 +194,11 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
   with a `node: false` opt-out for a host-supplied `NodeView` (`demo-react`'s `AiBlockNodeView`: Keep/
   Discard/Try again). Playwright coverage of async search, click-to-edit/remove, and the real
   stream → error → retry → keep/discard transitions against mock providers.
-- **M4 — Collaboration.** Yjs + y-prosemirror, Hocuspocus self-host recipe, presence cursors, comment marks + thread store adapter.
+- **M4 — Collaboration.** ✅ Done. Yjs + `y-prosemirror` (via Tiptap's official `Collaboration`/
+  `CollaborationCaret`), a Bun-native Hocuspocus self-host recipe, presence cursors, comment marks +
+  thread store adapter.
   _Done when:_ two browsers converge on concurrent edits across all custom nodes; offline reconnect merges cleanly.
+  _Landed:_ see `project-pdr/milestones.md` for the full write-up.
 
 ### Rollout
 

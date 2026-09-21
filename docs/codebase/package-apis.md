@@ -24,6 +24,8 @@ interface BlockKitOptions {
   // No default provider/adapter, so these are opt-in (undefined -> not registered), not `Partial<X> | false`:
   mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
+  collaboration?: CollaborationOptions | false; // no default; forces history:false when set
+  comment?: Partial<CommentOptions> | false; // default {}
   extend?: Extensions;
 }
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -411,6 +413,81 @@ function createAiSlashItems(options: Pick<AiKitOptions, "adapter" | "actions">):
 // never carries a real user text selection the way a bubble-toolbar action does.
 ```
 
+```ts
+// collaboration.ts — wraps Tiptap's official Collaboration/CollaborationCaret over y-prosemirror.
+function collaboration(options: CollaborationOptions): Extensions;
+interface CollaborationOptions {
+  document: Y.Doc; // host-owned; peer dependency
+  field?: string; // Yjs XmlFragment name; default "content"
+  provider?: CollaborationProvider; // enables CollaborationCaret presence carets when set
+  user?: CollaborationUser; // default { name: "Anonymous", color: "#94A3B8" }
+}
+interface CollaborationUser {
+  name: string;
+  color: string; // hex "#RRGGBB"; invalid values render as transparent
+  [key: string]: unknown;
+}
+// Duck-typed awareness surface — HocuspocusProvider/WebsocketProvider/WebrtcProvider all satisfy it:
+interface CollaborationProvider {
+  awareness: {
+    setLocalStateField(field: string, value: unknown): void;
+    getStates(): Map<number, Record<string, unknown>>;
+    on(event: "update" | "change", listener: () => void): void;
+    off(event: "update" | "change", listener: () => void): void;
+  };
+}
+// Remote carets render as data-collab-caret/data-collab-caret-label/data-collab-selection —
+// core emits no class names, so the upstream extension's default render/selectionRender
+// (collaboration-carets__* classes) is overridden.
+```
+
+```ts
+// comment.ts — comment mark (threadId anchor only) + bring-your-own CommentThreadStore contract.
+const Comment: Mark<CommentOptions, CommentStorage>;
+function comment(options?: Partial<CommentOptions>): Mark;
+interface CommentOptions {
+  HTMLAttributes: Record<string, unknown>;
+}
+// editor.commands.setComment(threadId) / unsetComment(threadId) / toggleComment(threadId)
+// unsetComment removes only that threadId's mark instances from the selection — ProseMirror's
+// built-in unsetMark would strip every distinct thread anchored there.
+// attrs: threadId (only) — mark type has excludes: "" so distinct threads can overlap.
+
+interface CommentState {
+  activeThreadIds: string[]; // distinct threadIds anchored under the current selection
+}
+interface CommentStorage {
+  // editor.storage.comment
+  state: CommentState;
+  subscribe(listener: () => void): () => void;
+}
+// Pure, DOM-free — testable against a bare EditorState:
+function activeThreadIds(state: EditorState): string[];
+
+// Thread bodies/authors/resolution never live in the document. Core never calls this interface
+// itself — @slash-editor/react's useComments composes it with setComment/unsetComment, the same
+// way useLinkEditor composes the link mark's own commands.
+interface CommentThreadStore {
+  createThread(input: { body: string }): CommentThread | Promise<CommentThread>;
+  addMessage(threadId: string, input: { body: string }): CommentThread | Promise<CommentThread>;
+  resolveThread(threadId: string): void | Promise<void>;
+  reopenThread(threadId: string): void | Promise<void>;
+  getThread(threadId: string): CommentThread | undefined | Promise<CommentThread | undefined>;
+  listThreads(): CommentThread[] | Promise<CommentThread[]>;
+}
+interface CommentThread {
+  id: string;
+  status: "open" | "resolved";
+  messages: CommentMessage[];
+}
+interface CommentMessage {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: number;
+}
+```
+
 ## `@slash-editor/react`
 
 ```ts
@@ -461,11 +538,40 @@ interface LinkEditor extends LinkEditorState {
   remove(): void; // unsetLink() then closeLinkEditor()
   close(): void;
 }
+
+function useComments(editor: Editor | null, options?: UseCommentsOptions): Comments;
+interface UseCommentsOptions {
+  store?: CommentThreadStore; // bring-your-own; omit to read anchors without create/resolve support
+}
+interface Comments extends CommentState {
+  addComment(body: string): Promise<string | null>; // creates via store, then setComment(id) in one chain
+  resolveThread(threadId: string): Promise<void>;
+  reopenThread(threadId: string): Promise<void>;
+  removeAnchor(threadId: string): void; // unsetComment(threadId); thread itself stays in `store`
+}
+
+function usePresence(provider: PresenceProvider | null | undefined): PresencePeer[];
+interface PresencePeer {
+  clientId: number;
+  [key: string]: unknown;
+}
+// Duck-typed like core's CollaborationProvider, kept separate so this package never depends on
+// yjs/y-protocols types directly. Peer list is cached, recomputed only on a real awareness
+// "update" event or a provider change — chrome outside the editor (an avatar row), independent
+// of CollaborationCaret's in-document carets.
+interface PresenceProvider {
+  awareness: {
+    clientID: number;
+    getStates(): Map<number, Record<string, unknown>>;
+    on(event: "update" | "change", listener: () => void): void;
+    off(event: "update" | "change", listener: () => void): void;
+  };
+}
 ```
 
 Re-exported from `@tiptap/react` so consumers need one import: `EditorContent`, `EditorContext`, `EditorProvider`, `useCurrentEditor`, `useEditorState`.
 
-`useSlashMenu`, `useBlockDrag`, `useBubbleToolbar`, `useMention`, and `useLinkEditor` are all safe with a `null` editor (closed state, no-op callbacks), which matters because `useSlashEditor` returns `null` on the first render.
+`useSlashMenu`, `useBlockDrag`, `useBubbleToolbar`, `useMention`, `useLinkEditor`, `useComments`, and `usePresence` are all safe with a `null`/`undefined` editor or provider (closed/empty state, no-op callbacks), which matters because `useSlashEditor` returns `null` on the first render.
 
 `useBlockDrag`'s click-vs-drag disambiguation lives entirely in the hook (not core): a grip press that stays within 4px opens `menuTarget`; past that it calls `storage.setDragging`. It is pure DOM gesture handling, not editor state.
 
@@ -474,6 +580,12 @@ mark's own `setLink`/`unsetLink` directly (see `link-editor.ts` above), then `cl
 `confirm`, the selection still rests on the just-created link, so `LinkEditor`'s own auto-open recomputes
 the popover right back into `editing: true` — the same state a click on any existing link produces, not
 a separate "just created" mode.
+
+`useComments.addComment` is composed in the hook, not as a core command: it awaits `store.createThread`
+(host-owned, may be network-backed) before calling `setComment(thread.id)`, the same deferred-then-chain
+shape `useLinkEditor.confirm` uses for the `link` mark. `usePresence` is unrelated to
+`CollaborationCaret`'s in-document carets — it reads a provider's awareness states directly, for chrome
+outside the editor (an avatar row, an "N online" badge).
 
 ## Demo surface
 
@@ -511,3 +623,13 @@ streaming text with a spinner, then Keep (`acceptAiAction`)/Try again (`retryAiA
 (`discardAiAction`) once `status` settles. `demo-react/src/lib/stream-adapter.ts` (`mockStreamAdapter`)
 yields a canned per-action response word by word after a simulated per-token delay; a context containing
 `"trigger-ai-error"` fails once mid-stream, mirroring `mockUploadAdapter`'s `fail-`-prefixed names.
+
+`app.tsx`'s `SoloApp`/`CollabApp` split: `?collab=<room>` in the URL renders `CollabApp` instead of the
+default `SoloApp`, so no existing spec ever opens a websocket. `src/lib/collaboration.ts`
+(`createDemoCollaboration`) creates the shared `Y.Doc` and a `HocuspocusProvider` pointed at
+`server/collab-server.ts` (the self-host recipe, bridging `@hocuspocus/server`'s runtime-agnostic
+`Hocuspocus` class to `Bun.serve` via `crossws`'s Bun adapter — its convenience `Server` class assumes
+Node and refuses to run under Bun). `src/lib/comment-store.ts` (`createMockCommentThreadStore`) is an
+in-memory `CommentThreadStore`. `src/components/presence-avatars.tsx` renders `usePresence(provider)` as
+a row of colored initials with a `Tooltip`; `src/components/comment-panel.tsx` composes `useComments`
+with the mock store into a sidebar: compose over a selection, resolve/reopen, remove an anchor.

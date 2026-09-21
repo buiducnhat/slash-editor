@@ -19,6 +19,8 @@
     "dev": "vp pack --watch"
   },
   "dependencies": {
+    "@tiptap/extension-collaboration": "^3.31.3",
+    "@tiptap/extension-collaboration-caret": "^3.31.3",
     "@tiptap/extension-details": "^3.31.3",
     "@tiptap/extension-list": "^3.31.3",
     "@tiptap/extension-table": "^3.31.3",
@@ -27,10 +29,12 @@
   },
   "devDependencies": {
     "@tiptap/core": "^3.31.3",
-    "@tiptap/pm": "^3.31.3"
+    "@tiptap/pm": "^3.31.3",
+    "yjs": "^13.6.0"
   },
   "peerDependencies": {
     "@tiptap/core": "^3.31.0",
-    "@tiptap/pm": "^3.31.0"
+    "@tiptap/pm": "^3.31.0",
+    "yjs": "^13.6.0"
   }
 }

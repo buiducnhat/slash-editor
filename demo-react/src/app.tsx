@@ -1,9 +1,12 @@
+import type { CommentThreadStore } from "@slash-editor/core";
 import { AiBlock, Embed, File as FileNode, Image, Video } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
+import { CommentPanel } from "@/components/comment-panel.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
 import { AiBlockNodeView } from "@/components/nodes/ai-block-node-view.tsx";
@@ -11,7 +14,10 @@ import { EmbedNodeView } from "@/components/nodes/embed-node-view.tsx";
 import { FileNodeView } from "@/components/nodes/file-node-view.tsx";
 import { ImageNodeView } from "@/components/nodes/image-node-view.tsx";
 import { VideoNodeView } from "@/components/nodes/video-node-view.tsx";
+import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
+import { type DemoCollaboration, createDemoCollaboration } from "@/lib/collaboration.ts";
+import { createMockCommentThreadStore } from "@/lib/comment-store.ts";
 import { mockMentionProvider } from "@/lib/mention-provider.ts";
 import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
 import { cn } from "@/lib/utils.ts";
@@ -72,7 +78,17 @@ function DocumentStats({ editor }: { editor: Editor }) {
   );
 }
 
-export function App() {
+function nodeViewExtensions() {
+  return [
+    Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) }),
+    FileNode.extend({ addNodeView: () => ReactNodeViewRenderer(FileNodeView) }),
+    Video.extend({ addNodeView: () => ReactNodeViewRenderer(VideoNodeView) }),
+    Embed.extend({ addNodeView: () => ReactNodeViewRenderer(EmbedNodeView) }),
+    AiBlock.extend({ addNodeView: () => ReactNodeViewRenderer(AiBlockNodeView) }),
+  ];
+}
+
+function SoloApp() {
   const editor = useSlashEditor({
     content: INITIAL_CONTENT,
     blockKit: {
@@ -84,13 +100,7 @@ export function App() {
       mention: {
         items: (query, { signal }) => mockMentionProvider(query, signal),
       },
-      extend: [
-        Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) }),
-        FileNode.extend({ addNodeView: () => ReactNodeViewRenderer(FileNodeView) }),
-        Video.extend({ addNodeView: () => ReactNodeViewRenderer(VideoNodeView) }),
-        Embed.extend({ addNodeView: () => ReactNodeViewRenderer(EmbedNodeView) }),
-        AiBlock.extend({ addNodeView: () => ReactNodeViewRenderer(AiBlockNodeView) }),
-      ],
+      extend: nodeViewExtensions(),
     },
     editorProps: {
       attributes: {
@@ -124,4 +134,94 @@ export function App() {
       </div>
     </main>
   );
+}
+
+/**
+ * `?collab=<room>` opt-in path: wires a shared `Y.Doc` + `HocuspocusProvider`
+ * (the self-host recipe in `server/collab-server.ts`) into the same block
+ * kit `SoloApp` uses, so the collaborative editor is otherwise identical —
+ * plus presence avatars and a comment sidebar.
+ *
+ * `collab`/`store` are created eagerly during render, guarded by a ref the
+ * same way `useSlashEditor` latches its own extensions: `blockKit` is only
+ * ever read on the first render, so the provider must exist before that
+ * call, not after it in an effect. Neither is torn down on unmount — like
+ * any other browser tab leaving a room, the connection closes when the
+ * page does, and the server (`collab-server.ts`) already treats that as a
+ * normal disconnect.
+ */
+function CollabApp({ room }: { room: string }) {
+  const collabRef = useRef<DemoCollaboration | null>(null);
+  collabRef.current ??= createDemoCollaboration(room);
+  const collab = collabRef.current;
+
+  const storeRef = useRef<CommentThreadStore | null>(null);
+  storeRef.current ??= createMockCommentThreadStore(collab.user.name);
+  const store = storeRef.current;
+
+  const editor = useSlashEditor({
+    blockKit: {
+      image: false,
+      file: false,
+      video: false,
+      embed: false,
+      ai: { adapter: mockStreamAdapter, node: false },
+      mention: {
+        items: (query, { signal }) => mockMentionProvider(query, signal),
+      },
+      collaboration: { document: collab.document, provider: collab.provider, user: collab.user },
+      extend: nodeViewExtensions(),
+    },
+    editorProps: {
+      attributes: {
+        class: "slash-content min-h-[60vh] pl-20 pr-10 py-8",
+        "aria-label": "Document",
+      },
+    },
+  });
+
+  return (
+    <main className="bg-background min-h-screen py-12">
+      <div className="mx-auto flex w-full max-w-5xl gap-6 px-6">
+        <div className="min-w-0 flex-1">
+          <header className="mb-6 flex items-baseline justify-between">
+            <h1 className="text-sm font-medium tracking-tight">
+              slash-editor playground — room “{room}”
+            </h1>
+            <div className="flex items-center gap-3">
+              {editor && <DocumentStats editor={editor} />}
+              <PresenceAvatars provider={collab.provider} />
+            </div>
+          </header>
+
+          <div
+            className={cn(
+              "bg-card border-border rounded-xl border shadow-sm",
+              "focus-within:ring-ring/40 focus-within:ring-2",
+            )}
+          >
+            <EditorContent editor={editor} />
+            {editor && <SlashMenu editor={editor} />}
+            {editor && <MentionMenu editor={editor} />}
+            {editor && <BlockHandle editor={editor} />}
+            {editor && <BubbleToolbar editor={editor} />}
+            {editor && <LinkEditorPopover editor={editor} />}
+          </div>
+        </div>
+        {editor && <CommentPanel editor={editor} store={store} />}
+      </div>
+    </main>
+  );
+}
+
+function readCollabRoom(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return new URLSearchParams(window.location.search).get("collab");
+}
+
+export function App() {
+  const room = readCollabRoom();
+  return room ? <CollabApp key={room} room={room} /> : <SoloApp />;
 }

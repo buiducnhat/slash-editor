@@ -16,14 +16,16 @@ useSlashEditor(options)            → Editor | null  (react)
 
 `createBlockKit()` returns `[StarterKit, SlashCommand, BlockId, BlockDrag, ...extend]`. Options:
 
-| Option          | Default                                   | Effect                                                              |
-| --------------- | ----------------------------------------- | ------------------------------------------------------------------- |
-| `headingLevels` | `[1, 2, 3]`                               | Levels offered by the heading extension                             |
-| `history`       | `true`                                    | `false` drops `undoRedo`; required once a Yjs provider owns history |
-| `slash`         | `{ char: "/", items: defaultSlashItems }` | `false` leaves the trigger character inert                          |
-| `blockId`       | `{ types: "auto" }`                       | `false` opts out; drag targeting and comments (M4) need it          |
-| `drag`          | `{}`                                      | `false` opts out of the gutter handle                               |
-| `extend`        | `[]`                                      | Extensions appended last, so they win conflicting keymaps           |
+| Option          | Default                                   | Effect                                                                   |
+| --------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| `headingLevels` | `[1, 2, 3]`                               | Levels offered by the heading extension                                  |
+| `history`       | `true`                                    | `false` drops `undoRedo`; forced `false` whenever `collaboration` is set |
+| `slash`         | `{ char: "/", items: defaultSlashItems }` | `false` leaves the trigger character inert                               |
+| `blockId`       | `{ types: "auto" }`                       | `false` opts out; drag targeting and comment anchoring need it           |
+| `drag`          | `{}`                                      | `false` opts out of the gutter handle                                    |
+| `collaboration` | none (opt-in)                             | Shared `Y.Doc`/provider/user; see Collaboration below                    |
+| `comment`       | `{}`                                      | `false` opts out of the `comment` mark                                   |
+| `extend`        | `[]`                                      | Extensions appended last, so they win conflicting keymaps                |
 
 ## Document model
 
@@ -31,14 +33,14 @@ Canonical format is the Tiptap/ProseMirror JSON document — no parallel block m
 
 Nesting uses **container nodes** (lists today; `details`, `callout`, `columns` planned), not a universal `blockContainer` wrapper. A wrapper schema would give uniform nesting but breaks third-party extension expectations, complicates markdown serialization, and doubles the Yjs node count.
 
-Rules that keep the future Yjs integration (M4) safe, enforced from day one:
+Rules that keep Yjs integration safe, enforced from day one and still binding now that `collaboration` is real:
 
 - No non-deterministic defaults in node attributes.
 - Identity attributes are generated on insert/parse, never during render, and never regenerated on update.
 
 ## Block identity
 
-`BlockId` injects `attrs.id` (12 chars, a 64-symbol alphabet) into every node whose `group` or `content` expression contains `block` — resolved the same way `getSchemaByResolvedExtensions` resolves those fields, via `getExtensionField`/`callOrReturn`, so function-valued extensions agree with the schema. `"auto"` deliberately includes nested nodes (a paragraph inside a list item gets its own id), since comment anchoring and block permissions (M4) need identity at every level, not just at drag units.
+`BlockId` injects `attrs.id` (12 chars, a 64-symbol alphabet) into every node whose `group` or `content` expression contains `block` — resolved the same way `getSchemaByResolvedExtensions` resolves those fields, via `getExtensionField`/`callOrReturn`, so function-valued extensions agree with the schema. `"auto"` deliberately includes nested nodes (a paragraph inside a list item gets its own id), since comment anchoring needs identity at every level, not just at drag units.
 
 Assignment is two-staged, because `addGlobalAttributes` runs during schema construction — before Tiptap's per-editor storage snapshot exists — so it cannot hand data to later hooks through `this.storage`:
 
@@ -74,7 +76,7 @@ their own "now uploading" transaction synchronously, from inside the very comman
 pipeline is still assembling a transaction for, throws `RangeError: Applying a mismatched
 transaction` once that pipeline's dispatch lands on top of it.
 
-The picked `File` never touches node attrs: attrs must stay JSON-serializable for Yjs (M4), so it
+The picked `File` never touches node attrs: attrs must stay JSON-serializable for Yjs, so it
 lives in `PendingUploadRegistry`, a per-node-type map keyed by the node's `BlockId`. Retry resends
 that same `File` — or, via `retryImage(id, { file, adapter })`, a fresh one, the same path a
 `NodeView` uses to attach a file to a placeholder that has never had an upload attempt.
@@ -92,6 +94,61 @@ about (and effectively breaks on) the collision. So a host that wants a `NodeVie
 `bubbleToolbar`'s `false` seam. `demo-react/src/app.tsx` does this for all four upload-capable/embed
 nodes, rendering React `NodeView`s from `src/components/nodes/*` via `ReactNodeViewRenderer` —
 `table`/`columns` have no such override; their default rendering is interactive enough on its own.
+
+## Collaboration
+
+`collaboration()` (`packages/core/src/collaboration.ts`) wraps Tiptap's official `Collaboration`/
+`CollaborationCaret` extensions — themselves a thin layer over `y-prosemirror` via `@tiptap/y-tiptap` —
+rather than driving `y-prosemirror` by hand: `BlockId`'s `"y-sync$"` remote-skip check (anticipated
+since M1) already recognizes the transaction meta these extensions set, so no core wiring changed to
+adopt it. `createBlockKit({ collaboration })` is opt-in like `mention`/`ai` — there is no default
+`Y.Doc` — and forces `undoRedo: false` on `StarterKit` whenever it's set, regardless of the `history`
+option: Yjs owns the undo stack once a document is shared, and running both corrupts it.
+
+`yjs` is a peer dependency of both `core` and `react`, the same rule as `@tiptap/core`/`@tiptap/pm`:
+two copies of `yjs` in one app produce `instanceof Y.Doc`-style mismatches. The host creates the
+`Y.Doc` and any network provider (`HocuspocusProvider`, `y-websocket`, …) and owns their lifecycle;
+`collaboration()` only ever receives them through options.
+
+Presence carets render through a custom `render`/`selectionRender` pair emitting
+`data-collab-caret`/`data-collab-caret-label`/`data-collab-selection` attributes, not the upstream
+extension's default `collaboration-carets__*` class names — keeping the "core emits no class names"
+rule intact for a vendored extension the same way it holds for hand-written ones.
+`@slash-editor/react`'s `usePresence` is a separate, editor-independent hook: it reads a provider's
+awareness states directly for chrome outside the document (an avatar row), duck-typed against the same
+awareness shape `collaboration()`'s `CollaborationProvider` option accepts so this package never
+depends on `yjs`/`y-protocols` types.
+
+`demo-react`'s self-host recipe (`server/collab-server.ts`) bridges Hocuspocus's runtime-agnostic
+`Hocuspocus` class to `Bun.serve` via `crossws`'s Bun adapter: `@hocuspocus/server`'s convenience
+`Server` class assumes Node's `node:http` and throws if it detects the `Bun` global. The demo's
+`?collab=<room>` opt-in path (`CollabApp` in `app.tsx`) is a separate component from the default
+`SoloApp`, so no existing spec ever opens a websocket, and `Y.Doc`/`HocuspocusProvider` creation is
+guarded by a ref (`collabRef.current ??= …`, mirroring `useSlashEditor`'s own extension-latching
+guard) rather than torn down on unmount — like any other browser tab leaving a room, the connection
+closes when the page does.
+
+## Comments
+
+`Comment` (`comment.ts`) is a mark, not a node: `threadId` is its only attribute, and `excludes: ""`
+opts out of ProseMirror's default same-type exclusion so distinct threads can anchor overlapping
+ranges. Because comment marks are ordinary document content, `collaboration()` syncs them for free —
+no comment-specific Yjs wiring exists or is needed. Thread bodies, authors, and resolved/open state
+never enter the document: a host-provided `CommentThreadStore` (`createThread`/`addMessage`/
+`resolveThread`/`reopenThread`/`getThread`/`listThreads`) owns all of that, the same "anchor in core,
+body outside" split `UploadAdapter`/`StreamAdapter` use for binary/model work.
+
+`unsetComment(threadId)` cannot use ProseMirror's built-in `unsetMark(from, to, markType)`, which
+strips every mark of that type regardless of attrs — removing one thread's anchor would also remove
+every other thread anchored on the same range. It instead calls `tr.removeMark(from, to, mark)` with a
+concrete `Mark` instance (type + `threadId`), which ProseMirror matches by `mark.eq()`.
+
+`activeThreadIds(state)` — the distinct thread ids anchored under the current selection — is a pure
+function over a bare `EditorState`, testable without a DOM the same way `resolveDropTarget` and
+`filterSlashItems` are. `@slash-editor/react`'s `useComments` composes it with a `CommentThreadStore`:
+`addComment` awaits `store.createThread` before calling `setComment(thread.id)`, the same
+deferred-then-chain shape `useLinkEditor.confirm` uses for the `link` mark's own commands — core never
+calls `CommentThreadStore` itself.
 
 ## Lifecycle decisions in `useSlashEditor`
 

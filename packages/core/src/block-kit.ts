@@ -12,7 +12,9 @@ import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
 import { bubbleToolbar, type BubbleToolbarOptions } from "./bubble-toolbar.ts";
 import { Callout } from "./callout.ts";
+import { collaboration, type CollaborationOptions } from "./collaboration.ts";
 import { column, columns, type ColumnsOptions } from "./columns.ts";
+import { comment, type CommentOptions } from "./comment.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
@@ -132,6 +134,21 @@ export interface BlockKitOptions {
    * there is no default adapter to fall back to.
    */
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
+  /**
+   * Shared Yjs document, network provider, and presence config. No
+   * default — omit to run local-only. Forces `history: false` (Yjs owns
+   * the undo stack once a document is shared) regardless of the `history`
+   * option.
+   */
+  collaboration?: CollaborationOptions | false;
+  /**
+   * Comment mark (`threadId` anchor) plus the selection-driven active-thread
+   * state a UI reads to open a thread panel. Thread bodies live in a
+   * host-provided `CommentThreadStore`, never in the document.
+   *
+   * @default {}
+   */
+  comment?: Partial<CommentOptions> | false;
 }
 
 const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
@@ -161,6 +178,8 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     linkEditor: linkEditorOptions,
     mention: mentionOptions,
     ai: aiOptions,
+    collaboration: collaborationOptions,
+    comment: commentOptions,
     extend = [],
   } = options;
 
@@ -168,10 +187,14 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ? { actions: defaultAiSlashActions, node: true, ...aiOptions }
     : undefined;
 
+  // Yjs owns the undo stack once a document is shared; running StarterKit's
+  // undoRedo alongside it corrupts it, so collaboration always wins.
+  const resolvedHistory = collaborationOptions ? false : history;
+
   return [
     StarterKit.configure({
       heading: { levels: headingLevels },
-      undoRedo: history ? {} : false,
+      undoRedo: resolvedHistory ? {} : false,
       // Editing wants clicking a link to select it (feeding LinkEditor's
       // auto-open), never to navigate away mid-edit.
       link: { openOnClick: false, enableClickSelection: true },
@@ -207,6 +230,10 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(drag === false ? [] : [blockDrag(drag)]),
     ...(bubbleToolbarOptions === false ? [] : [bubbleToolbar(bubbleToolbarOptions)]),
     ...(linkEditorOptions === false ? [] : [linkEditor(linkEditorOptions)]),
+    ...(collaborationOptions === false || !collaborationOptions
+      ? []
+      : [...collaboration(collaborationOptions)]),
+    ...(commentOptions === false ? [] : [comment(commentOptions)]),
     ...extend,
   ];
 }

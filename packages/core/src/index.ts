@@ -48,6 +48,12 @@ export {
 } from "./bubble-toolbar.ts";
 export { Callout, callout, type CalloutOptions } from "./callout.ts";
 export {
+  type CollaborationOptions,
+  type CollaborationProvider,
+  type CollaborationUser,
+  collaboration,
+} from "./collaboration.ts";
+export {
   Column,
   column,
   type ColumnOptions,
@@ -55,6 +61,17 @@ export {
   columns,
   type ColumnsOptions,
 } from "./columns.ts";
+export {
+  activeThreadIds,
+  Comment,
+  comment,
+  type CommentMessage,
+  type CommentOptions,
+  type CommentState,
+  type CommentStorage,
+  type CommentThread,
+  type CommentThreadStore,
+} from "./comment.ts";
 export { Embed, embed, type EmbedMode, type EmbedOptions, type SetEmbedOptions } from "./embed.ts";
 export {
   File,

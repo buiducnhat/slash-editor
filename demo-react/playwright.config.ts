@@ -12,10 +12,21 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: "bun run dev",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
-  },
+  webServer: [
+    {
+      command: "bun run dev",
+      url: "http://localhost:5173",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      // Self-hosted Hocuspocus recipe (`server/collab-server.ts`), started
+      // for `tests/e2e/collab.spec.ts` only — every other spec never opens
+      // a websocket, so a slow/dead collab server can't flake them.
+      command: "bun run collab:server",
+      port: 1234,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+  ],
 });

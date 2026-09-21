@@ -8,7 +8,7 @@ Status legend: **Done** · **In progress** · **Not started**
 | M1 — Block UX                     | ✅ Done        |
 | M2 — Media & structure            | ✅ Done        |
 | M3 — Mentions & AI                | ✅ Done        |
-| M4 — Collaboration                | ⬜ Not started |
+| M4 — Collaboration                | ✅ Done        |
 | Distribution — registry & release | ⬜ Not started |
 
 ---
@@ -86,14 +86,39 @@ opt-out-and-`extend` seam for a host-supplied `NodeView`. Playwright coverage (`
 `link-editor.spec.ts`, `ai-actions.spec.ts`) exercising the real async search, click-to-edit/remove, and
 stream → error → retry → keep/discard transitions against mock providers.
 
-## M4 — Collaboration ⬜
+## M4 — Collaboration ✅
 
 _Done when: two browsers converge on concurrent edits across every custom node and reconnect cleanly after offline edits._
 
-- [ ] Yjs + `y-prosemirror` wiring, `history: false` path exercised
-- [ ] Hocuspocus self-host recipe
-- [ ] Presence cursors
-- [ ] Comment mark + external thread store adapter
+- [x] Yjs + `y-prosemirror` wiring, `history: false` path exercised
+- [x] Hocuspocus self-host recipe
+- [x] Presence cursors
+- [x] Comment mark + external thread store adapter
+
+_Landed:_ `collaboration()` (`packages/core/src/collaboration.ts`) wraps Tiptap's official
+`Collaboration`/`CollaborationCaret` extensions (themselves a thin layer over `y-prosemirror` via
+`@tiptap/y-tiptap`) — `BlockId`'s `"y-sync$"` remote-skip check, anticipated since M1, needed no
+changes. `createBlockKit({ collaboration })` is opt-in like `mention`/`ai` (no default `Y.Doc`) and
+forces `undoRedo: false` on `StarterKit` whenever it's set, regardless of the `history` option — Yjs
+owns the undo stack once a document is shared. Presence carets render through a custom
+`render`/`selectionRender` pair emitting `data-collab-caret`/`data-collab-selection` instead of the
+upstream extension's default class names, keeping core's no-class-names rule; `yjs` is a peer
+dependency of both `core` and `react` (host owns the single `Y.Doc`/`Awareness` instance, the same
+rule as `@tiptap/pm`). `Comment` (`comment.ts`) is a mark (`threadId` only, `excludes: ""` so distinct
+threads can anchor overlapping ranges) plus a pure `activeThreadIds(state)` helper and a
+`CommentThreadStore` contract — thread bodies, authors, and resolved state live entirely outside the
+document, called from React (`useComments`), never from core itself, mirroring how `useLinkEditor`
+composes core's popover state with the `link` mark's own commands. `usePresence` (`@slash-editor/react`)
+reads connected peers off any awareness-shaped provider for chrome outside the editor (an avatar row),
+independent of `CollaborationCaret`'s in-document carets. `demo-react`'s self-host recipe
+(`server/collab-server.ts`) bridges Hocuspocus's runtime-agnostic `Hocuspocus` class to `Bun.serve` via
+`crossws`'s Bun adapter — `@hocuspocus/server`'s convenience `Server` class assumes Node's `node:http`
+and refuses to run under Bun; `src/lib/collaboration.ts` wires a `HocuspocusProvider` into a `?collab=
+<room>` opt-in path (`CollabApp` in `app.tsx`), kept entirely separate from the default single-user
+`SoloApp` so no existing spec ever opens a websocket. Playwright coverage (`collab.spec.ts`): two
+browser contexts converge on concurrent edits, one going offline mid-edit via `context.setOffline`
+and reconnecting cleanly; a single-page comment flow anchors a thread over a selection and resolves it
+through the mock `CommentThreadStore`.
 
 ## Distribution ⬜
 
