@@ -12,7 +12,46 @@ Notion-style block editor for React: headless core on Tiptap/ProseMirror, UI you
 
 ## Status
 
-M0–M4 (foundation through collaboration) complete — slash menu, block ids, drag handle, media/upload, mentions/AI, and real-time collaboration all ship. M5 (shadcn registry, docs site, release flow) in progress. Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+M0–M5 complete — slash menu, block ids, drag handle, media/upload, mentions/AI, real-time
+collaboration, and distribution (npm packages, shadcn registry, docs site) all ship. Full
+breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+
+## Installation
+
+```bash
+bun add @slash-editor/core @slash-editor/react
+```
+
+`@tiptap/core`, `@tiptap/pm`, and `@tiptap/react` are peer dependencies — install them in your
+own app so you never end up with two ProseMirror instances.
+
+### UI components (shadcn registry)
+
+The rendered UI (slash menu, bubble toolbar, node views, …) is a real shadcn registry, built
+from this repo's own source and hosted at **https://slash-editor-eta.vercel.app** — install any
+piece on its own, or everything at once. Browse live examples and copy-paste commands at
+[`/docs`](https://slash-editor-eta.vercel.app/docs).
+
+Add the registry once, in your project's `components.json`:
+
+```json
+{
+  "registries": {
+    "@slash-editor": "https://slash-editor-eta.vercel.app/r/{name}.json"
+  }
+}
+```
+
+Then install everything:
+
+```bash
+bunx --bun shadcn@latest add @slash-editor/slash-editor-kit
+```
+
+…or a single piece, e.g. `bunx --bun shadcn@latest add @slash-editor/slash-menu`. Several
+components depend on this repo's own anchor-aware `popover`/`dropdown-menu` overrides (also
+served from the registry under the same namespace), not the stock shadcn versions — installing
+by raw URL instead of the `@slash-editor/…` namespace will fail to resolve those.
 
 ## Documentation
 
@@ -81,14 +120,14 @@ useSlashEditor({
 });
 ```
 
-## Demo stack
+## Working on the demo app
 
-`demo-react` is initialized with shadcn **Base UI** (`--base base`) and the `nova` preset, so
-registry components land in `src/components/ui` and inherit the project's tokens:
+`demo-react` (this repo's own playground/docs/registry host, not something you install) is
+initialized with shadcn **Base UI** (`--base base`) and the `nova` preset. To add a _stock_
+shadcn primitive to it (distinct from installing `@slash-editor` components into your own app —
+see [Installation](#installation) above):
 
 ```bash
 cd demo-react
 bunx --bun shadcn@latest add <component>
 ```
-
-`@slash-editor/core` and `@slash-editor/react` declare `@tiptap/core`, `@tiptap/pm`, and `@tiptap/react` as peer dependencies so a project never ends up with two ProseMirror instances.

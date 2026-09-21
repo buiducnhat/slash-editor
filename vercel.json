@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd demo-react && bun run registry:build && bun run build",
+  "outputDirectory": "demo-react/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

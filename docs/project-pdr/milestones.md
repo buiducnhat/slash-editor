@@ -141,22 +141,33 @@ registry (the kit → its 8 members; several members → `popover`/`dropdown-men
 `registryDependencies` entry against the _default_ shadcn registry regardless of which registry
 is asking, so a same-registry cross-reference needs either a namespace or a full URL; namespace
 was chosen since it doesn't hardcode a deploy origin into `registry.json`. Consumers add one entry
-to `components.json` (shown on `/docs`) before `shadcn add @slash-editor/<item>`. Verified against
-the literal acceptance bar: a scratch Vite app and a scratch Next.js app, `@slash-editor/core` and
-`/react` installed from real `bun pm pack` tarballs (workspace:\* resolved to a concrete version,
-standing in for a real npm publish pre-release), `shadcn add @slash-editor/slash-editor-kit`
-installing all 22 files into each, both type-checking and building clean. The tag-triggered
-`.github/workflows/release.yml` (build → `vp check` → registry-schema gate → publish) publishes
-with real `npm publish` (not `bun publish`, which has no OIDC support: oven-sh/bun#22423, #24855
-are both still open) authenticated via npm's OIDC Trusted Publishing — no stored npm token.
-`bun pm pack` still produces each tarball first, since it resolves `packages/react`'s
-`workspace:*` dependency on core to a real version before npm (which has no notion of that
-protocol) ever sees the manifest. The `v0.0.1` tag's first CI run failed exactly as expected: npm
-Trusted Publishing cannot bootstrap a package that has never been published (npmjs.com's Trusted
-Publisher form requires the package to already exist), so `@slash-editor/core`/`@slash-editor/react`
-each need one manual `npm publish` from a maintainer's own npm account before a Trusted Publisher
-can be registered against this repo + `release.yml`; every release after that bootstrap publishes
-unattended with zero long-lived secrets.
+to `components.json` (shown on `/docs`) before `shadcn add @slash-editor/<item>`.
+
+`demo-react` is deployed to Vercel at <https://slash-editor-eta.vercel.app> (root `vercel.json`:
+`cd demo-react && bun run registry:build && bun run build`, output `demo-react/dist`, SPA
+rewrite to `index.html` for the pushState router) — the registry and docs site are genuinely
+public, not just locally verified. `@slash-editor/core` and `@slash-editor/react` are published
+on the real npm registry (`0.0.6` is `latest` for both). The full acceptance bar was re-verified
+against these live artifacts, not a stand-in: a from-scratch Vite app installing the real npm
+packages plus `shadcn add @slash-editor/slash-editor-kit` from the live Vercel-hosted registry,
+type-checking and building clean.
+
+The tag-triggered `.github/workflows/release.yml` (build → `vp check` → registry-schema gate →
+publish) publishes with real `npm publish` (not `bun publish`, which has no OIDC support:
+oven-sh/bun#22423, #24855 are both still open) authenticated via npm's OIDC Trusted Publishing —
+no stored npm token. `bun pm pack` produces each tarball first, resolving `packages/react`'s
+`workspace:*` dependency on core to a concrete version before npm (which has no notion of that
+protocol) ever sees the manifest. Two bootstrap-era constraints, both one-time: npm Trusted
+Publishing cannot register against a package that has never been published, so each package's
+very first release needed one manual `npm publish` before its Trusted Publisher could be
+configured on npmjs.com; and `bumpp` only commits the exact files it version-bumps, never a
+lockfile a post-bump script touches, so `bun.lock`'s per-workspace version cache silently went
+stale across three releases (`0.0.1`/`0.0.4`/`0.0.5`, each shipping `@slash-editor/react` pinned to a
+`@slash-editor/core` version that was never published) before landing on the actual fix: the
+`release` script's `bumpp` invocation runs `--execute "bun install"` _and_ `--all` (`git add
+--all` before the commit), so the resynced lockfile is never left out of the release commit
+again. The broken intermediate versions were unpublished; `0.0.6` is the first release built
+with the fix and is `latest` for both packages.
 
 ---
 
