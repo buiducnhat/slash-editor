@@ -18,6 +18,12 @@ export interface SlashItem {
   aliases?: string[];
   /** Lower-weight search terms that are never displayed. */
   keywords?: string[];
+  /**
+   * Markdown input-rule shorthand shown as a hint in the menu (`#`, `---`).
+   * Display only — ranking never reads it, and it must mirror a rule the
+   * editor actually registers.
+   */
+  shortcut?: string;
   /** Icon key resolved by the UI layer; the core ships no components. */
   icon?: string;
   /** Hides the item when the current editor cannot run it. */
@@ -100,6 +106,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Large section title",
     aliases: ["h1", "title"],
     keywords: ["#"],
+    shortcut: "#",
     icon: "heading-1",
     when: (editor) => hasNode(editor, "heading"),
     run: ({ editor, range }) => {
@@ -113,6 +120,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Medium section title",
     aliases: ["h2", "subtitle"],
     keywords: ["##"],
+    shortcut: "##",
     icon: "heading-2",
     when: (editor) => hasNode(editor, "heading"),
     run: ({ editor, range }) => {
@@ -126,6 +134,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Small section title",
     aliases: ["h3"],
     keywords: ["###"],
+    shortcut: "###",
     icon: "heading-3",
     when: (editor) => hasNode(editor, "heading"),
     run: ({ editor, range }) => {
@@ -139,6 +148,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Unordered list",
     aliases: ["ul", "bullet"],
     keywords: ["-", "*"],
+    shortcut: "-",
     icon: "list",
     when: (editor) => hasNode(editor, "bulletList"),
     run: ({ editor, range }) => {
@@ -152,6 +162,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Ordered list",
     aliases: ["ol", "numbered"],
     keywords: ["1."],
+    shortcut: "1.",
     icon: "list-ordered",
     when: (editor) => hasNode(editor, "orderedList"),
     run: ({ editor, range }) => {
@@ -165,6 +176,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Checklist with checkboxes",
     aliases: ["todo", "checklist", "checkbox"],
     keywords: ["[]", "[ ]"],
+    shortcut: "[]",
     icon: "list-checks",
     when: (editor) => hasNode(editor, "taskList"),
     run: ({ editor, range }) => {
@@ -178,6 +190,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Capture a quotation",
     aliases: ["quote", "citation"],
     keywords: [">"],
+    shortcut: ">",
     icon: "quote",
     when: (editor) => hasNode(editor, "blockquote"),
     run: ({ editor, range }) => {
@@ -217,6 +230,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Monospaced code",
     aliases: ["code", "snippet"],
     keywords: ["```"],
+    shortcut: "```",
     icon: "code",
     when: (editor) => hasNode(editor, "codeBlock"),
     run: ({ editor, range }) => {
@@ -230,6 +244,7 @@ export const defaultSlashItems: SlashItem[] = [
     description: "Visual separator",
     aliases: ["divider", "hr", "rule"],
     keywords: ["---"],
+    shortcut: "---",
     icon: "minus",
     when: (editor) => hasNode(editor, "horizontalRule"),
     run: ({ editor, range }) => {

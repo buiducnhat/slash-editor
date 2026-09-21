@@ -20,6 +20,7 @@ import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
 import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
 import { mention, type MentionOptions } from "./mention.ts";
+import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
 import { defaultSlashItems, type SlashItem } from "./slash-items.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 import { table, type TableKitOptions } from "./table.ts";
@@ -49,6 +50,13 @@ export interface BlockKitOptions {
    * @default { char: "/", items: defaultSlashItems }
    */
   slash?: Partial<SlashCommandOptions> | false;
+  /**
+   * Empty-block placeholder hints, or `false` to render none. Only the block
+   * holding the caret shows one.
+   *
+   * @default {}
+   */
+  placeholder?: PlaceholderOptions | false;
   /**
    * Stable per-block id configuration, or `false` to opt out. Drag
    * targeting and the future comment/collaboration surfaces depend on it.
@@ -166,6 +174,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     headingLevels = DEFAULT_HEADING_LEVELS,
     history = true,
     slash,
+    placeholder: placeholderOptions,
     blockId: blockIdOptions,
     drag,
     bubbleToolbar: bubbleToolbarOptions,
@@ -226,6 +235,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
               ])(),
           }),
         ]),
+    ...(placeholderOptions === false ? [] : [placeholder(placeholderOptions)]),
     ...(blockIdOptions === false ? [] : [blockId(blockIdOptions)]),
     ...(drag === false ? [] : [blockDrag(drag)]),
     ...(bubbleToolbarOptions === false ? [] : [bubbleToolbar(bubbleToolbarOptions)]),

@@ -313,7 +313,7 @@ export const defaultAiSlashActions: AiSlashAction[] = [
     id: "continue-writing",
     title: "Continue writing",
     description: "AI extends the text above the cursor",
-    icon: "sparkles",
+    icon: "pencil-sparkles",
     prompt:
       "Continue writing the document naturally, matching its tone and style. Write only the continuation, with no preamble.",
   },
@@ -321,21 +321,21 @@ export const defaultAiSlashActions: AiSlashAction[] = [
     id: "summarize",
     title: "Summarize",
     description: "AI summarizes the text above the cursor",
-    icon: "sparkles",
+    icon: "broom-sparkles",
     prompt: "Summarize the following text in a few concise sentences.",
   },
   {
     id: "brainstorm-ideas",
     title: "Brainstorm ideas",
     description: "AI lists ideas related to the text above the cursor",
-    icon: "sparkles",
+    icon: "brain",
     prompt: "Brainstorm a short bullet list of ideas related to the following text.",
   },
   {
     id: "fix-spelling-grammar",
     title: "Fix spelling & grammar",
     description: "AI rewrites the text above the cursor, correcting mistakes",
-    icon: "sparkles",
+    icon: "spell-check",
     prompt:
       "Rewrite the following text, correcting spelling and grammar mistakes only, and preserve its meaning and tone.",
   },

@@ -143,6 +143,7 @@ const slashCommandPluginKey: PluginKey;
 
 interface SlashCommandOptions {
   char: string; // default "/"
+  hint: string; // default "Type to search"; inline prompt while the query is empty
   items: SlashItem[] | ((editor: Editor) => SlashItem[]);
   onError?: (error: unknown, ctx: { item: SlashItem; editor: Editor }) => void;
 }
@@ -172,6 +173,7 @@ interface SlashItem {
   description?: string;
   aliases?: string[]; // ranked like the title
   keywords?: string[]; // never displayed
+  shortcut?: string; // markdown input-rule hint shown in the menu, display only
   icon?: string; // icon *key*, resolved by the UI layer
   when?: (editor: Editor) => boolean;
   run: (context: SlashContext) => void; // { editor, range }
@@ -184,6 +186,39 @@ const defaultSlashItems: SlashItem[];
 `ordered-list`, `task-list`, `blockquote`, `callout`, `toggle`, `code-block`, `horizontal-rule`
 (group `"Basic blocks"`), `image`, `file`, `video`, `embed` (group `"Media"`), `table`, `columns`
 (group `"Structure"`) — each gated on schema presence via `when`.
+
+Items whose block has a markdown input rule also carry `shortcut`, rendered on the right of the
+row: `#`/`##`/`###`, `-`, `1.`, `[]`, `>`, ` ``` `, `---`. It is display only — ranking reads
+`keywords`.
+
+```ts
+// placeholder.ts
+const Placeholder: Extension<PlaceholderOptions>;
+function placeholder(options?: PlaceholderOptions): Extension;
+const placeholderPluginKey: PluginKey;
+
+type PlaceholderKey =
+  | "paragraph"
+  | "heading1"
+  | "heading2"
+  | "heading3"
+  | "listItem"
+  | "taskItem"
+  | "blockquote"
+  | "callout"
+  | "details";
+
+interface PlaceholderOptions {
+  text?: Partial<Record<PlaceholderKey, string>>; // per-slot overrides
+  resolve?: (ctx: PlaceholderContext) => string | null; // wins over `text`; null suppresses
+}
+const defaultPlaceholderText: Record<PlaceholderKey, string>;
+function placeholderKeyFor(node: Node, parent: Node | null): PlaceholderKey | null;
+```
+
+Only the empty block holding the caret is decorated, with `data-placeholder` and no class names.
+Slots are resolved from the node _and_ its parent, because the empty node inside a list item, task
+item, quote or callout is always a `paragraph`. Code blocks are never decorated.
 
 The module augments `@tiptap/core`'s `Storage` interface so `editor.storage.slashCommand` is typed at every call site.
 
@@ -506,6 +541,11 @@ interface SlashMenu extends SlashMenuState {
   close(): void;
 }
 
+function useActiveItemScroll(
+  activeId: string | null | undefined,
+  options?: ActiveItemScrollOptions, // { attribute?: string } — default "data-value"
+): (node: HTMLElement | null) => void; // ref callback for the scroll container
+
 function useBlockDrag(editor: Editor | null): BlockDrag;
 interface BlockDrag extends BlockDragState {
   hoverAnchor: BlockDragAnchor | null;
@@ -575,6 +615,12 @@ Re-exported from `@tiptap/react` so consumers need one import: `EditorContent`, 
 
 `useBlockDrag`'s click-vs-drag disambiguation lives entirely in the hook (not core): a grip press that stays within 4px opens `menuTarget`; past that it calls `storage.setDragging`. It is pure DOM gesture handling, not editor state.
 
+`useActiveItemScroll` exists because a command palette scrolls itself only while it owns the
+keyboard. The editor never loses focus here, so `cmdk` sees a controlled `value` change rather
+than an arrow key and its own `scrollSelectedIntoView` never runs. The hook scrolls with
+`block: "nearest"`, which is inert for an already visible row, so pointer hover cannot fight it.
+Both the slash menu and the mention menu use it.
+
 `useLinkEditor.confirm`/`.remove` are composed in the hook, not as core commands: they call the `link`
 mark's own `setLink`/`unsetLink` directly (see `link-editor.ts` above), then `closeLinkEditor()`. After
 `confirm`, the selection still rests on the just-created link, so `LinkEditor`'s own auto-open recomputes
@@ -589,7 +635,7 @@ outside the editor (an avatar row, an "N online" badge).
 
 ## Demo surface
 
-`demo-react/src/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components.
+`demo-react/src/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components, with a fallback icon so an unmapped key can never render a blank slot. Each row is one line — icon, title, `shortcut` — and `description` becomes the row's `title` tooltip.
 
 `demo-react/src/components/bubble-toolbar.tsx` is the reference toolbar: a `Popover` anchored to `useBubbleToolbar().anchor`, `open` fully controlled by `toolbar.open` (no `onOpenChange` — visibility is entirely selection-driven), rendering one `Button` per item with `onMouseDown={(e) => e.preventDefault()}` so a click never blurs the editor before `item.run` fires.
 

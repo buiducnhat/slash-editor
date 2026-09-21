@@ -29,5 +29,8 @@ The project's selling point is UI you own that still looks native to a shadcn ap
 
 - Menus and toolbars must not steal focus from the document: pass `initialFocus={false}` and `finalFocus={false}` to the popup.
 - Filtering and ranking belong to core. UI renders with `shouldFilter={false}` and a controlled `value`.
-- Core ships icon **keys**; components resolve them to icon components locally. Never import icons into `packages/core`.
+- Core ships icon **keys**; components resolve them to icon components locally. Never import icons into `packages/core`. Resolution must have a fallback: an unmapped key renders a placeholder icon, never a blank slot.
 - Anchor floating surfaces to the caret with the virtual element from `useSlashMenu().anchor`.
+- Suggestion lists must scroll their highlighted row into view with `useActiveItemScroll`. The palette never sees the arrow keys, so it will not do it on its own.
+- Menu rows stay one line: `truncate` the label and put any hint in `CommandShortcut`. Longer copy belongs in the row's `title` tooltip.
+- Editor placeholders and the slash hint are `::before`/`::after` on `[data-placeholder]` and `[data-decoration-id].is-empty`, and ship to consumers through the `css` block on the registry's `slash-editor-kit` item.

@@ -341,4 +341,17 @@
   .slash-content [data-type="aiBlock"] {
     @apply border-border bg-muted/40 text-muted-foreground rounded-lg border border-dashed p-3 text-sm;
   }
+
+  /* Core renders `data-placeholder` only on the empty block holding the
+     caret, so attribute presence is the whole condition. */
+  .slash-content [data-placeholder]::before {
+    @apply text-muted-foreground pointer-events-none float-left h-0;
+    content: attr(data-placeholder);
+  }
+
+  /* `is-empty` comes from @tiptap/suggestion: set while `/` has no query. */
+  .slash-content [data-decoration-id].is-empty::after {
+    @apply text-muted-foreground pointer-events-none;
+    content: attr(data-decoration-content);
+  }
 }

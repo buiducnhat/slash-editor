@@ -40,6 +40,12 @@ export interface SlashCommandOptions {
   /** Item registry, or a resolver called with the live editor. */
   items: SlashItem[] | ((editor: Editor) => SlashItem[]);
   /**
+   * Inline hint rendered next to the trigger character while the query is
+   * still empty, the way Notion prompts after `/`. Set to `""` to drop it.
+   * The UI layer renders it from `data-decoration-content`.
+   */
+  hint: string;
+  /**
    * Called when an item's `run` throws. The failing transaction is never
    * applied, so the document keeps the state it had before the item ran.
    */
@@ -68,6 +74,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
   addOptions() {
     return {
       char: "/",
+      hint: "Type to search",
       items: defaultSlashItems,
     };
   },
@@ -153,6 +160,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
       Suggestion<SlashItem, SlashItem>({
         editor,
         char: this.options.char,
+        decorationContent: this.options.hint,
         pluginKey: slashCommandPluginKey,
         allowSpaces: false,
         // Code blocks take their text literally; a slash there is just a slash.

@@ -15,6 +15,7 @@ Current suites (`vp test`, Node environment, no DOM):
 | `packages/core/tests/link-editor.test.ts`    | `canOpenLinkEditor` gating (mark presence, editability, selection/active-link), kit opt-out, `link` mark editing config                                     |
 | `packages/core/tests/media-nodes.test.ts`    | image/file/video/embed attribute defaults, JSON round trips, `false` opt-out                                                                                |
 | `packages/core/tests/mention.test.ts`        | opt-in wiring (no provider -> no `mention`), schema defaults/JSON round trip, `char`/`debounce`/`minQueryLength` pass-through                               |
+| `packages/core/tests/placeholder.test.ts`    | placeholder slot resolution per node type, heading level and containing block; code blocks excluded; kit opt-out                                            |
 | `packages/core/tests/slash-items.test.ts`    | empty-query ordering, ranking precedence, keyword shorthands, no-match, `when` gating, tie stability                                                        |
 | `packages/core/tests/table-columns.test.ts`  | table/columns/column schema inventory, JSON round trip, `columns{2,}` minimum enforced by the schema, `false` opt-out                                       |
 | `packages/core/tests/upload.test.ts`         | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                                                   |
@@ -25,18 +26,19 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 
 `demo-react/tests/e2e` (`vp run -F demo-react test:e2e`, config in `demo-react/playwright.config.ts`) drives the actual playground in Chromium — the automated counterpart to the manual checklist below, covering what unit tests structurally cannot: real pointer drags and real paste events.
 
-| File                        | Covers                                                                                                           |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `insert.spec.ts`            | slash menu: alias insert, Escape leaves typed text, popover closes after selection                               |
-| `reorder.spec.ts`           | gutter-handle drag reorders a top-level block relative to a sibling                                              |
-| `nest.spec.ts`              | rightward drag past the indent threshold nests a block inside a list item                                        |
-| `paste-notion.spec.ts`      | representative Notion clipboard HTML normalizes into the block schema                                            |
-| `paste-google-docs.spec.ts` | representative Google Docs clipboard HTML: inline-style marks, guid wrapper unwrap                               |
-| `media-upload.spec.ts`      | image placeholder → real upload → ready; failed upload → error → retry → ready, against the mock `UploadAdapter` |
-| `structure.spec.ts`         | table/columns/embed insertion via the slash menu, embed URL input → bookmark card                                |
-| `mention.spec.ts`           | async directory search → chip insertion, empty-result state, Escape leaves typed text                            |
-| `link-editor.spec.ts`       | drafting a link over a selection, click-to-edit an existing link, remove                                         |
-| `ai-actions.spec.ts`        | slash action → real stream → Keep (paragraph)/Discard, and error → retry, against the mock `StreamAdapter`       |
+| File                        | Covers                                                                                                                                                    |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `insert.spec.ts`            | slash menu: alias insert, Escape leaves typed text, popover closes after selection                                                                        |
+| `reorder.spec.ts`           | gutter-handle drag reorders a top-level block relative to a sibling                                                                                       |
+| `nest.spec.ts`              | rightward drag past the indent threshold nests a block inside a list item                                                                                 |
+| `paste-notion.spec.ts`      | representative Notion clipboard HTML normalizes into the block schema                                                                                     |
+| `paste-google-docs.spec.ts` | representative Google Docs clipboard HTML: inline-style marks, guid wrapper unwrap                                                                        |
+| `media-upload.spec.ts`      | image placeholder → real upload → ready; failed upload → error → retry → ready, against the mock `UploadAdapter`                                          |
+| `structure.spec.ts`         | table/columns/embed insertion via the slash menu, embed URL input → bookmark card                                                                         |
+| `mention.spec.ts`           | async directory search → chip insertion, empty-result state, Escape leaves typed text                                                                     |
+| `link-editor.spec.ts`       | drafting a link over a selection, click-to-edit an existing link, remove                                                                                  |
+| `ai-actions.spec.ts`        | slash action → real stream → Keep (paragraph)/Discard, and error → retry, against the mock `StreamAdapter`                                                |
+| `slash-menu-ux.spec.ts`     | arrow-key scrolling keeps the highlight in view, one-line rows with icons, a shown `shortcut` really converts the block, per-block placeholders, `/` hint |
 
 `tests/e2e/support.ts` holds the shared helpers:
 
@@ -73,7 +75,7 @@ Assert on DOM facts, not screenshots alone: `[data-slot=popover-content]` presen
 ## Manual checklist for editor changes
 
 1. Menu opens at the caret and closes on `Escape` without losing typed text.
-2. Arrow keys move the highlight and wrap; `Enter` applies and consumes the `/query` text.
+2. Arrow keys move the highlight, wrap, and keep it scrolled into view; `Enter` applies and consumes the `/query` text.
 3. Mouse click applies the same item as the keyboard.
 4. Trigger is inert where it should be (code blocks today).
 5. Reload with StrictMode on — the editor survives the double mount.
@@ -86,3 +88,5 @@ Assert on DOM facts, not screenshots alone: `[data-slot=popover-content]` presen
    never loses focus to the editor mid-keystroke.
 9. An AI slash action streams visibly into a dashed placeholder block; Keep replaces it with a real
    paragraph in one undo step, Discard removes it, and Try again restarts the same request.
+10. Typing `/` shows the "Type to search" hint next to the caret, which disappears at the first
+    character; applying a block leaves an empty block naming itself ("Heading 1", "List", "To-do").

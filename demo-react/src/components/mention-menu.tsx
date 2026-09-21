@@ -1,4 +1,4 @@
-import { useMention } from "@slash-editor/react";
+import { useActiveItemScroll, useMention } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import { Loader2Icon, UserIcon } from "lucide-react";
 import {
@@ -12,6 +12,7 @@ import { Popover, PopoverContent } from "@/components/ui/popover.tsx";
 
 export function MentionMenu({ editor }: { editor: Editor }) {
   const mention = useMention(editor);
+  const listRef = useActiveItemScroll(mention.activeItem?.id);
 
   return (
     <Popover
@@ -39,7 +40,7 @@ export function MentionMenu({ editor }: { editor: Editor }) {
             mention.setActiveIndex(mention.items.findIndex((item) => item.id === value));
           }}
         >
-          <CommandList>
+          <CommandList ref={listRef}>
             {mention.loading ? (
               <div className="text-muted-foreground flex items-center gap-2 px-3 py-4 text-sm">
                 <Loader2Icon className="size-4 animate-spin" />

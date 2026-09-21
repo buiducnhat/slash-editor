@@ -109,6 +109,16 @@ export {
   type MentionStorage,
 } from "./mention.ts";
 export {
+  defaultPlaceholderText,
+  Placeholder,
+  placeholder,
+  type PlaceholderContext,
+  type PlaceholderKey,
+  placeholderKeyFor,
+  type PlaceholderOptions,
+  placeholderPluginKey,
+} from "./placeholder.ts";
+export {
   SlashCommand,
   slashCommand,
   type SlashCommandOptions,

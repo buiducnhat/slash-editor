@@ -30,6 +30,16 @@ The editor **keeps focus the whole time**. The popup renders with `initialFocus=
 
 `Command` runs with `shouldFilter={false}` and a controlled `value`, because ranking lives in core. Mouse hover feeds `onValueChange` back into `setActiveIndex`, which is a no-op when the index is unchanged, so hover and keyboard cannot loop.
 
+**Scrolling is the cost of that ownership.** `cmdk` scrolls the highlighted row into view from its own `setState("value", …)` path — the one its key handler and pointer handler use. A controlled `value` prop takes a different branch that deliberately skips the scroll, so arrow keys moved the highlight off-screen with the list frozen. `useActiveItemScroll` (in `@slash-editor/react`) closes the gap from the outside rather than handing the keys back to `cmdk`, which would split keyboard ownership.
+
+## The trigger's own decorations
+
+`@tiptap/suggestion` wraps the live `/query` text in a span carrying `data-decoration-id`, `data-decoration-content` (from `SlashCommandOptions.hint`), and the class `is-empty` while the query is empty. The UI layer renders the hint with `[data-decoration-id].is-empty::after { content: attr(data-decoration-content) }` — the prompt appears with the `/` and disappears at the first character typed. `is-empty` is the only third-party class the content styles depend on.
+
+## Empty-block placeholders
+
+A separate extension (`placeholder.ts`) decorates the empty block holding the caret with `data-placeholder`, so pressing Enter after choosing a block type leaves a named empty block rather than a blank line. Its decorations are derived from the state they are drawn against, never from `editor.state`: mid-transaction those are different documents, and resolving a parent in the stale one mislabels every nested block (a list item's empty child reads as a plain paragraph).
+
 ## Ranking
 
 `filterSlashItems(items, query, editor?)` drops items whose `when(editor)` is false, then scores the rest:

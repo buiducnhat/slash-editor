@@ -115,7 +115,21 @@
         "@slash-editor/comment-panel",
         "@slash-editor/presence-avatars",
         "@slash-editor/node-views"
-      ]
+      ],
+      "css": {
+        ".slash-content [data-placeholder]::before": {
+          "content": "attr(data-placeholder)",
+          "color": "var(--color-muted-foreground)",
+          "pointer-events": "none",
+          "float": "left",
+          "height": "0"
+        },
+        ".slash-content [data-decoration-id].is-empty::after": {
+          "content": "attr(data-decoration-content)",
+          "color": "var(--color-muted-foreground)",
+          "pointer-events": "none"
+        }
+      }
     }
   ]
 }
