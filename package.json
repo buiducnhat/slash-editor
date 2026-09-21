@@ -1,6 +1,6 @@
 {
   "name": "slash-editor",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "description": "Notion-style block editor for React: headless core, shadcn-native UI.",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "test": "vp test",
     "test:e2e": "vp run -F demo-react test:e2e",
     "check": "vp check",
-    "release": "bumpp package.json packages/core/package.json packages/react/package.json --execute \"bun install\" --commit --tag --push",
+    "release": "bumpp package.json packages/core/package.json packages/react/package.json --execute \"bun install\" --all --commit --tag --push",
     "prepare": "vp config"
   },
   "devDependencies": {
