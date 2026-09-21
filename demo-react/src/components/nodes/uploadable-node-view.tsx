@@ -3,7 +3,6 @@ import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { RotateCcwIcon, UploadIcon, type LucideIcon } from "lucide-react";
 import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button.tsx";
-import { mockUploadAdapter } from "@/lib/upload-adapter.ts";
 
 interface UploadableNodeAttrs {
   id: string;
@@ -17,6 +16,8 @@ interface UploadableNodeViewProps extends NodeViewProps {
   accept: string;
   icon: LucideIcon;
   emptyLabel: string;
+  /** Adapter used for a freshly picked `File` — the host's, not this component's, choice. */
+  adapter: UploadAdapter;
   /** `editor.commands.retry<Type>` — bound by the per-node wrapper so this stays generic. */
   retry: (id: string, override?: { file: File; adapter: UploadAdapter }) => boolean;
   /** Renders the node once it has a `src` (ready or mid-retry after a prior success). */
@@ -30,7 +31,7 @@ interface UploadableNodeViewProps extends NodeViewProps {
  * picking a `File` and an adapter; core owns the upload/retry mechanics.
  */
 export function UploadableNodeView(props: UploadableNodeViewProps) {
-  const { node, accept, icon: Icon, emptyLabel, retry, renderReady } = props;
+  const { node, accept, icon: Icon, emptyLabel, adapter, retry, renderReady } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const attrs = node.attrs as UploadableNodeAttrs;
 
@@ -104,7 +105,7 @@ export function UploadableNodeView(props: UploadableNodeViewProps) {
           if (!file) {
             return;
           }
-          retry(attrs.id, { file, adapter: mockUploadAdapter });
+          retry(attrs.id, { file, adapter });
         }}
       />
     </NodeViewWrapper>

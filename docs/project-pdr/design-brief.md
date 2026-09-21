@@ -145,6 +145,55 @@ Every filter/rank/keyboard path is testable in Node without a DOM.
 
 Comment anchors are a PM mark `comment { threadId }`; thread bodies live **outside** the document in a host-provided store. Deleting text removes anchors but never loses threads; orphan threads resolve to "resolved/detached" in UI. Rendering via decorations, so comment state never dirties the doc.
 
+### Distribution design (M5)
+
+Registry authoring follows shadcn's own `registry.json` + `shadcn build` convention (not a
+hand-rolled generator): a root `demo-react/registry.json` declares one `registry:component` item
+per editor UI piece (`slash-menu`, `bubble-toolbar`, `block-handle`, `mention-menu`,
+`link-editor-popover`, `comment-panel`, `presence-avatars`, `node-views`), each with
+`registryDependencies` on the shadcn primitives it imports (`command`, `tooltip`, `input`,
+`textarea`, `separator`, `button`, and this repo's own `@slash-editor/popover`/
+`@slash-editor/dropdown-menu` — see below) so `shadcn add` installs both in one command, and
+`dependencies` on `@slash-editor/core`/`@slash-editor/react`. One umbrella `registry:block`
+(`slash-editor-kit`) `registryDependencies`-references every component item, namespaced
+(`@slash-editor/<item>`) rather than by bare name, for a single-command full install; individual
+items stay installable on their own. `shadcn build` emits `public/r/*.json`, served as static
+assets by the same Vite app that hosts the docs — schema correctness is enforced by the build
+command itself failing closed in CI, not a second validator. Node-view example files distributed
+this way must not import the demo's mock adapters directly (`UploadableNodeView` takes `adapter`
+as a prop, set by the per-type wrapper) — a registry consumer must never receive a hardcoded
+data-URL mock upload path.
+
+Two shadcn primitives are patched in this repo (`popover.tsx`/`dropdown-menu.tsx` forward an
+`anchor` prop to their `Positioner`, so a surface can anchor to the caret or a block's rect
+instead of a trigger element — see `code-standard/ui-conventions.md`) and every anchored surface
+depends on that prop. Shipping the _stock_ shadcn `popover`/`dropdown-menu` would type-check-fail
+at the consumer's build, silently and only there — caught during scratch-app verification, not by
+any check inside this repo, since our own `demo-react` already has the patched files. Fixed by
+publishing `popover`/`dropdown-menu` as our own `registry:ui` items and referencing them, from
+every item that needs them, via the `@slash-editor/<name>` namespace — never a bare name. This
+also surfaced the general rule: a bare `registryDependencies` entry (`"button"`) always resolves
+against the _default_ shadcn registry, never self-referentially against the registry the
+referencing item came from, regardless of nesting. Cross-references within this registry — the kit
+referencing its 8 members, several members referencing `popover`/`dropdown-menu` — therefore all
+use the `@slash-editor/<name>` namespace, resolved via a `components.json` `registries` entry the
+docs site's install instructions show. A namespace was chosen over embedding a full URL in
+`registry.json` so the file doesn't hardcode a deploy origin.
+
+The docs site is `demo-react` itself, not a new app: a small pushState router (no new dependency)
+adds `/docs` (registry setup snippet, install-everything command, and the item list) and
+`/docs/:item` (description, copy-paste `shadcn add @slash-editor/<item>` command, and a live
+instance scoped to that one feature).
+`/` keeps today's full playground. This matches the non-goal against adding docs tooling that
+duplicates the Vite/Tailwind/shadcn stack already in place.
+
+Release stays `bumpp`-driven: one invocation bumps `package.json`,
+`packages/core/package.json`, and `packages/react/package.json` to the same version in one prompt
+(true lockstep, not two separate releases). A tag push (`v*`) runs GitHub Actions: build, `vp
+check`, `shadcn build` (registry schema gate), then `bun publish --access public` for `core` then
+`react` in dependency order. No hosted release service — the workflow runs on GitHub's own
+runners against the public npm registry, consistent with the MIT/self-hostable stance.
+
 ### Performance constraints
 
 - Per-extension entry points in core; no barrel-only exports. Target `createBlockKit()` < 45 kB gz on top of Tiptap.
@@ -199,6 +248,15 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
   thread store adapter.
   _Done when:_ two browsers converge on concurrent edits across all custom nodes; offline reconnect merges cleanly.
   _Landed:_ see `project-pdr/milestones.md` for the full write-up.
+- **M5 — Distribution.** ✅ Done. shadcn registry items (granular + `slash-editor-kit` umbrella
+  block) for every editor UI piece, a docs site built into `demo-react` (`/docs` overview +
+  `/docs/:item` live pages), and a lockstep `bumpp` release wired to a tag-triggered GitHub
+  Actions publish workflow.
+  _Done when:_ `shadcn add` installs the menu into a scratch Vite and Next app and both type-check
+  and build.
+  _Landed:_ see `project-pdr/milestones.md` for the full write-up, including the cross-registry
+  namespace fix and the anchor-aware `popover`/`dropdown-menu` overrides the scratch-app
+  verification surfaced.
 
 ### Rollout
 
@@ -208,9 +266,10 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
 
 ### Open risks
 
-| Risk                                | Mitigation                                                                                                         |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Tiptap relicenses future extensions | Core depends only on `@tiptap/core` + `@tiptap/pm`; custom nodes are ours. Escape hatch is plain ProseMirror.      |
-| Tiptap ships a Tailwind UI kit      | Differentiation stays the block interaction model and registry ownership, not button styling.                      |
-| Universal nesting demanded later    | Container-node approach can add nodes incrementally; wrapper-schema migration documented as a breaking 1.0 option. |
-| Yjs retrofit at M4                  | Determinism rules for attrs/IDs enforced from M1 and covered by core tests.                                        |
+| Risk                                             | Mitigation                                                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Tiptap relicenses future extensions              | Core depends only on `@tiptap/core` + `@tiptap/pm`; custom nodes are ours. Escape hatch is plain ProseMirror.                            |
+| Tiptap ships a Tailwind UI kit                   | Differentiation stays the block interaction model and registry ownership, not button styling.                                            |
+| Universal nesting demanded later                 | Container-node approach can add nodes incrementally; wrapper-schema migration documented as a breaking 1.0 option.                       |
+| Yjs retrofit at M4                               | Determinism rules for attrs/IDs enforced from M1 and covered by core tests.                                                              |
+| Registry drifts from source as components change | `shadcn build` runs against the real source files every release, not a hand-maintained copy — drift fails the build, not silently ships. |

@@ -2,14 +2,14 @@
 
 Status legend: **Done** · **In progress** · **Not started**
 
-| Milestone                         | Status         |
-| --------------------------------- | -------------- |
-| M0 — Foundation                   | ✅ Done        |
-| M1 — Block UX                     | ✅ Done        |
-| M2 — Media & structure            | ✅ Done        |
-| M3 — Mentions & AI                | ✅ Done        |
-| M4 — Collaboration                | ✅ Done        |
-| Distribution — registry & release | ⬜ Not started |
+| Milestone              | Status  |
+| ---------------------- | ------- |
+| M0 — Foundation        | ✅ Done |
+| M1 — Block UX          | ✅ Done |
+| M2 — Media & structure | ✅ Done |
+| M3 — Mentions & AI     | ✅ Done |
+| M4 — Collaboration     | ✅ Done |
+| M5 — Distribution      | ✅ Done |
 
 ---
 
@@ -120,13 +120,35 @@ browser contexts converge on concurrent edits, one going offline mid-edit via `c
 and reconnecting cleanly; a single-page comment flow anchors a thread over a selection and resolves it
 through the mock `CommentThreadStore`.
 
-## Distribution ⬜
+## M5 — Distribution ✅
 
 _Done when: `shadcn add` installs the menu into a scratch Vite and Next app and both type-check and build._
 
-- [ ] shadcn registry items for the editor components (`/r/[name].json`)
-- [ ] Docs site built from `demo-react` with live examples
-- [ ] Release flow (`bumpp`, `0.x` lockstep versioning for core + react)
+- [x] shadcn registry: `demo-react/registry.json`, granular `registry:component` items per editor UI
+      piece plus a `slash-editor-kit` umbrella `registry:block`, built via `shadcn build` into
+      `public/r/*.json`
+- [x] Docs site built into `demo-react` (`/docs` overview, `/docs/:item` live pages), no new
+      framework dependency
+- [x] Release flow: lockstep `bumpp` (root + core + react), tag-triggered GitHub Actions publish
+
+_Landed:_ `registry.json` ships 8 granular items plus the `slash-editor-kit` umbrella block; two of
+the granular items (`popover`, `dropdown-menu`) are this repo's own anchor-aware `registry:ui`
+overrides of the stock shadcn primitives — every surface that anchors off-element (caret, block
+rect) depends on the `anchor` prop these add, so shipping the stock versions would silently break
+the build (caught exactly by the acceptance test below). Cross-references between items in this
+registry (the kit → its 8 members; several members → `popover`/`dropdown-menu`) use the
+`@slash-editor/<name>` namespace, not bare names or raw URLs — shadcn resolves a bare
+`registryDependencies` entry against the _default_ shadcn registry regardless of which registry
+is asking, so a same-registry cross-reference needs either a namespace or a full URL; namespace
+was chosen since it doesn't hardcode a deploy origin into `registry.json`. Consumers add one entry
+to `components.json` (shown on `/docs`) before `shadcn add @slash-editor/<item>`. Verified against
+the literal acceptance bar: a scratch Vite app and a scratch Next.js app, `@slash-editor/core` and
+`/react` installed from real `bun pm pack` tarballs (workspace:\* resolved to a concrete version,
+standing in for a real npm publish pre-release), `shadcn add @slash-editor/slash-editor-kit`
+installing all 22 files into each, both type-checking and building clean. The `.github` release
+workflow (build → `vp check` → registry-schema gate → `bun publish` core then react) is wired and
+ready but has not been run — an actual npm publish needs a maintainer to trigger the `release`
+script with real registry credentials, not something to run unattended.
 
 ---
 

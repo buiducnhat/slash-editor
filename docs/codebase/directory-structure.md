@@ -45,7 +45,7 @@ packages/react/               @slash-editor/react
   src/use-presence.ts         usePresence(): awareness state -> peer list, cached/event-driven
   tsconfig.json               resolves core via ../core/dist/index.d.mts
 
-demo-react/                   playground, docs target, future registry host
+demo-react/                   playground, docs site, and registry host
   server/collab-server.ts     Hocuspocus self-host recipe: Hocuspocus class bridged to Bun.serve via crossws
   server/tsconfig.json        Bun types scope, separate from the browser app's tsconfig
   index.html                  entry, `class="dark"` on <html>
@@ -59,14 +59,23 @@ demo-react/                   playground, docs target, future registry host
   src/components/presence-avatars.tsx  usePresence() as a row of colored initials with a Tooltip
   src/components/mention-menu.tsx    Command + Popover surface for @-mentions, loading row
   src/components/link-editor-popover.tsx  Input-driven popover: href, Open/Remove when editing
-  src/components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video
-  src/components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image
-  src/components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File
-  src/components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video
+  src/components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video; `adapter` passed as a prop, never imported
+  src/components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image; takes `adapter` as a prop
+  src/components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File; takes `adapter` as a prop
+  src/components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video; takes `adapter` as a prop
   src/components/nodes/embed-node-view.tsx   ReactNodeViewRenderer target for Embed: URL input, bookmark/iframe
   src/components/nodes/ai-block-node-view.tsx  ReactNodeViewRenderer target for AiBlock: stream/Keep/Discard/Try again
+  src/components/top-nav.tsx          Playground/Docs links, active-route highlighting
+  src/components/install-command.tsx  copy-paste `shadcn add <url>` box, shared by the overview and item pages
   src/components/ui/*.tsx     shadcn components (added via CLI, owned by the repo)
+  src/routes/docs-app.tsx     `/docs` + `/docs/:item` shell: sidebar nav, 404 fallback for an unknown slug
+  src/routes/docs-overview.tsx  install-everything command + the full item list
+  src/routes/docs-item.tsx    one live, isolated demo editor per registry item (`DEMOS` slug lookup)
   src/lib/utils.ts            re-exports cn from the `cn` package
+  src/lib/router.tsx          usePathname()/navigate()/Link: pushState routing, no new dependency
+  src/lib/registry-items.ts   docs-facing item metadata + registryUrl()/installCommand()
+  src/lib/node-view-extensions.tsx  nodeViewExtensions(): the one place `mockUploadAdapter` is wired into image/file/video
+  src/lib/fake-presence.ts    createFakePresenceProvider(): static awareness for the presence-avatars docs page
   src/lib/collaboration.ts    createDemoCollaboration(): shared Y.Doc + HocuspocusProvider per room
   src/lib/comment-store.ts    createMockCommentThreadStore(): in-memory CommentThreadStore
   src/lib/upload-adapter.ts   mockUploadAdapter: data-URL upload, `fail-`-prefixed names reject once
@@ -86,7 +95,8 @@ demo-react/                   playground, docs target, future registry host
   tests/e2e/link-editor.spec.ts         create over a selection, click-to-edit, remove
   tests/e2e/ai-actions.spec.ts          slash action → stream → keep/discard, and error → retry
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
-
+demo-react/registry.json      shadcn registry manifest: granular items + `slash-editor-kit` umbrella block
+.github/workflows/release.yml tag-triggered (`v*`) publish: build, `vp check`, registry schema gate, `bun publish` core then react
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases
 vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, vitest excludes demo-react/tests/e2e
@@ -103,6 +113,6 @@ vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, v
 
 ## Generated and ignored
 
-`dist/` in each package (built by `vp pack`), `node_modules/` (bun isolated linker: packages have their own `node_modules`). Nothing else is generated into the tree — declarations must never appear beside `packages/core/src/*.ts`; if they do, a build resolved core through the source alias.
+`dist/` in each package (built by `vp pack`), `node_modules/` (bun isolated linker: packages have their own `node_modules`), `demo-react/public/r/*.json` (built by `shadcn build` from `demo-react/registry.json`, served as the live registry). Nothing else is generated into the tree — declarations must never appear beside `packages/core/src/*.ts`; if they do, a build resolved core through the source alias.
 
 `demo-react/test-results/`, `demo-react/playwright-report/`, `demo-react/.last-run.json` (Playwright run artifacts, gitignored).

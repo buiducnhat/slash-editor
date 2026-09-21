@@ -12,7 +12,7 @@ Notion-style block editor for React: headless core on Tiptap/ProseMirror, UI you
 
 ## Status
 
-M0 (foundation) and M1 (block UX) complete — slash menu, block ids, drag handle, callout/toggle/task-list nodes, bubble toolbar, and a Playwright browser regression suite all ship. Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+M0–M4 (foundation through collaboration) complete — slash menu, block ids, drag handle, media/upload, mentions/AI, and real-time collaboration all ship. M5 (shadcn registry, docs site, release flow) in progress. Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
 
 ## Documentation
 

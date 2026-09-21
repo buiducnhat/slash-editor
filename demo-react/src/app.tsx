@@ -1,26 +1,23 @@
 import type { CommentThreadStore } from "@slash-editor/core";
-import { AiBlock, Embed, File as FileNode, Image, Video } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
-import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
-import { AiBlockNodeView } from "@/components/nodes/ai-block-node-view.tsx";
-import { EmbedNodeView } from "@/components/nodes/embed-node-view.tsx";
-import { FileNodeView } from "@/components/nodes/file-node-view.tsx";
-import { ImageNodeView } from "@/components/nodes/image-node-view.tsx";
-import { VideoNodeView } from "@/components/nodes/video-node-view.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
+import { TopNav } from "@/components/top-nav.tsx";
 import { type DemoCollaboration, createDemoCollaboration } from "@/lib/collaboration.ts";
 import { createMockCommentThreadStore } from "@/lib/comment-store.ts";
 import { mockMentionProvider } from "@/lib/mention-provider.ts";
+import { nodeViewExtensions } from "@/lib/node-view-extensions.tsx";
+import { usePathname } from "@/lib/router.tsx";
 import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
 import { cn } from "@/lib/utils.ts";
+import { DocsApp } from "@/routes/docs-app.tsx";
 
 const INITIAL_CONTENT = `
 <h1>slash-editor</h1>
@@ -78,16 +75,6 @@ function DocumentStats({ editor }: { editor: Editor }) {
   );
 }
 
-function nodeViewExtensions() {
-  return [
-    Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) }),
-    FileNode.extend({ addNodeView: () => ReactNodeViewRenderer(FileNodeView) }),
-    Video.extend({ addNodeView: () => ReactNodeViewRenderer(VideoNodeView) }),
-    Embed.extend({ addNodeView: () => ReactNodeViewRenderer(EmbedNodeView) }),
-    AiBlock.extend({ addNodeView: () => ReactNodeViewRenderer(AiBlockNodeView) }),
-  ];
-}
-
 function SoloApp() {
   const editor = useSlashEditor({
     content: INITIAL_CONTENT,
@@ -113,6 +100,7 @@ function SoloApp() {
   return (
     <main className="bg-background min-h-screen py-12">
       <div className="mx-auto w-full max-w-3xl px-6">
+        <TopNav />
         <header className="mb-6 flex items-baseline justify-between">
           <h1 className="text-sm font-medium tracking-tight">slash-editor playground</h1>
           {editor && <DocumentStats editor={editor} />}
@@ -184,6 +172,7 @@ function CollabApp({ room }: { room: string }) {
     <main className="bg-background min-h-screen py-12">
       <div className="mx-auto flex w-full max-w-5xl gap-6 px-6">
         <div className="min-w-0 flex-1">
+          <TopNav />
           <header className="mb-6 flex items-baseline justify-between">
             <h1 className="text-sm font-medium tracking-tight">
               slash-editor playground — room “{room}”
@@ -222,6 +211,10 @@ function readCollabRoom(): string | null {
 }
 
 export function App() {
+  const pathname = usePathname();
+  if (pathname === "/docs" || pathname.startsWith("/docs/")) {
+    return <DocsApp pathname={pathname} />;
+  }
   const room = readCollabRoom();
   return room ? <CollabApp key={room} room={room} /> : <SoloApp />;
 }

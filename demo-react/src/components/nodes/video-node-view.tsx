@@ -1,8 +1,9 @@
+import type { UploadAdapter } from "@slash-editor/core";
 import type { NodeViewProps } from "@tiptap/react";
 import { VideoIcon } from "lucide-react";
 import { UploadableNodeView } from "@/components/nodes/uploadable-node-view.tsx";
 
-export function VideoNodeView(props: NodeViewProps) {
+export function VideoNodeView(props: NodeViewProps & { adapter: UploadAdapter }) {
   return (
     <UploadableNodeView
       {...props}

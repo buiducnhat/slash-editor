@@ -1,3 +1,4 @@
+import type { UploadAdapter } from "@slash-editor/core";
 import type { NodeViewProps } from "@tiptap/react";
 import { PaperclipIcon } from "lucide-react";
 import { UploadableNodeView } from "@/components/nodes/uploadable-node-view.tsx";
@@ -16,7 +17,7 @@ function formatSize(bytes: number | null): string | null {
   return `${value.toFixed(value < 10 && unit > 0 ? 1 : 0)} ${units[unit]}`;
 }
 
-export function FileNodeView(props: NodeViewProps) {
+export function FileNodeView(props: NodeViewProps & { adapter: UploadAdapter }) {
   const name = (props.node.attrs.name as string | null) ?? "Untitled file";
   const size = formatSize(props.node.attrs.size as number | null);
 

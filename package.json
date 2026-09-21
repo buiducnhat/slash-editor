@@ -16,6 +16,7 @@
     "test": "vp test",
     "test:e2e": "vp run -F demo-react test:e2e",
     "check": "vp check",
+    "release": "bumpp package.json packages/core/package.json packages/react/package.json --commit --tag --push",
     "prepare": "vp config"
   },
   "devDependencies": {
