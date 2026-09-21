@@ -2,6 +2,12 @@ import type { Extensions } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
+import {
+  aiBlock,
+  type AiKitOptions,
+  createAiSlashItems,
+  defaultAiSlashActions,
+} from "./ai-block.ts";
 import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
 import { bubbleToolbar, type BubbleToolbarOptions } from "./bubble-toolbar.ts";
@@ -10,6 +16,9 @@ import { column, columns, type ColumnsOptions } from "./columns.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
+import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
+import { mention, type MentionOptions } from "./mention.ts";
+import { defaultSlashItems, type SlashItem } from "./slash-items.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 import { table, type TableKitOptions } from "./table.ts";
 import { video, type VideoOptions } from "./video.ts";
@@ -102,6 +111,27 @@ export interface BlockKitOptions {
    * @default {}
    */
   columns?: Partial<ColumnsOptions> | false;
+  /**
+   * Selection-anchored link editing popover, or `false` to opt out.
+   * Requires the `link` mark, configured on by `createBlockKit` with
+   * `openOnClick: false, enableClickSelection: true` so clicking a link
+   * while editing selects it instead of navigating away.
+   *
+   * @default {}
+   */
+  linkEditor?: Partial<LinkEditorOptions> | false;
+  /**
+   * `@`-mention node with an async, bring-your-own provider. Omit to leave
+   * the trigger character inert — there is no default provider to fall
+   * back to, unlike the always-on `slash` menu.
+   */
+  mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
+  /**
+   * AI slash actions (`Continue writing`, `Summarize`, …) streamed through
+   * a bring-your-own `StreamAdapter`. Omit to leave those slash items out —
+   * there is no default adapter to fall back to.
+   */
+  ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
 }
 
 const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
@@ -128,13 +158,23 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     embed: embedOptions,
     table: tableOptions,
     columns: columnsOptions,
+    linkEditor: linkEditorOptions,
+    mention: mentionOptions,
+    ai: aiOptions,
     extend = [],
   } = options;
+
+  const resolvedAi: AiKitOptions | undefined = aiOptions
+    ? { actions: defaultAiSlashActions, node: true, ...aiOptions }
+    : undefined;
 
   return [
     StarterKit.configure({
       heading: { levels: headingLevels },
       undoRedo: history ? {} : false,
+      // Editing wants clicking a link to select it (feeding LinkEditor's
+      // auto-open), never to navigate away mid-edit.
+      link: { openOnClick: false, enableClickSelection: true },
     }),
     TaskList,
     TaskItem.configure({ nested: true }),
@@ -148,10 +188,25 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(embedOptions === false ? [] : [embed(embedOptions)]),
     ...(tableOptions === false ? [] : [table(tableOptions)]),
     ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
-    ...(slash === false ? [] : [slashCommand(slash)]),
+    ...(resolvedAi && resolvedAi.node !== false ? [aiBlock()] : []),
+    ...(mentionOptions === false || !mentionOptions ? [] : [mention(mentionOptions)]),
+    ...(slash === false
+      ? []
+      : [
+          slashCommand({
+            ...slash,
+            items:
+              slash?.items ??
+              ((): SlashItem[] => [
+                ...defaultSlashItems,
+                ...(resolvedAi ? createAiSlashItems(resolvedAi) : []),
+              ])(),
+          }),
+        ]),
     ...(blockIdOptions === false ? [] : [blockId(blockIdOptions)]),
     ...(drag === false ? [] : [blockDrag(drag)]),
     ...(bubbleToolbarOptions === false ? [] : [bubbleToolbar(bubbleToolbarOptions)]),
+    ...(linkEditorOptions === false ? [] : [linkEditor(linkEditorOptions)]),
     ...extend,
   ];
 }

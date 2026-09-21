@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { Extension, isTextSelection, posToDOMRect } from "@tiptap/core";
+import { canOpenLinkEditor } from "./link-editor.ts";
 
 export interface BubbleToolbarItem {
   /** Stable identity for React keys. */
@@ -96,6 +97,16 @@ export const defaultBubbleToolbarItems: BubbleToolbarItem[] = [
     isActive: (editor) => editor.isActive("code"),
     run: (editor) => {
       editor.chain().focus().toggleCode().run();
+    },
+  },
+  {
+    id: "link",
+    label: "Link",
+    icon: "link",
+    when: (editor) => canOpenLinkEditor(editor),
+    isActive: (editor) => editor.isActive("link"),
+    run: (editor) => {
+      editor.commands.openLinkEditor();
     },
   },
 ];

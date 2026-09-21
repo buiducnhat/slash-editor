@@ -17,7 +17,7 @@ function editorWith(marks: string[], active: string[] = []): Editor {
 const ids = (items: BubbleToolbarItem[]) => items.map((item) => item.id);
 
 test("default items cover every baseline mark", () => {
-  expect(ids(defaultBubbleToolbarItems)).toEqual(["bold", "italic", "strike", "code"]);
+  expect(ids(defaultBubbleToolbarItems)).toEqual(["bold", "italic", "strike", "code", "link"]);
 });
 
 test("items are hidden when the editor schema cannot host their mark", () => {

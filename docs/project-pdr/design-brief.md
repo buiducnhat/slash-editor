@@ -184,8 +184,16 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
   `extend` (`Image.extend({ addNodeView: () => ReactNodeViewRenderer(...) })`) without a duplicate schema
   registration; Playwright coverage of the real upload → error → retry → ready transition against a mock
   adapter, plus table/columns/embed insertion.
-- **M3 — Mentions & AI.** `@`-mentions with async provider, inline links, AI slash actions over a `StreamAdapter` (bring-your-own endpoint, SSE).
+- **M3 — Mentions & AI.** ✅ Done. `@`-mentions with async provider, inline link editing, AI slash actions over a `StreamAdapter` (bring-your-own endpoint, SSE).
   _Done when:_ demo works against a local mock endpoint; no vendor SDK in deps.
+  _Landed:_ `Mention` (async `Suggestion` provider with `loading`/`debounce`/abort, opt-in via
+  `mention: { items }`); `LinkEditor` (popover visibility + draft href only — applying/removing calls
+  the `link` mark's own commands directly; auto-opens on cursor-in-link, plus a bubble-toolbar "Link"
+  item for drafting over a selection); `AiBlock` transient node + `StreamAdapter` contract +
+  `PendingAiRegistry` + four default slash actions via `createAiSlashItems`, opt-in via `ai: { adapter }`
+  with a `node: false` opt-out for a host-supplied `NodeView` (`demo-react`'s `AiBlockNodeView`: Keep/
+  Discard/Try again). Playwright coverage of async search, click-to-edit/remove, and the real
+  stream → error → retry → keep/discard transitions against mock providers.
 - **M4 — Collaboration.** Yjs + y-prosemirror, Hocuspocus self-host recipe, presence cursors, comment marks + thread store adapter.
   _Done when:_ two browsers converge on concurrent edits across all custom nodes; offline reconnect merges cleanly.
 

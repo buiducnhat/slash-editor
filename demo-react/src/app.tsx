@@ -1,14 +1,19 @@
-import { Embed, File as FileNode, Image, Video } from "@slash-editor/core";
+import { AiBlock, Embed, File as FileNode, Image, Video } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditorState, useSlashEditor } from "@slash-editor/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
+import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
+import { MentionMenu } from "@/components/mention-menu.tsx";
+import { AiBlockNodeView } from "@/components/nodes/ai-block-node-view.tsx";
 import { EmbedNodeView } from "@/components/nodes/embed-node-view.tsx";
 import { FileNodeView } from "@/components/nodes/file-node-view.tsx";
 import { ImageNodeView } from "@/components/nodes/image-node-view.tsx";
 import { VideoNodeView } from "@/components/nodes/video-node-view.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
+import { mockMentionProvider } from "@/lib/mention-provider.ts";
+import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
 import { cn } from "@/lib/utils.ts";
 
 const INITIAL_CONTENT = `
@@ -37,6 +42,10 @@ const INITIAL_CONTENT = `
   <div data-type="column"><p>Columns are a container node: side-by-side content that still nests through the same drag/drop rules as lists.</p></div>
   <div data-type="column"><p>Type <code>/columns</code> to insert a new side-by-side layout.</p></div>
 </div>
+<h2>Mentions, links &amp; AI</h2>
+<p>Type <code>@</code> to mention a teammate: cc <span data-type="mention" data-id="1">@Ada Lovelace</span> — thanks!</p>
+<p>Click this <a href="https://prosemirror.net">link</a> to edit or remove it inline.</p>
+<p>Type <code>/continue-writing</code>, <code>/summarize</code>, <code>/brainstorm-ideas</code>, or <code>/fix-spelling-grammar</code> to stream an AI response through a mock <code>StreamAdapter</code>.</p>
 <table>
   <tbody>
     <tr><th><p>Node</p></th><th><p>Adapter</p></th></tr>
@@ -71,11 +80,16 @@ export function App() {
       file: false,
       video: false,
       embed: false,
+      ai: { adapter: mockStreamAdapter, node: false },
+      mention: {
+        items: (query, { signal }) => mockMentionProvider(query, signal),
+      },
       extend: [
         Image.extend({ addNodeView: () => ReactNodeViewRenderer(ImageNodeView) }),
         FileNode.extend({ addNodeView: () => ReactNodeViewRenderer(FileNodeView) }),
         Video.extend({ addNodeView: () => ReactNodeViewRenderer(VideoNodeView) }),
         Embed.extend({ addNodeView: () => ReactNodeViewRenderer(EmbedNodeView) }),
+        AiBlock.extend({ addNodeView: () => ReactNodeViewRenderer(AiBlockNodeView) }),
       ],
     },
     editorProps: {
@@ -102,8 +116,10 @@ export function App() {
         >
           <EditorContent editor={editor} />
           {editor && <SlashMenu editor={editor} />}
+          {editor && <MentionMenu editor={editor} />}
           {editor && <BlockHandle editor={editor} />}
           {editor && <BubbleToolbar editor={editor} />}
+          {editor && <LinkEditorPopover editor={editor} />}
         </div>
       </div>
     </main>

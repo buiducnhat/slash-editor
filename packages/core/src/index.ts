@@ -1,4 +1,20 @@
 export {
+  AiBlock,
+  aiBlock,
+  type AiActionStatus,
+  type AiBlockOptions,
+  type AiBlockStorage,
+  type AiKitOptions,
+  type AiRequest,
+  type AiSlashAction,
+  createAiSlashItems,
+  defaultAiSlashActions,
+  PendingAiRegistry,
+  type RunAiActionOptions,
+  type StreamAdapter,
+  type StreamContext,
+} from "./ai-block.ts";
+export {
   BlockDrag,
   blockDrag,
   blockDragPluginKey,
@@ -58,6 +74,23 @@ export {
   type SetImageFromSrc,
   type SetImageOptions,
 } from "./image.ts";
+export {
+  canOpenLinkEditor,
+  LinkEditor,
+  linkEditor,
+  type LinkEditorOptions,
+  type LinkEditorState,
+  type LinkEditorStorage,
+} from "./link-editor.ts";
+export {
+  Mention,
+  mention,
+  type MentionItem,
+  type MentionOptions,
+  mentionPluginKey,
+  type MentionState,
+  type MentionStorage,
+} from "./mention.ts";
 export {
   SlashCommand,
   slashCommand,

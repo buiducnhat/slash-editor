@@ -13,4 +13,6 @@ export {
   type BubbleToolbarItem,
   useBubbleToolbar,
 } from "./use-bubble-toolbar.ts";
+export { type LinkEditor, type LinkEditorAnchor, useLinkEditor } from "./use-link-editor.ts";
+export { type MentionMenu, type MentionMenuAnchor, useMention } from "./use-mention.ts";
 export { type SlashMenu, type SlashMenuAnchor, useSlashMenu } from "./use-slash-menu.ts";

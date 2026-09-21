@@ -333,4 +333,12 @@
   .slash-content .selectedCell::after {
     @apply bg-primary/20 pointer-events-none absolute inset-0 z-[2] content-[''];
   }
+
+  .slash-content [data-type="mention"] {
+    @apply bg-primary/10 text-primary rounded px-1 py-0.5 font-medium;
+  }
+
+  .slash-content [data-type="aiBlock"] {
+    @apply border-border bg-muted/40 text-muted-foreground rounded-lg border border-dashed p-3 text-sm;
+  }
 }

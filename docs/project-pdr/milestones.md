@@ -7,7 +7,7 @@ Status legend: **Done** · **In progress** · **Not started**
 | M0 — Foundation                   | ✅ Done        |
 | M1 — Block UX                     | ✅ Done        |
 | M2 — Media & structure            | ✅ Done        |
-| M3 — Mentions & AI                | ⬜ Not started |
+| M3 — Mentions & AI                | ✅ Done        |
 | M4 — Collaboration                | ⬜ Not started |
 | Distribution — registry & release | ⬜ Not started |
 
@@ -60,13 +60,31 @@ registration (`Image.extend({ addNodeView: () => ReactNodeViewRenderer(...) })` 
 (`media-upload.spec.ts`, `structure.spec.ts`) exercising the real upload → error → retry → ready
 transition against a mock `UploadAdapter`, plus table/columns/embed insertion.
 
-## M3 — Mentions & AI ⬜
+## M3 — Mentions & AI ✅
 
 _Done when: the demo works against a local mock endpoint with no vendor SDK in the dependency graph._
 
-- [ ] `@`-mentions with async provider
-- [ ] Inline link editing UI
-- [ ] AI slash actions over a `StreamAdapter` (bring-your-own SSE endpoint)
+- [x] `@`-mentions with async provider
+- [x] Inline link editing UI
+- [x] AI slash actions over a `StreamAdapter` (bring-your-own SSE endpoint)
+
+_Landed:_ `Mention` node built on `@tiptap/suggestion`'s native async `items`/`debounce`/
+`minQueryLength`/abort support — mirrors `SlashCommand`'s storage/keyboard shape plus a `loading` flag
+the (always-synchronous) slash registry never needs; opt-in via `mention: { items }` on `createBlockKit`
+since there is no default provider. `LinkEditor` extension owns only popover visibility and the draft
+href — applying/removing a link calls the `link` mark's own `setLink`/`unsetLink` directly, the same way
+a `BubbleToolbarItem` calls `toggleBold`; auto-opens (`editing: true`) whenever the cursor lands inside
+an existing link (`StarterKit`'s `link` now configured `openOnClick: false, enableClickSelection: true`),
+and a new "Link" bubble-toolbar item opens it (`editing: false`) over a fresh text selection. `AiBlock`
+transient node + `StreamAdapter` contract (`stream(request, context): AsyncIterable<string>`) +
+`PendingAiRegistry` (kept on success, unlike uploads, so "try again" always has the last request to
+replay) + four default AI slash actions (`continue-writing`/`summarize`/`brainstorm-ideas`/
+`fix-spelling-grammar`, each operating on the document text up to the trigger — a slash command never
+carries a real text selection) via `createAiSlashItems`; `runAiAction`/`retryAiAction`/`acceptAiAction`/
+`discardAiAction` commands, opt-in via `ai: { adapter }` with a `node: false` sub-option mirroring M2's
+opt-out-and-`extend` seam for a host-supplied `NodeView`. Playwright coverage (`mention.spec.ts`,
+`link-editor.spec.ts`, `ai-actions.spec.ts`) exercising the real async search, click-to-edit/remove, and
+stream → error → retry → keep/discard transitions against mock providers.
 
 ## M4 — Collaboration ⬜
 
