@@ -145,10 +145,18 @@ to `components.json` (shown on `/docs`) before `shadcn add @slash-editor/<item>`
 the literal acceptance bar: a scratch Vite app and a scratch Next.js app, `@slash-editor/core` and
 `/react` installed from real `bun pm pack` tarballs (workspace:\* resolved to a concrete version,
 standing in for a real npm publish pre-release), `shadcn add @slash-editor/slash-editor-kit`
-installing all 22 files into each, both type-checking and building clean. The `.github` release
-workflow (build → `vp check` → registry-schema gate → `bun publish` core then react) is wired and
-ready but has not been run — an actual npm publish needs a maintainer to trigger the `release`
-script with real registry credentials, not something to run unattended.
+installing all 22 files into each, both type-checking and building clean. The tag-triggered
+`.github/workflows/release.yml` (build → `vp check` → registry-schema gate → publish) publishes
+with real `npm publish` (not `bun publish`, which has no OIDC support: oven-sh/bun#22423, #24855
+are both still open) authenticated via npm's OIDC Trusted Publishing — no stored npm token.
+`bun pm pack` still produces each tarball first, since it resolves `packages/react`'s
+`workspace:*` dependency on core to a real version before npm (which has no notion of that
+protocol) ever sees the manifest. The `v0.0.1` tag's first CI run failed exactly as expected: npm
+Trusted Publishing cannot bootstrap a package that has never been published (npmjs.com's Trusted
+Publisher form requires the package to already exist), so `@slash-editor/core`/`@slash-editor/react`
+each need one manual `npm publish` from a maintainer's own npm account before a Trusted Publisher
+can be registered against this repo + `release.yml`; every release after that bootstrap publishes
+unattended with zero long-lived secrets.
 
 ---
 

@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # required for npm OIDC trusted publishing
 
 jobs:
   release:
@@ -19,6 +20,22 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.2"
+
+      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855, both still
+      # open) — the actual registry upload runs through real npm instead. Trusted
+      # publishing needs npm CLI >= 11.5.1 (Node 24 ships a recent-enough npm, but
+      # pin the floor explicitly rather than trust whatever a given runner image
+      # bundles).
+      - name: Set up Node (npm publish supports OIDC; bun publish does not)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -33,14 +50,22 @@ jobs:
         working-directory: demo-react
         run: bun run registry:build
 
-      - name: Publish @slash-editor/core
+      # `bun pm pack` strips the `workspace:*` protocol and resolves it to a real
+      # version — plain `npm publish` from a directory doesn't understand that
+      # protocol at all, so react's dependency on core must already be a concrete
+      # version before npm ever sees the manifest. Pack with bun, publish the
+      # resulting tarball with npm (OIDC needs no token: the Trusted Publisher for
+      # each package is configured on npmjs.com against this repo + workflow file).
+      - name: Pack @slash-editor/core
         working-directory: packages/core
-        run: bun publish --access public
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bun pm pack --destination /tmp/pack/core
+
+      - name: Publish @slash-editor/core
+        run: npm publish /tmp/pack/core/*.tgz --access public --ignore-scripts
+
+      - name: Pack @slash-editor/react
+        working-directory: packages/react
+        run: bun pm pack --destination /tmp/pack/react
 
       - name: Publish @slash-editor/react
-        working-directory: packages/react
-        run: bun publish --access public
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish /tmp/pack/react/*.tgz --access public --ignore-scripts

@@ -190,9 +190,18 @@ duplicates the Vite/Tailwind/shadcn stack already in place.
 Release stays `bumpp`-driven: one invocation bumps `package.json`,
 `packages/core/package.json`, and `packages/react/package.json` to the same version in one prompt
 (true lockstep, not two separate releases). A tag push (`v*`) runs GitHub Actions: build, `vp
-check`, `shadcn build` (registry schema gate), then `bun publish --access public` for `core` then
-`react` in dependency order. No hosted release service — the workflow runs on GitHub's own
-runners against the public npm registry, consistent with the MIT/self-hostable stance.
+check`, `shadcn build` (registry schema gate), then publish. Publishing uses real `npm publish`
+(not `bun publish`, which has no OIDC support — oven-sh/bun#22423, #24855) authenticated via npm's
+OIDC Trusted Publishing, so the workflow stores no long-lived npm token at all; `bun pm pack`
+still does the packing (it resolves `packages/react`'s `workspace:*` dependency on core to a real
+version — plain npm has no notion of that protocol), and `npm publish` uploads the resulting
+tarball. Trusted Publishing cannot bootstrap a brand-new package: npm requires the package to
+already exist before a Trusted Publisher can be configured on npmjs.com, so each package's very
+first publish is a one-time manual `npm publish` a maintainer runs locally with their own npm
+account, after which the GitHub Actions + workflow-filename pair is registered as that package's
+Trusted Publisher and every subsequent tag push publishes with zero stored secrets. No hosted
+release service — the workflow runs on GitHub's own runners against the public npm registry,
+consistent with the MIT/self-hostable stance.
 
 ### Performance constraints
 
