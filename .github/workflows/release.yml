@@ -56,11 +56,16 @@ jobs:
       # version before npm ever sees the manifest. Pack with bun, publish the
       # resulting tarball with npm (OIDC needs no token: the Trusted Publisher for
       # each package is configured on npmjs.com against this repo + workflow file).
+      # `npm publish` runs from `/tmp`, not the repo: the root `package.json`'s
+      # `devEngines.packageManager` (bun-only) makes npm refuse to run *anywhere*
+      # inside this tree (EBADDEVENGINES), even in a package with no devEngines
+      # of its own — devEngines resolves against the workspace root, not cwd.
       - name: Pack @slash-editor/core
         working-directory: packages/core
         run: bun pm pack --destination /tmp/pack/core
 
       - name: Publish @slash-editor/core
+        working-directory: /tmp
         run: npm publish /tmp/pack/core/*.tgz --access public --ignore-scripts
 
       - name: Pack @slash-editor/react
@@ -68,4 +73,5 @@ jobs:
         run: bun pm pack --destination /tmp/pack/react
 
       - name: Publish @slash-editor/react
+        working-directory: /tmp
         run: npm publish /tmp/pack/react/*.tgz --access public --ignore-scripts
