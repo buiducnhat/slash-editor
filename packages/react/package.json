@@ -1,6 +1,6 @@
 {
   "name": "@slash-editor/react",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Headless React bindings for slash-editor: provider, hooks, unstyled primitives.",
   "license": "MIT",
   "repository": {
