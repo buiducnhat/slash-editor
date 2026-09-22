@@ -213,6 +213,15 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
 
   return [
     StarterKit.configure({
+      /*
+       * No gap cursor. ProseMirror hands one to any click that lands on an
+       * isolated block's boundary — the strip a margin leaves between two
+       * blocks, the space beside an atom — and typing there inserts a new
+       * block instead of continuing the nearest line. Clicking empty space
+       * focuses the closest text position instead, which is what a block
+       * editor's whitespace should do.
+       */
+      gapcursor: false,
       heading: { levels: headingLevels },
       undoRedo: resolvedHistory ? {} : false,
       // Editing wants clicking a link to select it (feeding LinkEditor's

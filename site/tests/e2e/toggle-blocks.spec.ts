@@ -247,4 +247,41 @@ test.describe("toggle navigation", () => {
     expect(centre).toBeGreaterThanOrEqual(summaryBox.y);
     expect(centre).toBeLessThanOrEqual(summaryBox.y + summaryBox.height);
   });
+
+  test("the space under a toggle focuses a line instead of starting a new block", async ({
+    page,
+  }) => {
+    await page.goto("/playground");
+    await focusTrailingParagraph(page);
+
+    await page.keyboard.type("> Gap one", { delay: 15 });
+    const first = toggle(page, "Gap one");
+    await expect(first.locator("summary")).toHaveText("Gap one");
+
+    // ArrowDown leaves the collapsed toggle for the block after it, which the
+    // second toggle then takes over — leaving a margin-sized space between
+    // the two.
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.type("> Gap two", { delay: 15 });
+    const second = toggle(page, "Gap two");
+    await expect(second.locator("summary")).toHaveText("Gap two");
+
+    const above = (await first.boundingBox())!;
+    const below = (await second.boundingBox())!;
+    const blocks = editor(page).locator("> *");
+    const count = await blocks.count();
+
+    await page.mouse.click(above.x + above.width / 2, (above.y + above.height + below.y) / 2);
+
+    // This space used to hold a gap cursor, and the next keystroke became a
+    // block of its own instead of joining the nearest line.
+    await expect(page.locator(".ProseMirror-gapcursor")).toHaveCount(0);
+
+    await page.keyboard.type("zz", { delay: 15 });
+
+    await expect(blocks).toHaveCount(count);
+    await expect(
+      editor(page).locator('[data-type="details"] summary', { hasText: "zz" }),
+    ).toHaveCount(1);
+  });
 });

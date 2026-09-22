@@ -26,20 +26,20 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 
 `site/tests/e2e` (`vp run -F site test:e2e`, config in `site/playwright.config.ts`) drives the actual playground in Chromium — the automated counterpart to the manual checklist below, covering what unit tests structurally cannot: real pointer drags and real paste events.
 
-| File                        | Covers                                                                                                                                                    |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `insert.spec.ts`            | slash menu: alias insert, Escape leaves typed text, popover closes after selection                                                                        |
-| `reorder.spec.ts`           | gutter-handle drag reorders a top-level block relative to a sibling                                                                                       |
-| `nest.spec.ts`              | rightward drag past the indent threshold nests a block inside a list item                                                                                 |
-| `paste-notion.spec.ts`      | representative Notion clipboard HTML normalizes into the block schema                                                                                     |
-| `paste-google-docs.spec.ts` | representative Google Docs clipboard HTML: inline-style marks, guid wrapper unwrap                                                                        |
-| `media-upload.spec.ts`      | image placeholder → real upload → ready; failed upload → error → retry → ready, against the mock `UploadAdapter`                                          |
-| `structure.spec.ts`         | table/columns/embed insertion via the slash menu, embed URL input → bookmark card                                                                         |
-| `mention.spec.ts`           | async directory search → chip insertion, empty-result state, Escape leaves typed text                                                                     |
-| `link-editor.spec.ts`       | drafting a link over a selection, click-to-edit an existing link, remove                                                                                  |
-| `ai-actions.spec.ts`        | slash action → real stream → Keep (paragraph)/Discard, and error → retry, against the mock `StreamAdapter`                                                |
-| `toggle-blocks.spec.ts`     | `>` makes a toggle and `"` a quote; `# ` + `> ` and in-title `##` set the level; level and block id survive open/close; Advanced blocks slash rows        |
-| `slash-menu-ux.spec.ts`     | arrow-key scrolling keeps the highlight in view, one-line rows with icons, a shown `shortcut` really converts the block, per-block placeholders, `/` hint |
+| File                        | Covers                                                                                                                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `insert.spec.ts`            | slash menu: alias insert, Escape leaves typed text, popover closes after selection                                                                                                                      |
+| `reorder.spec.ts`           | gutter-handle drag reorders a top-level block relative to a sibling; a tall block's handle rides its first line                                                                                         |
+| `nest.spec.ts`              | rightward drag past the indent threshold nests a block inside a list item                                                                                                                               |
+| `paste-notion.spec.ts`      | representative Notion clipboard HTML normalizes into the block schema                                                                                                                                   |
+| `paste-google-docs.spec.ts` | representative Google Docs clipboard HTML: inline-style marks, guid wrapper unwrap                                                                                                                      |
+| `media-upload.spec.ts`      | image placeholder → real upload → ready; failed upload → error → retry → ready, against the mock `UploadAdapter`                                                                                        |
+| `structure.spec.ts`         | table/columns/embed insertion via the slash menu, embed URL input → bookmark card                                                                                                                       |
+| `mention.spec.ts`           | async directory search → chip insertion, empty-result state, Escape leaves typed text                                                                                                                   |
+| `link-editor.spec.ts`       | drafting a link over a selection, click-to-edit an existing link, remove                                                                                                                                |
+| `ai-actions.spec.ts`        | slash action → real stream → Keep (paragraph)/Discard, and error → retry, against the mock `StreamAdapter`                                                                                              |
+| `toggle-blocks.spec.ts`     | `>` makes a toggle and `"` a quote; `# ` + `> ` and in-title `##` set the level; level and block id survive open/close; body caret in/out, per-line handles, whitespace between toggles focusing a line |
+| `slash-menu-ux.spec.ts`     | arrow-key scrolling keeps the highlight in view, one-line rows with icons, a shown `shortcut` really converts the block, per-block placeholders, `/` hint                                               |
 
 `tests/e2e/support.ts` holds the shared helpers:
 

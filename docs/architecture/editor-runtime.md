@@ -27,6 +27,8 @@ useSlashEditor(options)            → Editor | null  (react)
 | `comment`       | `{}`                                      | `false` opts out of the `comment` mark                                   |
 | `extend`        | `[]`                                      | Extensions appended last, so they win conflicting keymaps                |
 
+StarterKit is tuned where a default fights the block model: `blockquote` is off (`quote()` re-registers it with the `"` shorthand, freeing `>` for the toggle) and `gapcursor` is off, so clicking the empty strip a margin leaves next to an isolated block focuses the nearest line instead of a gap cursor that turns the next keystroke into a new block.
+
 ## Document model
 
 Canonical format is the Tiptap/ProseMirror JSON document — no parallel block model, no conversion layer.
@@ -51,6 +53,8 @@ Assignment is two-staged, because `addGlobalAttributes` runs during schema const
 ## Block drag
 
 `BlockDrag` resolves both hover and drop targets from cached block rects (`computeRects`, invalidated on transaction), not `view.posAtCoords`: the gutter and a block's own left padding are empty space with no caret position, where `posAtCoords` reliably returns nothing, dropping the hover the instant the pointer left the text and entered the gutter it was heading for. Hover picks the smallest rect whose vertical range contains the pointer, so a list item wins over its enclosing list. Not HTML5 DnD; drives its own storage/subscribe pair (`editor.storage.blockDrag`, mirroring `SlashCommandStorage`). A drag unit is a direct doc child, a `listItem` at any depth, or a block inside a toggle's body (`detailsContent`) — deeper nodes resolve outward to one of those, so dragging a paragraph inside a list item moves the whole row.
+
+The gutter itself is anchored by `BlockTarget.getClientRect`, which reports the block's _first line_ rather than its box: a `Range` over the block's first text node, so top padding (callout, code block, table cell) is accounted for, falling back to the block's own line box for a block with no text (a rule, a ready image). A tall block — an expanded toggle, a table, a multi-line column — therefore keeps its hover controls at the top instead of centring them on its height.
 
 `resolveDropTarget` is pure geometry (before/after by nearest-midpoint, `inside` when rightward travel passes `indentThreshold`) parameterized by two schema predicates the plugin supplies:
 

@@ -178,7 +178,7 @@ export interface BlockTarget {
   size: number;
   type: string;
   id: string | null;
-  /** Live rect lookup; re-evaluated on every read so scroll/resize never leaves it stale. */
+  /** Live lookup of the block's gutter row — its first line — re-evaluated on every read so scroll/resize never leaves it stale. */
   getClientRect: () => DOMRect | null;
 }
 
@@ -282,6 +282,47 @@ function autoScroll(view: EditorView, clientY: number, margin: number): void {
   }
 }
 
+/**
+ * The row the gutter controls ride on: the block's first line of text, as the
+ * browser laid it out. Measured through a `Range` rather than read off an
+ * element so a block's own padding is accounted for — a callout, a code
+ * block, or a table cell anchors to its text, not to its box.
+ *
+ * A block with no text to measure — a rule, an uploaded image — falls back to
+ * its own line box: the controls sit at the block's top instead of centring
+ * on a block that can be arbitrarily tall.
+ *
+ * The block's own left edge and width are kept either way, so every row
+ * starts in the same gutter column and stays clear of anything a node view
+ * puts to the left of its text (a toggle's disclosure button).
+ */
+function gutterRowRect(dom: HTMLElement, rect: DOMRect): DOMRect {
+  const text = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT).nextNode();
+
+  if (text) {
+    const range = document.createRange();
+
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+
+    const line = range.getBoundingClientRect();
+
+    if (line.height > 0) {
+      return new DOMRect(rect.left, line.top, rect.width, line.height);
+    }
+  }
+
+  const { lineHeight } = getComputedStyle(dom);
+  const height = Number.parseFloat(lineHeight);
+
+  return new DOMRect(
+    rect.left,
+    rect.top,
+    rect.width,
+    Number.isFinite(height) ? Math.min(height, rect.height) : rect.height,
+  );
+}
+
 function toBlockTarget(view: EditorView, pos: number): BlockTarget | null {
   const node = view.state.doc.nodeAt(pos);
 
@@ -301,25 +342,7 @@ function toBlockTarget(view: EditorView, pos: number): BlockTarget | null {
         return null;
       }
 
-      const rect = dom.getBoundingClientRect();
-
-      /*
-       * A toggle's own rect spans its whole expanded body, which would park
-       * the gutter halfway down the block. Its row is the title line, so take
-       * the summary's vertical box — and the wrapper's left edge, keeping the
-       * buttons in the same gutter column as every other block, clear of the
-       * disclosure button that now sits at the title's left.
-       */
-      const summary =
-        node.type.name === "details" ? dom.querySelector(":scope > div > summary") : null;
-
-      if (summary instanceof HTMLElement) {
-        const box = summary.getBoundingClientRect();
-
-        return new DOMRect(rect.left, box.top, rect.width, box.height);
-      }
-
-      return rect;
+      return gutterRowRect(dom, dom.getBoundingClientRect());
     },
   };
 }
