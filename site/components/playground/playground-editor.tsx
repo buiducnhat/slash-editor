@@ -2,9 +2,11 @@
 
 import type { CommentThreadStore } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
+import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { EditorContent, useEditorState } from "@slash-editor/react";
-import { useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { ArrowLeftIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
@@ -81,6 +83,59 @@ const BLOCK_KIT_DEFAULTS = {
   },
   extend: nodeViewExtensions(),
 } as const;
+
+type ConnectionStatus = "connecting" | "connected" | "disconnected";
+
+const STATUS_LABEL: Record<ConnectionStatus, string> = {
+  connecting: "Connecting…",
+  connected: "Connected",
+  disconnected: "Offline",
+};
+
+const STATUS_DOT: Record<ConnectionStatus, string> = {
+  connecting: "bg-amber-500",
+  connected: "bg-emerald-500",
+  disconnected: "bg-destructive",
+};
+
+/**
+ * Live connection state off the `HocuspocusProvider` itself — there is no
+ * hosted collab server for this public deployment, so a visitor's first
+ * `?collab=<room>` attempt reaches nothing until they run
+ * `bun run collab:server` themselves (or point `NEXT_PUBLIC_COLLAB_SERVER_URL`
+ * at their own). Surfacing the real status turns that into a legible
+ * "Offline" state instead of a silently empty document that looks broken.
+ */
+function useConnectionStatus(provider: HocuspocusProvider): ConnectionStatus {
+  const [status, setStatus] = useState<ConnectionStatus>(
+    (provider.configuration.websocketProvider.status as ConnectionStatus | undefined) ??
+      "connecting",
+  );
+
+  useEffect(() => {
+    // The connection may already have transitioned (even to "connected")
+    // between the initial render and this effect attaching — a status
+    // change that fires in that window would otherwise be missed, since
+    // each transition only emits once.
+    setStatus(provider.configuration.websocketProvider.status as ConnectionStatus);
+    const handleStatus = ({ status }: { status: ConnectionStatus }) => setStatus(status);
+    provider.on("status", handleStatus);
+    return () => {
+      provider.off("status", handleStatus);
+    };
+  }, [provider]);
+
+  return status;
+}
+
+function ConnectionStatusBadge({ status }: { status: ConnectionStatus }) {
+  return (
+    <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
+      <span className={cn("size-1.5 rounded-full", STATUS_DOT[status])} aria-hidden />
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
 
 /** Rendered only once the editor exists, so the stats subscribe to a live instance. */
 function DocumentStats({ editor }: { editor: Editor }) {
@@ -186,6 +241,7 @@ function CollabEditor({ room }: { room: string }) {
   const collabRef = useRef<DemoCollaboration | null>(null);
   collabRef.current ??= createDemoCollaboration(room);
   const collab = collabRef.current;
+  const status = useConnectionStatus(collab.provider);
 
   const storeRef = useRef<CommentThreadStore | null>(null);
   storeRef.current ??= createMockCommentThreadStore(collab.user.name);
@@ -204,7 +260,7 @@ function CollabEditor({ room }: { room: string }) {
   return (
     <div className="mx-auto flex w-full max-w-5xl gap-6">
       <div className="min-w-0 flex-1">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <header className="mb-2 flex flex-wrap items-center justify-between gap-4">
           <div>
             <button
               type="button"
@@ -218,9 +274,24 @@ function CollabEditor({ room }: { room: string }) {
           </div>
           <div className="flex items-center gap-3">
             {editor && <DocumentStats editor={editor} />}
+            <ConnectionStatusBadge status={status} />
             <PresenceAvatars provider={collab.provider} />
           </div>
         </header>
+
+        {status === "disconnected" ? (
+          <p className="text-muted-foreground mb-4 text-sm">
+            Can't reach a collaboration server — this demo is self-hosted, not free hosting. Run{" "}
+            <code className="bg-muted rounded px-1 py-0.5">bun run collab:server</code> locally, or
+            point{" "}
+            <code className="bg-muted rounded px-1 py-0.5">NEXT_PUBLIC_COLLAB_SERVER_URL</code> at
+            your own. See the{" "}
+            <Link href="/docs/guides/collaboration" className="text-primary underline">
+              collaboration guide
+            </Link>
+            .
+          </p>
+        ) : null}
 
         <div className={EDITOR_CARD}>
           <EditorContent editor={editor} />
