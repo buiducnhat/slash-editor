@@ -168,7 +168,7 @@ jobs:
           bun-version: "1.4.2"
 
       - name: Download blob reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: all-blob-reports
           pattern: e2e-blob-report-*
