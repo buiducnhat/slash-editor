@@ -35,4 +35,4 @@ We follow responsible disclosure practices. We will credit reporters unless requ
 
 ## Contact
 
-For questions about this policy, email: **nhat@buiducnhat.com**
+For questions about this policy, email: **nhaths4701@gmail.com**
