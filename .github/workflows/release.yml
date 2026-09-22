@@ -32,6 +32,13 @@ jobs:
       - name: Build packages
         run: bun run build
 
+      # `vp check` typechecks `site/` too, and Next's route types (`LayoutProps`,
+      # `PageProps`) only exist once typegen has run — a fresh checkout has no
+      # `.next`, so generate them first, exactly as CI's `check-site` job does.
+      - name: Generate Next route types
+        working-directory: site
+        run: bunx next typegen
+
       - name: Check (format, lint, typecheck)
         run: bunx vp check
 
