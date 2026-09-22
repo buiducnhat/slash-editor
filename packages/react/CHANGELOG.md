@@ -1,5 +1,16 @@
 # @slash-editor/react
 
+## 0.1.1
+
+### Patch Changes
+
+- Ships with `@slash-editor/core` 0.1.1 (the two packages are released in lockstep): the
+  gutter's hover controls anchor to a block's first line, and clicking the whitespace
+  between blocks no longer turns the next keystroke into a new block. No API change here —
+  the fix lives in core, which `useBlockDrag` reads its anchors from.
+- Updated dependencies
+  - @slash-editor/core@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

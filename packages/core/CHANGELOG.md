@@ -1,5 +1,19 @@
 # @slash-editor/core
 
+## 0.1.1
+
+### Patch Changes
+
+- Blocks no longer take a gap cursor, and the gutter handle rides a block's first line.
+
+  - StarterKit's `gapcursor` is off: clicking the empty strip a block's margin leaves
+    between it and its neighbour used to place a gap cursor, and the next keystroke became
+    a block of its own instead of joining the nearest line.
+  - `BlockTarget.getClientRect` reports the block's first line rather than its box, so a
+    tall block — a multi-line column, a table, an expanded toggle — keeps its hover
+    controls at its top instead of centring them on its height. Top padding (callout, code
+    block, table cell) is measured, and a block with no text falls back to its own line box.
+
 ## 0.1.0
 
 ### Minor Changes

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.1.1] — 2026-09-23
+
+Two block-chrome fixes, both in the shared core (`@slash-editor/core` 0.1.1,
+`@slash-editor/react` 0.1.1):
+
+- **No gap cursor.** StarterKit's `gapcursor` is off, so clicking the strip a block's
+  margin leaves between it and its neighbour focuses the nearest line instead of placing
+  a cursor in the void that turned the next keystroke into a block of its own. Toggles
+  hit this most, since `details` is `isolating` and ProseMirror offers a gap cursor on
+  every isolated block's boundary.
+- **The gutter handle rides the block's first line.** `BlockTarget.getClientRect` used to
+  report the block's whole box, and the hover controls are centred on it — so a tall
+  block (a multi-line column, a table, an expanded toggle) parked `+`/grip halfway down
+  its height. It now measures the block's first text line, padding included, falling back
+  to the block's own line box when there is no text to measure (a rule, a ready image).
+
 ## [0.1.0] — 2026-09-22
 
 Initial documented release. M0–M7 shipped:
