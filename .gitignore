@@ -13,7 +13,7 @@ dist
 !.env.example
 
 .agents/
-skills-lock.json
+skills-lock.json/
 
 # Playwright
 site/test-results/
@@ -28,4 +28,7 @@ site/public/r/
 # site build artifacts
 site/.source/
 site/.next/
-.env*
+
+# Changesets
+.changeset/
+!/.changeset/

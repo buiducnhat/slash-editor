@@ -1,0 +1,28 @@
+name: "\u2709 Question"
+description: Ask a question about slash-editor usage or implementation.
+labels: ["question"]
+type: Question
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For general help with Tiptap or ProseMirror concepts, check the
+        [Tiptap docs](https://tiptap.dev/docs) and
+        [ProseMirror docs](https://prosemirror.net/docs/guide/).
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Be specific and include relevant code snippets.
+      placeholder: |
+        How do I register a custom block type that integrates with the slash menu?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context (optional)
+      description: Your setup, what you've tried, relevant links.

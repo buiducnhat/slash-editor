@@ -1,76 +1,37 @@
 # slash-editor
 
-Notion-style block editor for React: headless core on Tiptap/ProseMirror, UI you own, shadcn + Tailwind native. MIT top to bottom — no paid tier, no hosted dependency.
+🏗️ **slash-editor** — Notion-style block editor for React.
+
+A headless core on Tiptap/ProseMirror, React bindings, and shadcn/Tailwind UI you own.
+MIT top to bottom — no paid tier, no hosted dependency.
+
+[![CI](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@slash-editor/core?label=%40slash-editor%2Fcore)](https://www.npmjs.com/package/@slash-editor/core)
+[![npm version](https://img.shields.io/npm/v/@slash-editor/react?label=%40slash-editor%2Freact)](https://www.npmjs.com/package/@slash-editor/react)
+[![License: MIT](https://img.shields.io/npm/l/@slash-editor/core)](#license)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)](https://www.typescriptlang.org/)
 
 ## Workspace
 
-| Path             | Package               | Role                                                                          |
-| ---------------- | --------------------- | ----------------------------------------------------------------------------- |
-| `packages/core`  | `@slash-editor/core`  | Extensions, schema, commands, serializers. No React, no CSS.                  |
-| `packages/react` | `@slash-editor/react` | Hooks and headless primitives over `@tiptap/react`.                           |
-| `site`           | —                     | The app: playground, docs site, landing page, shadcn registry host (Next.js). |
+| Path                               | Package               | Role                                                      |
+| ---------------------------------- | --------------------- | --------------------------------------------------------- |
+| [`packages/core`](packages/core)   | `@slash-editor/core`  | Extensions, schema, commands. No React, no CSS.           |
+| [`packages/react`](packages/react) | `@slash-editor/react` | Hooks and headless primitives over `@tiptap/react`.       |
+| [`site`](site)                     | —                     | Playground, docs, landing page, and shadcn registry host. |
 
 ## Status
 
 M0–M7 complete — slash menu, block ids, drag handle, media/upload, mentions/AI, real-time
-collaboration, distribution (npm packages, shadcn registry), and a single Fumadocs/Next.js app —
-docs site, landing page, and playground — all ship. Full breakdown:
-[`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+collaboration, distribution (npm packages, shadcn registry), and a single Fumadocs/Next.js app.
+Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
 
-## Installation
+## Quick start
 
 ```bash
 bun add @slash-editor/core @slash-editor/react
 ```
 
-`@tiptap/core`, `@tiptap/pm`, and `@tiptap/react` are peer dependencies — install them in your
-own app so you never end up with two ProseMirror instances.
-
-### UI components (shadcn registry)
-
-The rendered UI (slash menu, bubble toolbar, node views, …) is a real shadcn registry, built
-from this repo's own source and hosted at **https://slash-editor-eta.vercel.app** — install any
-piece on its own, or everything at once. Browse live examples and copy-paste commands at
-[`/docs`](https://slash-editor-eta.vercel.app/docs), or try the whole thing at
-[`/playground`](https://slash-editor-eta.vercel.app/playground).
-
-Add the registry once, in your project's `components.json`:
-
-```json
-{
-  "registries": {
-    "@slash-editor": "https://slash-editor-eta.vercel.app/r/{name}.json"
-  }
-}
-```
-
-Then install everything:
-
-```bash
-bunx --bun shadcn@latest add @slash-editor/slash-editor-kit
-```
-
-…or a single piece, e.g. `bunx --bun shadcn@latest add @slash-editor/slash-menu`. Several
-components depend on this repo's own anchor-aware `popover`/`dropdown-menu` overrides (also
-served from the registry under the same namespace), not the stock shadcn versions — installing
-by raw URL instead of the `@slash-editor/…` namespace will fail to resolve those.
-
-## Documentation
-
-Start at [`docs/SUMMARY.md`](docs/SUMMARY.md) — architecture, codebase map, code standards, and product docs.
-
-## Development
-
-```bash
-vp install                  # install workspace dependencies
-vp run -F site dev          # playground + docs site + landing page on http://localhost:3000
-vp test                     # unit tests (headless, no DOM)
-vp run -F site test:e2e     # browser regression suite (Playwright)
-vp check                    # format, lint, typecheck (packages; site has its own `bun run types:check`)
-vp run -F './packages/*' build
-```
-
-## Usage
+`@tiptap/core`, `@tiptap/pm`, and `@tiptap/react` are peer dependencies.
 
 ```tsx
 import { EditorContent, useSlashEditor, useSlashMenu } from "@slash-editor/react";
@@ -90,49 +51,54 @@ export function Editor() {
 }
 ```
 
-`createBlockKit()` registers the slash menu by default. The core ranks items and owns the
-keyboard state machine; `useSlashMenu(editor)` exposes that state plus a caret anchor, and the
-UI layer renders it — see `site/registry/components/slash-menu.tsx` for a shadcn
-`Command` + `Popover` implementation.
+## UI components (shadcn registry)
 
-```tsx
-const menu = useSlashMenu(editor);
-// { open, query, items, activeIndex, activeItem, anchor, setActiveIndex, select, close }
+The rendered UI (slash menu, bubble toolbar, node views, …) is a real shadcn registry.
+Browse live examples and copy-paste install commands at
+[**slash-editor-eta.vercel.app/docs**](https://slash-editor-eta.vercel.app/docs).
+
+Add the registry once:
+
+```json
+{
+  "registries": {
+    "@slash-editor": "https://slash-editor-eta.vercel.app/r/{name}.json"
+  }
+}
 ```
 
-Custom items are plain objects; `run` receives the editor and the range covering `/query`:
-
-```tsx
-useSlashEditor({
-  blockKit: {
-    slash: {
-      items: [
-        ...defaultSlashItems,
-        {
-          id: "date-stamp",
-          title: "Date stamp",
-          group: "Basic blocks",
-          aliases: ["today", "date"],
-          run: ({ editor, range }) =>
-            editor.chain().focus().insertContentAt(range, new Date().toLocaleDateString()).run(),
-        },
-      ],
-    },
-  },
-});
-```
-
-## Working on `site`
-
-`site` (this repo's own playground, docs, and registry host — not something you install) is
-initialized with shadcn **Base UI** (`--base base`) and the `nova` preset. To add a _stock_
-shadcn primitive to it (distinct from installing `@slash-editor` components into your own app —
-see [Installation](#installation) above):
+Then install any component:
 
 ```bash
-cd site
-bunx --bun shadcn@latest add <component>
+bunx --bun shadcn@latest add @slash-editor/slash-editor-kit
 ```
 
-The registry component source lives at `site/registry/components/` — see
-[`docs/codebase/directory-structure.md`](docs/codebase/directory-structure.md) for the full map.
+## Documentation
+
+Start at [`docs/SUMMARY.md`](docs/SUMMARY.md) — architecture, codebase map, code standards, and product docs.
+
+## Development
+
+```bash
+bun install          # install workspace dependencies
+bun run dev          # playground + docs on http://localhost:3000
+bun run test         # unit tests (Node, no DOM)
+bun run test:e2e    # browser regression suite (Playwright)
+bun run check       # format, lint, typecheck
+bun run check --fix # auto-fix formatting/lint issues
+bun run build       # build packages (core then react)
+```
+
+## Contributing
+
+Please read the [contributing guide](CONTRIBUTING.md) before opening a PR.
+
+## Community
+
+- [GitHub Discussions](https://github.com/buiducnhat/slash-editor/discussions) — ideas, Q&A, showcase
+- [GitHub Issues](https://github.com/buiducnhat/slash-editor/issues) — bugs and feature requests
+
+## License
+
+MIT — see [LICENSE](LICENSE). The full MIT dependency graph means you own every line of code
+in your editor stack.

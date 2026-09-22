@@ -15,28 +15,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.2"
 
-      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855, both still
-      # open) — the actual registry upload runs through real npm instead. Trusted
-      # publishing needs npm CLI >= 11.5.1 (Node 24 ships a recent-enough npm, but
-      # pin the floor explicitly rather than trust whatever a given runner image
-      # bundles).
-      - name: Set up Node (npm publish supports OIDC; bun publish does not)
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Ensure npm supports trusted publishing
-        run: |
-          npm install -g npm@^11.5.1
-          npm --version
-
+      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855) —
+      # `changeset publish` uses npm internally, so it works fine with trusted publishing.
+      # Run from /tmp to avoid EBADDEVENGINES (root package.json requires bun).
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -50,28 +39,10 @@ jobs:
         working-directory: site
         run: bunx --bun shadcn build
 
-      # `bun pm pack` strips the `workspace:*` protocol and resolves it to a real
-      # version — plain `npm publish` from a directory doesn't understand that
-      # protocol at all, so react's dependency on core must already be a concrete
-      # version before npm ever sees the manifest. Pack with bun, publish the
-      # resulting tarball with npm (OIDC needs no token: the Trusted Publisher for
-      # each package is configured on npmjs.com against this repo + workflow file).
-      # `npm publish` runs from `/tmp`, not the repo: the root `package.json`'s
-      # `devEngines.packageManager` (bun-only) makes npm refuse to run *anywhere*
-      # inside this tree (EBADDEVENGINES), even in a package with no devEngines
-      # of its own — devEngines resolves against the workspace root, not cwd.
-      - name: Pack @slash-editor/core
-        working-directory: packages/core
-        run: bun pm pack --destination /tmp/pack/core
-
-      - name: Publish @slash-editor/core
-        working-directory: /tmp
-        run: npm publish /tmp/pack/core/*.tgz --access public --ignore-scripts
-
-      - name: Pack @slash-editor/react
-        working-directory: packages/react
-        run: bun pm pack --destination /tmp/pack/react
-
-      - name: Publish @slash-editor/react
-        working-directory: /tmp
-        run: npm publish /tmp/pack/react/*.tgz --access public --ignore-scripts
+      # changeset publish runs from /tmp so npm is not blocked by devEngines.
+      # OIDC (id-token: write) handles auth — no NPM_TOKEN needed.
+      - name: Publish packages
+        run: |
+          cp -r . /tmp/slash-editor
+          cd /tmp && bunx changeset publish --filter=@slash-editor/*
+        working-directory: /tmp/slash-editor

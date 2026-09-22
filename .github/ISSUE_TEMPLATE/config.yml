@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Feature Request
+    url: https://github.com/buiducnhat/slash-editor/issues/new?template=feature_request.yml
+    about: Interested in proposing a new feature? Use the feature request template.
+  - name: Question
+    url: https://github.com/buiducnhat/slash-editor/issues/new?template=question.yml
+    about: Have a question about usage? Use the question template.

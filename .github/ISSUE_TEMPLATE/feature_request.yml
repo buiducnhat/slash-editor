@@ -1,0 +1,48 @@
+name: Feature Request
+description: Propose a new feature or enhancement for slash-editor.
+labels: ["enhancement"]
+type: Enhancement
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are welcome! Before opening one, please check:
+        - [Existing issues and discussions](https://github.com/buiducnhat/slash-editor/discussions)
+          to see if someone else has already proposed the same thing.
+        - [Milestones](https://github.com/buiducnhat/slash-editor/blob/main/docs/project-pdr/milestones.md)
+          to understand the current roadmap.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve? Be specific.
+      placeholder: |
+        The slash menu currently does not support grouping items by category,
+        which makes it hard to navigate when many items are registered.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should it work? Describe the API or UX.
+      placeholder: |
+        Add a `group` field to `SlashItem` and render sections in the menu with
+        group headers.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+      description: Any other approaches you considered?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context (optional)
+      description: Mockups, examples, references, or anything else.

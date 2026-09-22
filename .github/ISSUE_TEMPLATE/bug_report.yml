@@ -1,0 +1,97 @@
+name: Bug Report
+description: Found a bug? Report it here to help us improve slash-editor.
+labels: ["bug"]
+type: Bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please use simple, human-written English. Keep your answers short and clear.
+        Small code examples that show the problem are welcome. Do not include a code fix or
+        a complete implementation in an issue. If you already have a fix, please open a
+        pull request instead.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected Package
+      description: Which package is affected?
+      options:
+        - "@slash-editor/core"
+        - "@slash-editor/react"
+        - "Registry / UI components"
+        - "Docs site"
+        - "Multiple / Not sure"
+      validations:
+        required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version of slash-editor are you using?
+      placeholder: "0.0.8"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+        - Not browser-specific
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe what happens, when it happens, and why it is a problem.
+      placeholder: |
+        Type "/" in the editor and the slash menu appears. Then type "image".
+        Expected: "Image" block item appears.
+        Actual: The menu shows no results and crashes when clicking.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: I expected the slash menu to show the Image block when typing "image".
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        A small reproducible example is the best way to help us investigate the issue.
+        Please add one if you can.
+
+        - [StackBlitz template](https://stackblitz.com)
+        - [CodeSandbox template](https://codesandbox.io)
+        - A GitHub repo with a minimal reproduction
+
+  - type: input
+    id: reproduction
+    attributes:
+      label: Reproducible example (optional)
+      description: Link a StackBlitz, CodeSandbox, or GitHub repo.
+      placeholder: https://stackblitz.com/edit/example
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context (optional)
+      description: Screenshots, videos, or other short details.
+
+  - type: markdown
+    attributes:
+      value: "Thank you for helping us improve slash-editor!"

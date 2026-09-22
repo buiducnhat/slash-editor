@@ -20,10 +20,13 @@
     "test": "vp test",
     "test:e2e": "vp run -F site test:e2e",
     "check": "vp check",
-    "release": "bumpp package.json packages/core/package.json packages/react/package.json --execute \"bun install\" --all --commit --tag --push",
+    "check:fix": "vp check --fix",
+    "changeset": "changeset",
+    "release": "bun run build && changeset publish",
     "prepare": "vp config"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@types/node": "^26.1.1",
     "bumpp": "^11.1.0",
     "typescript": "^7.0.2",
