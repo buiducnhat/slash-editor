@@ -2,11 +2,10 @@
 
 import type { CommentThreadStore } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
-import type { HocuspocusProvider } from "@hocuspocus/provider";
+import type { WebrtcProvider } from "y-webrtc";
 import { EditorContent, useEditorState } from "@slash-editor/react";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeftIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
@@ -84,55 +83,45 @@ const BLOCK_KIT_DEFAULTS = {
   extend: nodeViewExtensions(),
 } as const;
 
-type ConnectionStatus = "connecting" | "connected" | "disconnected";
-
-const STATUS_LABEL: Record<ConnectionStatus, string> = {
-  connecting: "Connecting…",
-  connected: "Connected",
-  disconnected: "Offline",
-};
-
-const STATUS_DOT: Record<ConnectionStatus, string> = {
-  connecting: "bg-amber-500",
-  connected: "bg-emerald-500",
-  disconnected: "bg-destructive",
-};
-
 /**
- * Live connection state off the `HocuspocusProvider` itself — there is no
- * hosted collab server for this public deployment, so a visitor's first
- * `?collab=<room>` attempt reaches nothing until they run
- * `bun run collab:server` themselves (or point `NEXT_PUBLIC_COLLAB_SERVER_URL`
- * at their own). Surfacing the real status turns that into a legible
- * "Offline" state instead of a silently empty document that looks broken.
+ * Live peer count off the `WebrtcProvider` itself. Unlike a centralized
+ * server, there's no "offline" error state here — WebRTC peers find each
+ * other via the signaling relay (see `lib/collaboration.ts`), so being
+ * alone in a room just means no one else has joined it yet, not that
+ * anything is broken.
  */
-function useConnectionStatus(provider: HocuspocusProvider): ConnectionStatus {
-  const [status, setStatus] = useState<ConnectionStatus>(
-    (provider.configuration.websocketProvider.status as ConnectionStatus | undefined) ??
-      "connecting",
+function usePeerCount(provider: WebrtcProvider): number {
+  const [peerCount, setPeerCount] = useState<number>(
+    () => (provider.room?.webrtcConns.size ?? 0) + (provider.room?.bcConns.size ?? 0),
   );
 
   useEffect(() => {
-    // The connection may already have transitioned (even to "connected")
-    // between the initial render and this effect attaching — a status
-    // change that fires in that window would otherwise be missed, since
-    // each transition only emits once.
-    setStatus(provider.configuration.websocketProvider.status as ConnectionStatus);
-    const handleStatus = ({ status }: { status: ConnectionStatus }) => setStatus(status);
-    provider.on("status", handleStatus);
+    // The room may already have peers by the time this effect attaches —
+    // re-sync before subscribing so an event that fired in that window
+    // isn't missed.
+    setPeerCount((provider.room?.webrtcConns.size ?? 0) + (provider.room?.bcConns.size ?? 0));
+    const handlePeers = ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) =>
+      setPeerCount(webrtcPeers.length + bcPeers.length);
+    provider.on("peers", handlePeers);
     return () => {
-      provider.off("status", handleStatus);
+      provider.off("peers", handlePeers);
     };
   }, [provider]);
 
-  return status;
+  return peerCount;
 }
 
-function ConnectionStatusBadge({ status }: { status: ConnectionStatus }) {
+function ConnectionStatusBadge({ peerCount }: { peerCount: number }) {
+  const connected = peerCount > 0;
   return (
     <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
-      <span className={cn("size-1.5 rounded-full", STATUS_DOT[status])} aria-hidden />
-      {STATUS_LABEL[status]}
+      <span
+        className={cn("size-1.5 rounded-full", connected ? "bg-emerald-500" : "bg-amber-500")}
+        aria-hidden
+      />
+      {connected
+        ? `Synced with ${peerCount} peer${peerCount === 1 ? "" : "s"}`
+        : "Waiting for others…"}
     </span>
   );
 }
@@ -223,25 +212,25 @@ function SoloEditor() {
 }
 
 /**
- * `?collab=<room>` opt-in path: wires a shared `Y.Doc` + `HocuspocusProvider`
- * (the self-host recipe in `server/collab-server.ts`) into the same block
- * kit `SoloEditor` uses, so the collaborative editor is otherwise identical —
+ * `?collab=<room>` opt-in path: wires a shared `Y.Doc` + `WebrtcProvider`
+ * (peer-to-peer, see `lib/collaboration.ts`) into the same block kit
+ * `SoloEditor` uses, so the collaborative editor is otherwise identical —
  * plus presence avatars and a comment sidebar.
  *
  * `collab`/`store` are created eagerly during render, guarded by a ref the
  * same way `useSlashEditor` latches its own extensions: `blockKit` is only
  * ever read on the first render, so the provider must exist before that
  * call, not after it in an effect. Neither is torn down on unmount — like
- * any other browser tab leaving a room, the connection closes when the
- * page does, and the server (`collab-server.ts`) already treats that as a
- * normal disconnect.
+ * any other browser tab leaving a room, the WebRTC connections just close
+ * when the page does.
  */
 function CollabEditor({ room }: { room: string }) {
   const router = useRouter();
+  const [copied, setCopied] = useState(false);
   const collabRef = useRef<DemoCollaboration | null>(null);
   collabRef.current ??= createDemoCollaboration(room);
   const collab = collabRef.current;
-  const status = useConnectionStatus(collab.provider);
+  const peerCount = usePeerCount(collab.provider);
 
   const storeRef = useRef<CommentThreadStore | null>(null);
   storeRef.current ??= createMockCommentThreadStore(collab.user.name);
@@ -256,6 +245,19 @@ function CollabEditor({ room }: { room: string }) {
       attributes: { class: "slash-content min-h-[60vh] px-8 py-10", "aria-label": "Document" },
     },
   });
+
+  function handleCopyLink() {
+    navigator.clipboard
+      .writeText(window.location.href)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        // Clipboard access denied or unavailable — the link is still
+        // visible in the address bar, nothing else to do here.
+      });
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl gap-6">
@@ -274,22 +276,18 @@ function CollabEditor({ room }: { room: string }) {
           </div>
           <div className="flex items-center gap-3">
             {editor && <DocumentStats editor={editor} />}
-            <ConnectionStatusBadge status={status} />
+            <ConnectionStatusBadge peerCount={peerCount} />
             <PresenceAvatars provider={collab.provider} />
           </div>
         </header>
 
-        {status === "disconnected" ? (
+        {peerCount === 0 ? (
           <p className="text-muted-foreground mb-4 text-sm">
-            Can't reach a collaboration server — this demo is self-hosted, not free hosting. Run{" "}
-            <code className="bg-muted rounded px-1 py-0.5">bun run collab:server</code> locally, or
-            point{" "}
-            <code className="bg-muted rounded px-1 py-0.5">NEXT_PUBLIC_COLLAB_SERVER_URL</code> at
-            your own. See the{" "}
-            <Link href="/docs/guides/collaboration" className="text-primary underline">
-              collaboration guide
-            </Link>
-            .
+            Peer-to-peer over WebRTC — no server involved. Open this link in another tab, or{" "}
+            <button type="button" onClick={handleCopyLink} className="text-primary underline">
+              {copied ? "copied!" : "copy it to share"}
+            </button>
+            , to see live sync.
           </p>
         ) : null}
 

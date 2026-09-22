@@ -107,8 +107,8 @@ option: Yjs owns the undo stack once a document is shared, and running both corr
 
 `yjs` is a peer dependency of both `core` and `react`, the same rule as `@tiptap/core`/`@tiptap/pm`:
 two copies of `yjs` in one app produce `instanceof Y.Doc`-style mismatches. The host creates the
-`Y.Doc` and any network provider (`HocuspocusProvider`, `y-websocket`, …) and owns their lifecycle;
-`collaboration()` only ever receives them through options.
+`Y.Doc` and any network provider (`HocuspocusProvider`, `WebrtcProvider`, …) and owns their
+lifecycle; `collaboration()` only ever receives them through options.
 
 Presence carets render through a custom `render`/`selectionRender` pair emitting
 `data-collab-caret`/`data-collab-caret-label`/`data-collab-selection` attributes, not the upstream
@@ -119,14 +119,19 @@ awareness states directly for chrome outside the document (an avatar row), duck-
 awareness shape `collaboration()`'s `CollaborationProvider` option accepts so this package never
 depends on `yjs`/`y-protocols` types.
 
-`site`'s self-host recipe (`server/collab-server.ts`) bridges Hocuspocus's runtime-agnostic
-`Hocuspocus` class to `Bun.serve` via `crossws`'s Bun adapter: `@hocuspocus/server`'s convenience
-`Server` class assumes Node's `node:http` and throws if it detects the `Bun` global. The playground's
-`?collab=<room>` opt-in path (`CollabEditor` in `playground-editor.tsx`) is a separate component from the default
-`SoloEditor`, so no existing spec ever opens a websocket, and `Y.Doc`/`HocuspocusProvider` creation is
-guarded by a ref (`collabRef.current ??= …`, mirroring `useSlashEditor`'s own extension-latching
-guard) rather than torn down on unmount — like any other browser tab leaving a room, the connection
-closes when the page does.
+The deployed playground's `?collab=<room>` opt-in path (`CollabEditor` in
+`playground-editor.tsx`) runs `y-webrtc`'s `WebrtcProvider` — peer-to-peer, no document server —
+signaling through `app/api/signaling/route.ts`, a Vercel WebSocket Function since serverless
+functions can't host the long-lived process a document server needs. `site`'s Hocuspocus recipe
+(`server/collab-server.ts`, bridging Hocuspocus's runtime-agnostic `Hocuspocus` class to
+`Bun.serve` via `crossws`'s Bun adapter — `@hocuspocus/server`'s convenience `Server` class
+assumes Node's `node:http` and throws if it detects the `Bun` global) stays documented as the
+centralized-server alternative; see [Collaboration](/docs/guides/collaboration) for when to
+reach for which. `CollabEditor` is a separate component from the default `SoloEditor`, so no
+existing spec ever opens a websocket, and `Y.Doc`/provider creation is guarded by a ref
+(`collabRef.current ??= …`, mirroring `useSlashEditor`'s own extension-latching guard) rather
+than torn down on unmount — like any other browser tab leaving a room, the connection closes
+when the page does.
 
 ## Comments
 

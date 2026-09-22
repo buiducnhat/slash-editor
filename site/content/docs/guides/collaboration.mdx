@@ -8,24 +8,6 @@ description: Real-time collaboration over Yjs — self-hosted, no paid tier.
 
 <AutoTypeTable path="../packages/core/src/collaboration.ts" name="CollaborationOptions" />
 
-```tsx
-import * as Y from "yjs";
-import { HocuspocusProvider } from "@hocuspocus/provider";
-
-const document = new Y.Doc();
-const provider = new HocuspocusProvider({ url: "ws://localhost:1234", name: room, document });
-
-useSlashEditor({
-  blockKit: {
-    collaboration: {
-      document,
-      provider, // enables CollaborationCaret presence carets
-      user: { name: "Ada Lovelace", color: "#94A3B8" },
-    },
-  },
-});
-```
-
 ## Provider contract
 
 `CollaborationProvider` is duck-typed against the shared-awareness surface —
@@ -48,8 +30,65 @@ the core emits no class names, so style them directly. See
 [Presence Avatars](/docs/components/presence-avatars) for reading the same awareness instance
 into a UI list of connected collaborators.
 
-## Self-hosting
+## Peer-to-peer over WebRTC (what the playground uses)
 
-There is no hosted collaboration backend to pay for. The self-host recipe is a Hocuspocus
-server — see `server/collab-server.ts` in the repository for the reference implementation the
-playground's own `?collab=<room>` mode runs against.
+The [playground](/playground)'s own `?collab=<room>` mode uses `y-webrtc`'s `WebrtcProvider` —
+true peer-to-peer, no document server of ours to run:
+
+```tsx
+import * as Y from "yjs";
+import { WebrtcProvider } from "y-webrtc";
+
+const document = new Y.Doc();
+const provider = new WebrtcProvider(room, document, {
+  signaling: ["wss://your-signaling-server"],
+});
+
+useSlashEditor({
+  blockKit: {
+    collaboration: {
+      document,
+      provider, // enables CollaborationCaret presence carets
+      user: { name: "Ada Lovelace", color: "#94A3B8" },
+    },
+  },
+});
+```
+
+Peers still need a **signaling server** to find each other — a small, stateless relay that
+forwards only WebRTC connection setup (SDP/ICE), never document content. `y-webrtc` ships one
+default list of public signaling servers, but as of this writing they're dead (the Heroku free
+dynos they ran on were decommissioned). This repo runs its own instead, as a Vercel WebSocket
+Function — see `app/api/signaling/route.ts`, a direct port of `y-webrtc`'s own
+`bin/server.js` protocol. Point `signaling` at your own instance (self-hosted with `y-webrtc`'s
+bundled server, or your own port of the same protocol) rather than relying on the upstream
+defaults.
+
+WebRTC doesn't suit every deployment: it's a full mesh (each peer connects to every other), so
+it degrades past a few dozen concurrent collaborators on one document, and some restrictive
+corporate networks block the UDP traffic WebRTC needs. For those cases, use the centralized
+Hocuspocus recipe below instead — the `collaboration()` extension doesn't care which one you
+use.
+
+## Self-hosting a central server instead
+
+For a document with many concurrent editors, or networks where peer-to-peer isn't reliable, run
+a central Hocuspocus server instead — the same `CollaborationProvider` contract, backed by a
+real server rather than a mesh:
+
+```tsx
+import * as Y from "yjs";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+
+const document = new Y.Doc();
+const provider = new HocuspocusProvider({ url: "ws://localhost:1234", name: room, document });
+
+useSlashEditor({
+  blockKit: {
+    collaboration: { document, provider, user: { name: "Ada Lovelace", color: "#94A3B8" } },
+  },
+});
+```
+
+There is no hosted collaboration backend to pay for either way. `server/collab-server.ts` in the
+repository is the reference Hocuspocus implementation this pattern runs against.

@@ -247,6 +247,39 @@ never had to be weakened to land the merge. Full topology:
 
 ---
 
+## M8 — Live demo on Vercel ✅
+
+_Done when: the deployed site's own `/playground?collab=<room>` mode is reachable by two
+strangers on the public internet with no server of ours to run._
+
+- [x] Vercel project's Root Directory/Framework repointed at `site` (was still `demo-react/dist`
+      from before the M7 merge, so every deploy served a stale build)
+- [x] Command menu selected-state CSS bug fixed (`data-selected:` is Tailwind v4's presence
+      shorthand, not a value match; cmdk sets `data-selected="true"|"false"` literally, so every
+      item rendered as selected) — `data-[selected=true]:`
+- [x] `CollabEditor` surfaces real connection state (a status badge) instead of silently doing
+      nothing when there's no reachable document server
+- [x] Collaboration provider switched from `HocuspocusProvider` to `y-webrtc`'s
+      `WebrtcProvider` — peer-to-peer, no document server to deploy at all; the
+      `collaboration()` core extension needed no changes (duck-typed on `.awareness` already)
+- [x] Signaling relay (`app/api/signaling/route.ts`) — a Vercel WebSocket Function, ported from
+      `y-webrtc`'s own `bin/server.js` protocol — since `y-webrtc`'s default public signaling
+      servers are dead (Heroku decommissioned the free dynos they ran on)
+
+_Landed:_ Hocuspocus needs a long-lived process holding the document in memory — exactly what
+Vercel's serverless functions don't provide, so the playground's collab mode was unreachable on
+the deployed site even though it worked in every local/self-hosted context. `y-webrtc` sidesteps
+that: peers connect directly to each other, and the only thing worth centralizing is signaling
+(exchanging WebRTC connection setup, never document content), which fits a stateless WebSocket
+relay. The Hocuspocus recipe (`server/collab-server.ts`) stays documented as the pattern for
+apps that want a centralized server — nothing about it was wrong, it just can't run on this
+deployment target. See [Collaboration](../../site/content/docs/guides/collaboration.mdx) for the
+provider comparison and the signaling-server caveat (a WebSocket connection is pinned to one
+Function instance; correct today, would need a shared pub/sub layer like Redis behind the same
+protocol if peers start missing each other under heavier concurrent-room traffic).
+
+---
+
 ## Deferred decisions
 
 | Decision                                           | Current stance                          | Revisit when                                  |

@@ -9,6 +9,7 @@
     "start": "next start",
     "build:prepare": "bun run scripts/prebuild.ts",
     "collab:server": "bun run server/collab-server.ts",
+    "signaling:server": "y-webrtc-signaling",
     "test:e2e": "playwright test",
     "types:check": "next typegen && tsc --noEmit"
   },
@@ -21,6 +22,7 @@
     "@tiptap/core": "^3.31.3",
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
+    "@vercel/functions": "^3.9.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -35,6 +37,7 @@
     "shadcn": "^4.21.0",
     "tailwind-merge": "^3.7.0",
     "y-protocols": "^1.0.6",
+    "y-webrtc": "^10.3.0",
     "yjs": "^13.6.0"
   },
   "devDependencies": {
@@ -45,6 +48,7 @@
     "@types/mdx": "^2.0.14",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.1",
     "crossws": "^0.4.12",
     "fumadocs-typescript": "^5.4.1",
     "postcss": "^8.5.28",
