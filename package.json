@@ -1,6 +1,6 @@
 {
   "name": "slash-editor",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "private": true,
   "description": "Notion-style block editor for React: headless core, shadcn-native UI.",
   "license": "MIT",
