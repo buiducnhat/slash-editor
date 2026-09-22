@@ -33,8 +33,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check
-        run: bunx vp check
+      - name: Check (packages only — skip site, which needs next typegen)
+        run: bunx vp check packages/*/src
+
+      - name: Check site types (requires next typegen)
+        run: bun run -F site types:check
 
   test:
     name: Test (unit)
