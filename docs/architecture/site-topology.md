@@ -8,13 +8,16 @@ playground and the registry component source (M7, [`project-pdr/milestones.md`](
 
 ## Routing map
 
-| Path            | Owner                            | Notes                                                              |
-| --------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `/`             | `app/(home)/page.tsx`            | Landing page                                                       |
-| `/playground`   | `app/(home)/playground/page.tsx` | Live editor; `?collab=<room>` for real-time collaboration          |
-| `/docs/**`      | `app/docs/**` (Fumadocs + MDX)   | Prose, component docs, API reference                               |
-| `/api/search`   | `app/api/search/route.ts`        | Fumadocs search endpoint                                           |
-| `/r/:name.json` | `shadcn build` output, static    | **Hard constraint** — published `components.json` files point here |
+| Path             | Owner                              | Notes                                                              |
+| ---------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| `/`              | `app/(home)/page.tsx`              | Landing page                                                       |
+| `/playground`    | `app/(home)/playground/page.tsx`   | Live editor; `?collab=<room>` for real-time collaboration          |
+| `/docs/**`       | `app/docs/**` (Fumadocs + MDX)     | Prose, component docs, API reference                               |
+| `/docs/**.md`    | `app/llms.mdx/docs/**` (rewritten) | Same page as Markdown, for AI agents                               |
+| `/llms.txt`      | `app/llms.txt/route.ts`            | Page index for LLMs, generated from the page tree                  |
+| `/llms-full.txt` | `app/llms-full.txt/route.ts`       | Every docs page concatenated as Markdown                           |
+| `/api/search`    | `app/api/search/route.ts`          | Fumadocs search endpoint                                           |
+| `/r/:name.json`  | `shadcn build` output, static      | **Hard constraint** — published `components.json` files point here |
 
 `/playground` and `/` share `app/(home)/layout.tsx` (`HomeLayout`), the same nav, search dialog,
 and theme toggle as everywhere else — one app shell, not three separately-styled surfaces.
@@ -62,6 +65,18 @@ site.
 `components/mdx.tsx` wires `fumadocs-typescript`'s `AutoTypeTable` against a
 `createFileSystemGeneratorCache`-backed generator, so `<AutoTypeTable path="../packages/core/src/upload.ts" name="UploadAdapter" />`
 in a guide or API page reads real `packages/*/src` exports via ts-morph.
+
+## Docs for LLMs
+
+`source.config.ts`'s `docs.postprocess.includeProcessedMarkdown: true` makes `fumadocs-mdx`
+export each page's postprocessed Markdown (`page.data.getText('processed')`), not just the
+compiled MDX component — fumadocs-core's `llms()` (`lib/source.ts`'s `docsLlms`) renders that
+into three surfaces, none of which touch the docs UI: `app/llms.txt/route.ts` (a page-tree index,
+one line per page with its description), `app/llms-full.txt/route.ts` (every page concatenated),
+and `app/llms.mdx/docs/[[...slug]]/route.ts` (one page at a time) reachable at `/docs/**.md` via
+`next.config.mjs`'s rewrite. JSX component syntax (e.g. `<SlashMenuDemo />`) appears verbatim in
+the Markdown output rather than being rendered or stripped — the default `llms()` behavior, left
+as-is since the JSX itself is usually still legible context for an agent reading the page.
 
 ## Build and deploy
 

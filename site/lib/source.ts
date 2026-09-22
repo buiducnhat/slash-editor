@@ -1,4 +1,4 @@
-import { loader } from "fumadocs-core/source";
+import { llms, loader } from "fumadocs-core/source";
 import { docs } from "../.source/server.ts";
 
 /**
@@ -11,4 +11,17 @@ import { docs } from "../.source/server.ts";
 export const source = loader({
   baseUrl: "/docs",
   source: docs.toFumadocsSource(),
+});
+
+/**
+ * Renders docs pages as Markdown for LLMs/AI agents — `/llms.txt` (page
+ * index), `/llms-full.txt` (every page concatenated), and per-page
+ * `/docs/*.md`. `getText('processed')` reads the postprocessed Markdown
+ * `source.config.ts`'s `includeProcessedMarkdown` exports per page, not
+ * the raw MDX source, so JSX/component syntax in prose doesn't leak
+ * through verbatim.
+ */
+export const docsLlms = llms(source, {
+  renderPage: async (page) =>
+    `# ${page.data.title} (${page.url})\n\n${await page.data.getText("processed")}`,
 });

@@ -7,6 +7,9 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   outputFileTracingRoot: fileURLToPath(new URL("..", import.meta.url)),
+  async rewrites() {
+    return [{ source: "/docs/:slug*.md", destination: "/llms.mdx/docs/:slug*/content.md" }];
+  },
 };
 
 export default withMDX(config);
