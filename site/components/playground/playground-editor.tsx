@@ -180,7 +180,10 @@ function SoloEditor() {
     content: INITIAL_CONTENT,
     blockKit: BLOCK_KIT_DEFAULTS,
     editorProps: {
-      attributes: { class: "slash-content min-h-[60vh] px-8 py-10", "aria-label": "Document" },
+      attributes: {
+        class: "slash-content min-h-[60vh] pl-24 pr-8 py-10",
+        "aria-label": "Document",
+      },
     },
   });
 
@@ -242,7 +245,10 @@ function CollabEditor({ room }: { room: string }) {
       collaboration: { document: collab.document, provider: collab.provider, user: collab.user },
     },
     editorProps: {
-      attributes: { class: "slash-content min-h-[60vh] px-8 py-10", "aria-label": "Document" },
+      attributes: {
+        class: "slash-content min-h-[60vh] pl-24 pr-8 py-10",
+        "aria-label": "Document",
+      },
     },
   });
 

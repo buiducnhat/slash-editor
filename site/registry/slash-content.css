@@ -94,6 +94,22 @@
     @apply text-muted-foreground hover:text-foreground hover:bg-accent flex h-[1lh] w-[1lh] shrink-0 cursor-pointer items-center justify-center rounded;
   }
 
+  /*
+   * Heading toggles get a smaller marker: a full 1lh box at text-3xl is a
+   * 36px button, visually heavier than the heading itself.
+   */
+  .slash-content [data-type="details"][data-level="1"] > button {
+    @apply size-8;
+  }
+
+  .slash-content [data-type="details"][data-level="2"] > button {
+    @apply size-7;
+  }
+
+  .slash-content [data-type="details"][data-level="3"] > button {
+    @apply size-6;
+  }
+
   .slash-content [data-type="details"] > button > svg {
     @apply size-[0.75em] transition-transform duration-150;
   }
@@ -112,7 +128,7 @@
 
   /* The body is ordinary content again, whatever the title's level. */
   .slash-content [data-type="detailsContent"] {
-    @apply border-border text-foreground mt-1 border-l-2 pl-4 text-base leading-7 font-normal tracking-normal;
+    @apply text-foreground mt-1 pl-5 text-base leading-7 font-normal tracking-normal;
   }
 
   .slash-content ul[data-type="taskList"] {

@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils.ts";
  * registry modules touch DOM globals at module scope.
  */
 
-const EDITOR_CLASS = "slash-content min-h-40 px-6 py-8";
+const EDITOR_CLASS = "slash-content min-h-40 pl-24 pr-6 py-8";
 const CARD_CLASS = cn(
   "bg-card border-border relative rounded-xl border shadow-sm",
   "focus-within:ring-ring/40 focus-within:ring-2",
