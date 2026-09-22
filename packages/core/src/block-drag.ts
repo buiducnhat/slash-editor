@@ -121,16 +121,21 @@ function canBeChildType(schema: Schema, sourceType: string, parentType: string):
 }
 
 /**
- * The draggable unit containing `$pos`: a direct child of the document, or a
- * list item at any nesting depth. A paragraph inside a list item carries its
- * own block id (see `BlockId`) but is not itself a drag unit — dragging
- * moves the whole list item, matching Notion's per-row handle.
+ * The draggable unit containing `$pos`: a direct child of the document, a
+ * list item at any nesting depth, or a block inside a toggle's body. A
+ * paragraph inside a list item carries its own block id (see `BlockId`) but
+ * is not itself a drag unit — dragging moves the whole list item, matching
+ * Notion's per-row handle.
  */
 function resolveBlockAt($pos: ResolvedPos): { pos: number; node: ProseMirrorNode } | null {
   for (let depth = $pos.depth; depth >= 1; depth--) {
     const node = $pos.node(depth);
 
-    if (depth === 1 || node.type.name === "listItem") {
+    if (
+      depth === 1 ||
+      node.type.name === "listItem" ||
+      $pos.node(depth - 1).type.name === "detailsContent"
+    ) {
       return { pos: $pos.before(depth), node };
     }
   }
@@ -291,7 +296,30 @@ function toBlockTarget(view: EditorView, pos: number): BlockTarget | null {
     id: typeof node.attrs.id === "string" ? node.attrs.id : null,
     getClientRect: () => {
       const dom = view.nodeDOM(pos);
-      return dom instanceof HTMLElement ? dom.getBoundingClientRect() : null;
+
+      if (!(dom instanceof HTMLElement)) {
+        return null;
+      }
+
+      const rect = dom.getBoundingClientRect();
+
+      /*
+       * A toggle's own rect spans its whole expanded body, which would park
+       * the gutter halfway down the block. Its row is the title line, so take
+       * the summary's vertical box — and the wrapper's left edge, keeping the
+       * buttons in the same gutter column as every other block, clear of the
+       * disclosure button that now sits at the title's left.
+       */
+      const summary =
+        node.type.name === "details" ? dom.querySelector(":scope > div > summary") : null;
+
+      if (summary instanceof HTMLElement) {
+        const box = summary.getBoundingClientRect();
+
+        return new DOMRect(rect.left, box.top, rect.width, box.height);
+      }
+
+      return rect;
     },
   };
 }
@@ -340,7 +368,12 @@ function computeRects(view: EditorView): BlockRect[] {
   const rects: BlockRect[] = [];
 
   view.state.doc.descendants((node, pos, parent) => {
-    if (!parent || (parent.type.name !== "doc" && node.type.name !== "listItem")) {
+    if (
+      !parent ||
+      (parent.type.name !== "doc" &&
+        parent.type.name !== "detailsContent" &&
+        node.type.name !== "listItem")
+    ) {
       return;
     }
 

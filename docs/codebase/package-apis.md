@@ -56,6 +56,12 @@ const toggleHeadingInputRegex: RegExp; // /^(#{1,3})\s$/, only inside a toggle t
 // details gains attr `level` (0-3), rendered as `data-level` on the wrapper and omitted at 0.
 // editor.commands.setToggle(level?) — converts the current block, or re-levels the toggle
 // holding the selection; setToggleLevel(level) — re-levels only.
+// Toggles are created collapsed (Tiptap's own `setDetails`); Enter is what opens them:
+// Enter on a title hands the caret to the body — the fresh toggle's empty placeholder line,
+// or a new block on top of an existing body — reopening a collapsed toggle first.
+// Enter on an empty last body block leaves the toggle into a new paragraph after it.
+// ArrowDown leaves the body from its last block (and a collapsed toggle from its title);
+// ArrowUp on the first body block returns to the end of the title.
 
 // quote.ts — blockquote whose shorthand is `"`, not `>`
 const Quote: Node<QuoteOptions>; // extends @tiptap/extension-blockquote

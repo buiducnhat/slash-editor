@@ -1,4 +1,11 @@
-import { findParentNode, InputRule, mergeAttributes } from "@tiptap/core";
+import {
+  findChildren,
+  findParentNode,
+  findParentNodeClosestToPos,
+  InputRule,
+  mergeAttributes,
+  type Editor,
+} from "@tiptap/core";
 import { Details, type DetailsOptions } from "@tiptap/extension-details";
 import {
   Fragment,
@@ -82,9 +89,90 @@ function replaceBlockWithToggle(tr: Transaction, pos: number, level: ToggleLevel
   const body = contentType.create(null, paragraphType.create());
   const from = $pos.before($pos.depth);
 
+  /*
+   * Left closed: the node view owns `open`, and Tiptap paints its class a
+   * tick after creation, so a node that starts open has a body that is still
+   * hidden when the next keystroke arrives. `Enter` on the title opens it and
+   * hands the caret to the body instead (see `addKeyboardShortcuts`).
+   */
   tr.replaceWith(from, $pos.after($pos.depth), detailsType.create({ level }, [summary, body]));
   // from → details, +1 → summary, +1 → its first text position.
   tr.setSelection(TextSelection.create(tr.doc, from + 2 + summary.content.size));
+
+  return true;
+}
+
+/** A toggle and its body, as located from a caret position inside one. */
+interface ToggleContext {
+  /** The `details` wrapper; `depth` is the depth it sits at. */
+  details: { pos: number; depth: number; node: ProseMirrorNode };
+  /** The `detailsContent` holding the body blocks; `pos` is relative to `details`. */
+  content: { pos: number; node: ProseMirrorNode };
+}
+
+/**
+ * The toggle around `$pos` and its body, or `null`. `details.depth` is the
+ * depth the toggle itself sits at, so the block holding `$pos` is at
+ * `details.depth + 2` (`details` → `detailsContent` → block).
+ */
+function toggleAt($pos: ResolvedPos, detailsType: NodeType): ToggleContext | null {
+  const details = findParentNodeClosestToPos($pos, (node) => node.type === detailsType);
+
+  if (!details) {
+    return null;
+  }
+
+  const content = findChildren(details.node, (node) => node.type.name === "detailsContent")[0];
+
+  return content ? { details, content } : null;
+}
+
+/** Whether a toggle's body is showing. Absent `open` (no `persist`) means the node view tracks it alone, and a body is only reachable while open. */
+function isToggleOpen(node: ProseMirrorNode): boolean {
+  return "open" in node.attrs ? Boolean(node.attrs.open) : true;
+}
+
+/** What the caret should land on after leaving a toggle's body. */
+type LeaveMode =
+  /** The nearest position in the following block, creating one only when the toggle ends the document. */
+  | "next-block"
+  /** A fresh empty paragraph right after the toggle — what Enter on an empty body line produces. */
+  | "new-block";
+
+/**
+ * Moves the caret past `details`. In `new-block` mode the caret's own block is
+ * dropped first (when the body has others), so exiting from an empty line
+ * doesn't leave that line behind inside the toggle.
+ */
+function leaveToggle(editor: Editor, toggle: ToggleContext, mode: LeaveMode): boolean {
+  const { state, view } = editor;
+  const { $from } = state.selection;
+  const tr = state.tr;
+  const blockDepth = toggle.details.depth + 2;
+
+  if (mode === "new-block" && toggle.content.node.childCount > 1 && $from.depth === blockDepth) {
+    tr.delete($from.before(blockDepth), $from.after(blockDepth));
+  }
+
+  const node = tr.doc.nodeAt(toggle.details.pos);
+  const paragraph = state.schema.nodes.paragraph?.createAndFill();
+
+  if (!node || !paragraph) {
+    return false;
+  }
+
+  const after = toggle.details.pos + node.nodeSize;
+  const $after = tr.doc.resolve(after);
+
+  if (mode === "new-block" || !$after.nodeAfter) {
+    tr.insert(after, paragraph);
+    tr.setSelection(TextSelection.create(tr.doc, after + 1));
+  } else {
+    tr.setSelection(TextSelection.near($after, 1));
+  }
+
+  tr.scrollIntoView();
+  view.dispatch(tr);
 
   return true;
 }
@@ -249,6 +337,182 @@ export const Toggle = Details.extend<ToggleOptions>({
 
           return true;
         },
+    };
+  },
+
+  /*
+   * Toggle navigation, and the escape hatches out of a body. Tiptap's own
+   * shortcuts only cover some of it — its `Enter` drops the block after the
+   * whole toggle when the body is hidden, and nothing moves the caret out of
+   * a body downwards — while overriding a key here replaces the parent's
+   * binding, so the parent's cases are reimplemented too.
+   */
+  addKeyboardShortcuts() {
+    return {
+      ...this.parent?.(),
+      /*
+       * On a title: hand the caret to the body — into its existing line when
+       * that is the fresh toggle's empty placeholder, otherwise into a new
+       * block at the top of it — reopening a collapsed toggle first. On an
+       * empty last body block: leave the toggle, which is the way back out
+       * to the surrounding document.
+       */
+      Enter: ({ editor }) => {
+        const { state, view } = editor;
+        const { schema, selection } = state;
+        const { $head } = selection;
+
+        if ($head.parent.type === schema.nodes.detailsSummary) {
+          const details = findParentNode((node) => node.type === this.type)(selection);
+          const contentType = schema.nodes.detailsContent;
+
+          if (!details || !contentType) {
+            return false;
+          }
+
+          const content = findChildren(details.node, (node) => node.type === contentType)[0];
+          const child = content?.node.type.contentMatch.defaultType?.createAndFill();
+
+          if (!content || !child) {
+            return false;
+          }
+
+          /*
+           * Open first and dispatch, so the DOM shows the body before the
+           * insert transaction — the detailsSelection plugin snaps
+           * selections out of hidden content, and it checks the DOM, which
+           * only reflects `open` after a dispatch. With `persist: false`
+           * `open` is not an attribute at all, so the node view's class is
+           * flipped directly instead.
+           */
+          if (!isToggleOpen(details.node)) {
+            if ("open" in details.node.attrs) {
+              view.dispatch(
+                state.tr.setNodeMarkup(details.pos, undefined, {
+                  ...details.node.attrs,
+                  open: true,
+                }),
+              );
+            } else {
+              const dom = view.domAtPos(details.pos).node as HTMLElement;
+
+              dom.classList.add(this.options.openClassName);
+            }
+          }
+
+          /*
+           * A body that is one empty block is the placeholder a fresh toggle
+           * starts with: hand the caret to that line instead of adding a
+           * second one. The block cannot be swapped for a new one in the same
+           * transaction — `detailsContent` is `block+`, so removing its only
+           * child is a step ProseMirror refuses — and a body that already has
+           * content gets the new block on top, right under the title.
+           */
+          const placeholder = content.node.firstChild;
+          const isEmptyBody =
+            content.node.childCount === 1 && (placeholder?.content.size ?? 0) === 0;
+          const insertPos = details.pos + 1 + content.pos + 1;
+          const tr = editor.state.tr;
+
+          if (!isEmptyBody) {
+            tr.insert(insertPos, child);
+          }
+
+          // insertPos → new block, +1 → its first text position.
+          tr.setSelection(TextSelection.create(tr.doc, insertPos + 1));
+          tr.scrollIntoView();
+          view.dispatch(tr);
+
+          return true;
+        }
+
+        const toggle = toggleAt($head, this.type);
+        const bodyDepth = toggle ? toggle.details.depth + 1 : -1;
+
+        if (
+          !toggle ||
+          !selection.empty ||
+          $head.parent.content.size > 0 ||
+          $head.index(bodyDepth) !== toggle.content.node.childCount - 1
+        ) {
+          return false;
+        }
+
+        return leaveToggle(editor, toggle, "new-block");
+      },
+      /*
+       * Down: out of the body from its last block, out of a collapsed
+       * toggle from its title. An open title already moves into the body
+       * through ProseMirror's default handling, so that case declines.
+       */
+      ArrowDown: ({ editor }) => {
+        const { state } = editor;
+        const { schema, selection } = state;
+        const { $head } = selection;
+
+        if ($head.parent.type === schema.nodes.detailsSummary) {
+          const toggle = toggleAt($head, this.type);
+
+          if (!toggle || isToggleOpen(toggle.details.node)) {
+            return false;
+          }
+
+          return leaveToggle(editor, toggle, "next-block");
+        }
+
+        const toggle = toggleAt($head, this.type);
+        const bodyDepth = toggle ? toggle.details.depth + 1 : -1;
+
+        if (
+          !toggle ||
+          !selection.empty ||
+          $head.parentOffset !== $head.parent.content.size ||
+          $head.index(bodyDepth) !== toggle.content.node.childCount - 1
+        ) {
+          return false;
+        }
+
+        return leaveToggle(editor, toggle, "next-block");
+      },
+      /* Up: from the first body block back onto the title. */
+      ArrowUp: ({ editor }) => {
+        const { state, view } = editor;
+        const { selection } = state;
+        const { $head } = selection;
+
+        if (!selection.empty || $head.parentOffset !== 0) {
+          return false;
+        }
+
+        const toggle = toggleAt($head, this.type);
+
+        if (!toggle || $head.index(toggle.details.depth + 1) !== 0) {
+          return false;
+        }
+
+        const summary = findChildren(
+          toggle.details.node,
+          (node) => node.type.name === "detailsSummary",
+        )[0];
+
+        if (!summary) {
+          return false;
+        }
+
+        const tr = state.tr;
+
+        /*
+         * The end of the title's text: +1 into the details' content, +1 into
+         * the summary itself (its content size is its text length).
+         */
+        tr.setSelection(
+          TextSelection.create(tr.doc, toggle.details.pos + 2 + summary.node.content.size),
+        );
+        tr.scrollIntoView();
+        view.dispatch(tr);
+
+        return true;
+      },
     };
   },
 
