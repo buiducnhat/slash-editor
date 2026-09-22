@@ -16,10 +16,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build packages
+        run: bun run build
+
   check:
     name: Check (format · lint · types)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: [build]
 
     steps:
       - name: Checkout
@@ -59,26 +80,6 @@ jobs:
       - name: Run unit tests
         run: bun run test
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.4.2"
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build packages
-        run: bun run build
-
   registry:
     name: Registry (shadcn schema)
     runs-on: ubuntu-latest
@@ -105,6 +106,7 @@ jobs:
     name: Test (e2e · ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: [build]
 
     strategy:
       fail-fast: false
@@ -151,7 +153,7 @@ jobs:
     name: Merge e2e reports
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check, test, build, registry, e2e]
+    needs: [check, test, registry, e2e]
     if: always()
 
     steps:
