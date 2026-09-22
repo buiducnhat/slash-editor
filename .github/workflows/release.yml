@@ -23,9 +23,21 @@ jobs:
         with:
           bun-version: "1.4.2"
 
-      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855) —
-      # `changeset publish` uses npm internally, so it works fine with trusted publishing.
-      # Run from /tmp to avoid EBADDEVENGINES (root package.json requires bun).
+      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855) — the
+      # registry upload runs through real npm instead. Trusted publishing needs
+      # npm >= 11.5.1, so put a recent Node on PATH and pin that floor rather
+      # than trust whatever the runner image bundles.
+      - name: Set up Node (npm publish supports OIDC; bun publish does not)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -46,10 +58,30 @@ jobs:
         working-directory: site
         run: bunx --bun shadcn build
 
-      # changeset publish runs from /tmp so npm is not blocked by devEngines.
-      # OIDC (id-token: write) handles auth — no NPM_TOKEN needed.
-      - name: Publish packages
-        run: |
-          cp -r . /tmp/slash-editor
-          cd /tmp && bunx changeset publish --filter=@slash-editor/*
-        working-directory: /tmp/slash-editor
+      # The version bump is committed ahead of the tag (`changeset version`), so
+      # these steps only upload what the tag already says. Two constraints shape
+      # them:
+      #
+      # - `npm pack` leaves `workspace:*` in react's manifest (`npm pack` in
+      #   packages/react ships `@slash-editor/core: "workspace:*"`, which no
+      #   consumer can resolve), while `bun pm pack` resolves it to the concrete
+      #   version — so pack with bun and upload the tarball with npm;
+      # - npm refuses to run anywhere inside this tree: the root `devEngines`
+      #   pins bun, and devEngines resolves against the workspace root rather
+      #   than cwd (EBADDEVENGINES), so publish from /tmp, where no package.json
+      #   governs it.
+      - name: Pack @slash-editor/core
+        working-directory: packages/core
+        run: bun pm pack --destination /tmp/pack/core
+
+      - name: Publish @slash-editor/core
+        working-directory: /tmp
+        run: npm publish /tmp/pack/core/*.tgz --access public --ignore-scripts
+
+      - name: Pack @slash-editor/react
+        working-directory: packages/react
+        run: bun pm pack --destination /tmp/pack/react
+
+      - name: Publish @slash-editor/react
+        working-directory: /tmp
+        run: npm publish /tmp/pack/react/*.tgz --access public --ignore-scripts
