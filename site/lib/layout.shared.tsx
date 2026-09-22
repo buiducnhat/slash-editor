@@ -14,11 +14,7 @@ export function baseOptions(): BaseLayoutProps {
         text: "Playground",
         url: "/playground",
       },
-      {
-        text: "GitHub",
-        url: "https://github.com/buiducnhat/slash-editor",
-        external: true,
-      },
     ],
+    githubUrl: "https://github.com/buiducnhat/slash-editor",
   };
 }

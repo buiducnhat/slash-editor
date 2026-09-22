@@ -71,12 +71,20 @@ in a guide or API page reads real `packages/*/src` exports via ts-morph.
 `source.config.ts`'s `docs.postprocess.includeProcessedMarkdown: true` makes `fumadocs-mdx`
 export each page's postprocessed Markdown (`page.data.getText('processed')`), not just the
 compiled MDX component — fumadocs-core's `llms()` (`lib/source.ts`'s `docsLlms`) renders that
-into three surfaces, none of which touch the docs UI: `app/llms.txt/route.ts` (a page-tree index,
-one line per page with its description), `app/llms-full.txt/route.ts` (every page concatenated),
-and `app/llms.mdx/docs/[[...slug]]/route.ts` (one page at a time) reachable at `/docs/**.md` via
+into three surfaces: `app/llms.txt/route.ts` (a page-tree index, one line per page with its
+description), `app/llms-full.txt/route.ts` (every page concatenated), and
+`app/llms.mdx/docs/[[...slug]]/route.ts` (one page at a time) reachable at `/docs/**.md` via
 `next.config.mjs`'s rewrite. JSX component syntax (e.g. `<SlashMenuDemo />`) appears verbatim in
 the Markdown output rather than being rendered or stripped — the default `llms()` behavior, left
 as-is since the JSX itself is usually still legible context for an agent reading the page.
+
+Every docs page surfaces this itself: `app/docs/[[...slug]]/page.tsx` renders fumadocs-ui's
+`MarkdownCopyButton`/`ViewOptionsPopover` above `DocsBody`, pointed at the per-page route via
+`lib/shared.ts`'s `getPageMarkdownUrl` — "Copy Markdown", "View as Markdown", "Open in
+ChatGPT/Claude/Cursor", and a GitHub source link, all without a person needing to know `/llms.txt`
+exists. The top nav's GitHub link is `baseOptions()`'s `githubUrl` shorthand rather than a
+`links` entry — fumadocs-ui renders that as the icon-only button next to the theme toggle
+(sidebar footer in `DocsLayout`, top-right in `HomeLayout`), not further nav-list text.
 
 ## Build and deploy
 
