@@ -13,6 +13,8 @@ packages/core/src/embed.ts                Embed node: bookmark/iframe, setEmbed(
 packages/core/src/file.ts                 File node: upload/retry shape, download-link rendering
 packages/core/src/image.ts                Image node: upload/retry shape, empty-placeholder state
 packages/core/src/link-editor.ts          LinkEditor extension: popover visibility + draft href only
+packages/core/src/markdown.ts             @slash-editor/core/markdown entry: Markdown extension, serializeMarkdown()/parseMarkdown()
+packages/core/src/markdown-syntax.ts      dependency-free marker/link/block-scan helpers nodes use for their markdown hooks
 packages/core/src/mention.ts              Mention node, async Suggestion provider, storage store
 packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
 packages/core/src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
@@ -98,6 +100,7 @@ site/                          the one app: playground, docs site, landing page,
   components/demo/registry-demos.tsx          one demo per registry item, wiring the same editor defaults the playground uses
   components/demo/registry-demos.preview.tsx  `next/dynamic(…, { ssr: false })` wrapper per demo — ProseMirror needs a real DOM
   components/playground/playground-editor.tsx  SoloEditor / CollabEditor, ported from the former standalone app's `app.tsx`
+  components/playground/markdown-panel.tsx     solo editor's "Markdown" panel: live `getMarkdown()`, edit + apply, import/download `.md`
   components/playground/playground-editor.preview.tsx  `ssr: false` wrapper — same DOM-globals constraint as the demo previews
   components/landing/feature-grid.tsx         landing page feature cards
   content/docs/**/*.mdx         getting-started/, components/ (one per registry item + the kit), guides/, api/
@@ -123,14 +126,15 @@ vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, v
 
 ## Entry points
 
-| Purpose                   | Path                                                          |
-| ------------------------- | ------------------------------------------------------------- |
-| Core public API           | `packages/core/src/index.ts`                                  |
-| React public API          | `packages/react/src/index.ts`                                 |
-| Playground                | `site/app/layout.tsx` → `app/(home)/playground/page.tsx`      |
-| Docs site + landing       | `site/app/layout.tsx` → `app/(home)/page.tsx` / `app/docs/**` |
-| Registry component source | `site/registry/components/*`                                  |
-| Toolchain config          | `vite.config.ts` (root), `site/next.config.mjs`               |
+| Purpose                   | Path                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| Core public API           | `packages/core/src/index.ts`                                    |
+| Core markdown subpath     | `packages/core/src/markdown.ts` → `@slash-editor/core/markdown` |
+| React public API          | `packages/react/src/index.ts`                                   |
+| Playground                | `site/app/layout.tsx` → `app/(home)/playground/page.tsx`        |
+| Docs site + landing       | `site/app/layout.tsx` → `app/(home)/page.tsx` / `app/docs/**`   |
+| Registry component source | `site/registry/components/*`                                    |
+| Toolchain config          | `vite.config.ts` (root), `site/next.config.mjs`                 |
 
 ## Generated and ignored
 

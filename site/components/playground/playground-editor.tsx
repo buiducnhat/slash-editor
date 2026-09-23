@@ -1,12 +1,13 @@
 "use client";
 
 import type { CommentThreadStore } from "@slash-editor/core";
+import { markdown } from "@slash-editor/core/markdown";
 import type { Editor } from "@tiptap/core";
 import type { WebrtcProvider } from "y-webrtc";
 import { EditorContent, useEditorState } from "@slash-editor/react";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftIcon, UsersIcon } from "lucide-react";
+import { ArrowLeftIcon, FileCodeIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
@@ -14,6 +15,7 @@ import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { type DemoCollaboration, createDemoCollaboration } from "@/lib/collaboration.ts";
 import { createMockCommentThreadStore } from "@/lib/comment-store.ts";
 import { mockMentionProvider } from "@/lib/mention-provider.ts";
@@ -21,6 +23,7 @@ import { nodeViewExtensions } from "@/lib/node-view-extensions.tsx";
 import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
 import { useDemoEditor } from "@/lib/use-demo-editor.ts";
 import { cn } from "@/lib/utils.ts";
+import { MarkdownPanel } from "./markdown-panel.tsx";
 
 const INITIAL_CONTENT = `
 <h1>slash-editor</h1>
@@ -70,6 +73,9 @@ const EDITOR_CARD = cn(
   "focus-within:ring-ring/40 focus-within:ring-2",
 );
 
+// Declared outside the `as const` object, which would make the list a readonly tuple.
+const EXTENSIONS = [...nodeViewExtensions(), markdown()];
+
 const BLOCK_KIT_DEFAULTS = {
   image: false,
   file: false,
@@ -80,7 +86,7 @@ const BLOCK_KIT_DEFAULTS = {
     items: (query: string, { signal }: { signal: AbortSignal }) =>
       mockMentionProvider(query, signal),
   },
-  extend: nodeViewExtensions(),
+  extend: EXTENSIONS,
 } as const;
 
 /**
@@ -176,6 +182,7 @@ function RoomJoinForm() {
 }
 
 function SoloEditor() {
+  const [showMarkdown, setShowMarkdown] = useState(false);
   const editor = useDemoEditor({
     content: INITIAL_CONTENT,
     blockKit: BLOCK_KIT_DEFAULTS,
@@ -189,15 +196,24 @@ function SoloEditor() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <header className="mb-6 flex flex-col gap-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h1 className="text-lg font-semibold tracking-tight">Playground</h1>
-          <p className="text-muted-foreground text-sm">
-            A live, editable instance — every block, the slash menu, and inline formatting.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
           {editor && <DocumentStats editor={editor} />}
+        </div>
+        <p className="text-muted-foreground text-sm">
+          A live, editable instance — every block, the slash menu, and inline formatting.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant={showMarkdown ? "secondary" : "outline"}
+            size="sm"
+            aria-pressed={showMarkdown}
+            onClick={() => setShowMarkdown((shown) => !shown)}
+          >
+            <FileCodeIcon data-icon="inline-start" />
+            Markdown
+          </Button>
           <RoomJoinForm />
         </div>
       </header>
@@ -210,6 +226,12 @@ function SoloEditor() {
         {editor && <BubbleToolbar editor={editor} />}
         {editor && <LinkEditorPopover editor={editor} />}
       </div>
+
+      {editor && showMarkdown && (
+        <div className="mt-6">
+          <MarkdownPanel editor={editor} />
+        </div>
+      )}
     </div>
   );
 }

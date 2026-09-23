@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { mediaMarkdown } from "./markdown-syntax.ts";
 
 export interface EmbedOptions {
   HTMLAttributes: Record<string, unknown>;
@@ -107,6 +108,12 @@ export const Embed = Node.create<EmbedOptions>({
       (node.attrs.title as string | null) ?? (node.attrs.url as string | null) ?? "Untitled link",
     ];
   },
+  ...mediaMarkdown({
+    type: "embed",
+    hrefAttr: "url",
+    labelAttr: "title",
+    markerKeys: ["mode", "description", "thumbnail"],
+  }),
   addCommands() {
     return {
       setEmbed:

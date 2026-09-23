@@ -1,5 +1,22 @@
 # @slash-editor/core
 
+## 0.2.0
+
+### Minor Changes
+
+- Markdown import/export through a new `@slash-editor/core/markdown` entry.
+
+  - `markdown()` — add it via `createBlockKit({ extend: [markdown()] })` for `editor.getMarkdown()`
+    and `setContent(md, { contentType: "markdown" })`. `serializeMarkdown`/`parseMarkdown` do the
+    same without an editor or a DOM.
+  - Output is GitHub-flavoured: callouts become `> [!TIP]`-style alerts, toggles `<details>`, and
+    columns, media metadata, and mention ids ride in `<!-- slash:… -->` comments GitHub hides.
+    Every slash-editor node survives the round trip.
+  - AI drafts and unfinished uploads are left out (new `excludeFromMarkdown` node field); comment
+    anchors keep their text.
+  - `marked` stays out of bundles that never import the entry, and each editor gets its own
+    `Marked` instance instead of registering into the global one.
+
 ## 0.1.1
 
 ### Patch Changes

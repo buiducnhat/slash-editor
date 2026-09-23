@@ -280,10 +280,36 @@ protocol if peers start missing each other under heavier concurrent-room traffic
 
 ---
 
+## M9 — Markdown import/export ✅
+
+_Done when: a document exports to `.md` that reads well on GitHub and imports back with every
+slash-editor node intact._
+
+- [x] `@slash-editor/core/markdown` subpath entry: `markdown()` (Tiptap's `Markdown`, extended —
+      `editor.getMarkdown()`, `setContent(md, { contentType: "markdown" })`) plus DOM-free
+      `serializeMarkdown`/`parseMarkdown`
+- [x] Per-node `renderMarkdown`/`parseMarkdown`/`markdownTokenizer` for callout (GitHub alerts),
+      toggle (`<details>`), columns, image/file/video/embed, mention; `<!-- slash:… -->` markers
+      carry what GFM cannot
+- [x] `excludeFromMarkdown` node field: AI drafts and unfinished uploads leave no blank-line
+      residue
+- [x] Round-trip, fallback, and global-`marked` isolation tests (`tests/markdown.test.ts`)
+
+_Landed:_ The brief's `createBlockKit({ markdown })` option shipped briefly and was measured
+pulling `marked` + `@tiptap/markdown` (~20 KB gzipped) into every kit bundle, since the kit
+references the extension unconditionally — so it moved to a subpath, opted into via `extend`.
+Two upstream defaults were overridden: `MarkdownManager` registers tokenizers into the global
+`marked` singleton (stacking per editor, and changing a host app's own `marked` output), so each
+manager gets its own `Marked`; and raw HTML parses to literal text without a DOM, so every
+construct is read by its own tokenizer, with a catch-all swallowing unusable markers. Full
+design: [`markdown-design-brief.md`](markdown-design-brief.md).
+
+---
+
 ## Deferred decisions
 
-| Decision                                           | Current stance                          | Revisit when                                  |
-| -------------------------------------------------- | --------------------------------------- | --------------------------------------------- |
-| Universal block nesting (`blockContainer` wrapper) | Rejected; container nodes instead       | Users demand arbitrary block-in-block nesting |
-| Markdown as canonical format                       | Rejected; ProseMirror JSON is canonical | A portability requirement appears             |
-| Comment bodies inside the document                 | Rejected; external thread store         | M4 design review                              |
+| Decision                                           | Current stance                                                                | Revisit when                                  |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
+| Universal block nesting (`blockContainer` wrapper) | Rejected; container nodes instead                                             | Users demand arbitrary block-in-block nesting |
+| Markdown as canonical format                       | Rejected; ProseMirror JSON is canonical — markdown is import/export only (M9) | A portability requirement appears             |
+| Comment bodies inside the document                 | Rejected; external thread store                                               | M4 design review                              |

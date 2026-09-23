@@ -14,6 +14,7 @@ import {
   type ResolvedPos,
 } from "@tiptap/pm/model";
 import { TextSelection, type Transaction } from "@tiptap/pm/state";
+import { blockChildren, scanBlock } from "./markdown-syntax.ts";
 
 export type ToggleOptions = DetailsOptions;
 
@@ -42,6 +43,12 @@ export const toggleHeadingInputRegex = /^(#{1,3})\s$/;
 function asToggleLevel(value: unknown): ToggleLevel {
   return value === 1 || value === 2 || value === 3 ? value : 0;
 }
+
+// `<details>` + `<summary>` opening a toggle, the summary on one line and
+// optionally wrapping its title in `<h1>`–`<h3>` for a toggle heading.
+const DETAILS_OPEN =
+  /^ {0,3}<details(\s+open)?\s*>[ \t]*\n?[ \t]*<summary>(?:<h([1-6])>(.*?)<\/h\2>|(.*?))<\/summary>[ \t]*(?:\n|$)/i;
+const DETAILS_SYNTAX = { open: /^ {0,3}<details[\s>]/i, close: /^ {0,3}<\/details>/i };
 
 function canReplaceBlockWithToggle($pos: ResolvedPos, detailsType: NodeType): boolean {
   if ($pos.depth === 0 || !$pos.parent.isTextblock) {
@@ -202,6 +209,52 @@ export const Toggle = Details.extend<ToggleOptions>({
   renderHTML({ HTMLAttributes }) {
     return ["details", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
   },
+
+  // Raw HTML, because GitHub renders `<details>` natively; the toggle
+  // tokenizer below reads it back without a DOM.
+  renderMarkdown(node, h) {
+    const [summary, content] = node.content ?? [];
+    const level = asToggleLevel(node.attrs?.level);
+    const title = h.renderChildren(summary?.content ?? []);
+    const body = h.renderChildren(content?.content ?? [], "\n\n");
+
+    return [
+      `<details${node.attrs?.open ? " open" : ""}>`,
+      `<summary>${level ? `<h${level}>${title}</h${level}>` : title}</summary>`,
+      ...(body ? ["", body, ""] : []),
+      "</details>",
+    ].join("\n");
+  },
+
+  markdownTokenizer: {
+    name: "details",
+    level: "block",
+    start: (src) => src.search(/^ {0,3}<details[\s>]/im),
+    tokenize(src, _tokens, lexer) {
+      const open = DETAILS_OPEN.exec(src);
+      const rest = open ? src.slice(open[0].length) : "";
+      const block = open ? scanBlock(rest, DETAILS_SYNTAX) : undefined;
+
+      if (!open || !block) {
+        return undefined;
+      }
+
+      return {
+        type: "details",
+        raw: open[0] + rest.slice(0, block.length),
+        open: Boolean(open[1]),
+        level: asToggleLevel(Number(open[2])),
+        summary: lexer.inlineTokens(open[3] ?? open[4] ?? ""),
+        tokens: lexer.blockTokens(block.parts[0]!),
+      };
+    },
+  },
+
+  parseMarkdown: (token, h) =>
+    h.createNode("details", { open: token.open, level: token.level }, [
+      h.createNode("detailsSummary", undefined, h.parseInline(token.summary ?? [])),
+      h.createNode("detailsContent", undefined, blockChildren(token.tokens ?? [], h)),
+    ]),
 
   /*
    * Two fixes over Tiptap's own node view, which is otherwise reused as-is:

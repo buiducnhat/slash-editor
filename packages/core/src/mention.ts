@@ -2,6 +2,10 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import type { Editor } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import { Suggestion, type SuggestionProps } from "@tiptap/suggestion";
+import { readMarker, renderClosingMarker, renderMarker } from "./markdown-syntax.ts";
+
+// The closing marker bounds the label, which may contain spaces.
+const MENTION_CLOSE = renderClosingMarker("mention");
 
 export interface MentionItem {
   /** Stable identity of the mentioned entity (user id, page id, …). */
@@ -148,6 +152,35 @@ export const Mention = Node.create<MentionOptions, MentionStorage>({
   renderText({ node }) {
     return `@${node.attrs.label}`;
   },
+
+  // `@label` is what GitHub shows; the markers around it (hidden there) keep
+  // the id. Without them — or with a malformed payload — it is plain text.
+  renderMarkdown: (node) =>
+    `${renderMarker("mention", { id: node.attrs?.id, label: node.attrs?.label })}@${node.attrs?.label ?? ""}${MENTION_CLOSE}`,
+  markdownTokenizer: {
+    name: "mention",
+    level: "inline",
+    start: (src) => src.indexOf("<!-- slash:mention"),
+    tokenize(src) {
+      const marker = readMarker(src, "mention", true);
+      const close = marker ? src.indexOf(MENTION_CLOSE, marker.raw.length) : -1;
+      const text = marker && close >= 0 ? src.slice(marker.raw.length, close) : "";
+
+      if (!marker || !text.startsWith("@") || text.includes("\n")) {
+        return undefined;
+      }
+
+      const { id, label } = marker.attrs;
+
+      return {
+        type: "mention",
+        raw: src.slice(0, close + MENTION_CLOSE.length),
+        id: typeof id === "string" ? id : null,
+        label: typeof label === "string" ? label : text.slice(1),
+      };
+    },
+  },
+  parseMarkdown: (token, h) => h.createNode("mention", { id: token.id, label: token.label }),
 
   addCommands() {
     return {

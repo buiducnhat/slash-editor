@@ -195,6 +195,10 @@ export const AiBlock = Node.create<AiBlockOptions, AiBlockStorage>({
     ];
   },
 
+  // A draft until Keep turns it into real paragraphs; exporting it would
+  // re-import unreviewed model output as document content.
+  excludeFromMarkdown: () => true,
+
   addCommands() {
     return {
       runAiAction:

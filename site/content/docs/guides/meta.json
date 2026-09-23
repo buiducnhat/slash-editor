@@ -7,6 +7,7 @@
     "mentions",
     "ai-stream-adapter",
     "collaboration",
-    "comments"
+    "comments",
+    "markdown"
   ]
 }

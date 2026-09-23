@@ -1,4 +1,13 @@
-import { mergeAttributes, Node } from "@tiptap/core";
+import { type MarkdownToken, mergeAttributes, Node } from "@tiptap/core";
+import {
+  blockChildren,
+  markerLinePattern,
+  markerStart,
+  readMarker,
+  renderClosingMarker,
+  renderMarker,
+  scanBlock,
+} from "./markdown-syntax.ts";
 
 export interface ColumnsOptions {
   HTMLAttributes: Record<string, unknown>;
@@ -20,6 +29,14 @@ declare module "@tiptap/core" {
 const MIN_COLUMNS = 2;
 const MAX_COLUMNS = 6;
 const DEFAULT_COLUMNS = 2;
+
+// GFM has no columns: on GitHub they read top to bottom, and the markers
+// (hidden there) carry the split back in.
+const COLUMNS_SYNTAX = {
+  open: markerLinePattern("columns"),
+  close: markerLinePattern("columns", true),
+  separator: markerLinePattern("column"),
+};
 
 /**
  * A single column inside `Columns`. Not a `block`-group node itself — it
@@ -88,6 +105,44 @@ export const Columns = Node.create<ColumnsOptions>({
         },
     };
   },
+  renderMarkdown: (node, h) =>
+    [
+      renderMarker("columns"),
+      (node.content ?? [])
+        .map((column) => h.renderChildren(column.content ?? [], "\n\n"))
+        .join(`\n\n${renderMarker("column")}\n\n`),
+      renderClosingMarker("columns"),
+    ].join("\n\n"),
+  markdownTokenizer: {
+    name: "columns",
+    level: "block",
+    start: markerStart("columns"),
+    tokenize(src, _tokens, lexer) {
+      const open = readMarker(src, "columns");
+      const rest = open ? src.slice(open.raw.length) : "";
+      const block = open ? scanBlock(rest, COLUMNS_SYNTAX) : undefined;
+
+      // Below the schema's two-column floor there is nothing to rebuild;
+      // declining leaves the markers to the catch-all and the content in place.
+      if (!open || !block || block.parts.length < MIN_COLUMNS) {
+        return undefined;
+      }
+
+      return {
+        type: "columns",
+        raw: open.raw + rest.slice(0, block.length),
+        columns: block.parts.map((part) => lexer.blockTokens(part)),
+      };
+    },
+  },
+  parseMarkdown: (token, h) =>
+    h.createNode(
+      "columns",
+      undefined,
+      (token.columns as MarkdownToken[][]).map((tokens) =>
+        h.createNode("column", undefined, blockChildren(tokens, h)),
+      ),
+    ),
 });
 
 /** Configures the columns container node. */

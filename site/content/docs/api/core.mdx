@@ -77,6 +77,18 @@ mention(options: Partial<MentionOptions> & Pick<MentionOptions, "items">): Node
 
 See the [mentions guide](/docs/guides/mentions).
 
+## Markdown
+
+```ts
+// @slash-editor/core/markdown
+markdown(options?: Partial<MarkdownOptions>): Extension
+serializeMarkdown(doc: JSONContent, extensions?: Extensions): string
+parseMarkdown(markdown: string, extensions?: Extensions): JSONContent
+```
+
+A separate entry, so `marked` stays out of bundles that don't import it. See
+[Markdown](/docs/guides/markdown).
+
 ## Baseline nodes and marks
 
 `Callout`, `Toggle` (Tiptap's `Details` plus a heading level and Notion shorthands `>` /

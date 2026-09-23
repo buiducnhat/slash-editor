@@ -1,6 +1,6 @@
 {
   "name": "@slash-editor/core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Headless block-editor core: ProseMirror/Tiptap extensions, schema, commands.",
   "license": "MIT",
   "repository": {
@@ -14,14 +14,15 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.mjs",
+    "./markdown": "./dist/markdown.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
-    "dev": "vp pack --watch"
+    "build": "vp pack src/index.ts src/markdown.ts",
+    "dev": "vp pack src/index.ts src/markdown.ts --watch"
   },
   "dependencies": {
     "@tiptap/extension-blockquote": "^3.31.3",
@@ -30,8 +31,10 @@
     "@tiptap/extension-details": "^3.31.3",
     "@tiptap/extension-list": "^3.31.3",
     "@tiptap/extension-table": "^3.31.3",
+    "@tiptap/markdown": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
-    "@tiptap/suggestion": "^3.31.3"
+    "@tiptap/suggestion": "^3.31.3",
+    "marked": "^17.0.1"
   },
   "devDependencies": {
     "@tiptap/core": "^3.31.3",

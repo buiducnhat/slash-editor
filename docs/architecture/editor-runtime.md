@@ -159,6 +159,31 @@ function over a bare `EditorState`, testable without a DOM the same way `resolve
 deferred-then-chain shape `useLinkEditor.confirm` uses for the `link` mark's own commands — core never
 calls `CommentThreadStore` itself.
 
+## Markdown
+
+Markdown is an import/export format only; the document stays ProseMirror JSON. Tiptap's
+`MarkdownManager` walks the doc calling each node's `renderMarkdown`, and parses through `marked`
+with each node's `markdownTokenizer`/`parseMarkdown` — so every node owns its syntax in its own
+file, and a new node (first- or third-party, via `extend`) brings its own without anything central
+changing. The hooks live in the main entry through the dependency-free `markdown-syntax.ts`; only
+`@slash-editor/core/markdown` imports `@tiptap/markdown`/`marked`, keeping ~20 KB gzipped out of
+bundles that never opt in.
+
+Three constraints shape it:
+
+- **No DOM on import.** Without `window.DOMParser`, `MarkdownManager` turns raw HTML into literal
+  text, so `<details>` and every `<!-- slash:… -->` marker are read by a tokenizer, never by the
+  HTML fallback. A catch-all tokenizer (registered first, so `marked` tries it last) swallows any
+  marker no node claimed, leaving the block after it as plain markdown.
+- **Separators outlive empty renders.** A container joins children with `\n\n` even when one
+  renders `""`, and the extra blank lines re-import as an empty paragraph. Nodes with nothing
+  durable to write (`aiBlock`, an upload without a URL) declare `excludeFromMarkdown` and are
+  pruned from the JSON before serializing.
+- **`marked` is a global.** The upstream manager registers tokenizers into the `marked` singleton —
+  another copy per editor, and a host app's own `marked` would start reading `> [!NOTE]` as a
+  callout. `SlashMarkdownManager` defaults to a fresh `Marked` instance per manager (per editor, and
+  per cached `extensions` array for the pure helpers).
+
 ## Lifecycle decisions in `useSlashEditor`
 
 - `immediatelyRender: false` — the same component renders under SSR (Next.js App Router) without hydration mismatch.

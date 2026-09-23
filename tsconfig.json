@@ -18,6 +18,7 @@
     "skipLibCheck": true,
     "paths": {
       "@slash-editor/core": ["./packages/core/src/index.ts"],
+      "@slash-editor/core/markdown": ["./packages/core/src/markdown.ts"],
       "@slash-editor/react": ["./packages/react/src/index.ts"]
     }
   },

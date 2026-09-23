@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { mediaMarkdown } from "./markdown-syntax.ts";
 import {
   PendingUploadRegistry,
   retryUpload,
@@ -107,6 +108,7 @@ export const Video = Node.create<VideoOptions, VideoStorage>({
       }),
     ];
   },
+  ...mediaMarkdown({ type: "video", hrefAttr: "src", markerKeys: ["poster"] }),
   addCommands() {
     return {
       setVideo:

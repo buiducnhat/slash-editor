@@ -397,6 +397,38 @@ interface MentionStorage {
 empty result set rather than leaving the menu stuck loading.
 
 ```ts
+// @slash-editor/core/markdown — a separate entry (dist/markdown.mjs), so marked +
+// @tiptap/markdown (~20 KB gzipped) stay out of bundles that never import it.
+const Markdown: Extension<MarkdownOptions, MarkdownExtensionStorage>; // Tiptap's Markdown, extended
+function markdown(options?: Partial<MarkdownOptions>): Extension; // createBlockKit({ extend: [markdown()] })
+type MarkdownOptions = MarkdownExtensionOptions; // indentation, marked, markedOptions
+// editor.getMarkdown(); editor.commands.setContent(md, { contentType: "markdown" }) — also
+// insertContent/insertContentAt, and `contentType: "markdown"` for initial `content`.
+
+// Pure, no editor or DOM. Managers are cached per `extensions` array (WeakMap).
+function serializeMarkdown(doc: JSONContent, extensions?: Extensions): string; // default createBlockKit()
+function parseMarkdown(markdown: string, extensions?: Extensions): JSONContent; // no block ids
+
+// @slash-editor/core — NodeConfig field (markdown-syntax.ts augments @tiptap/core)
+interface NodeConfig {
+  // Leave a node out of export with no blank-line residue: aiBlock always; image/file/video/embed
+  // while they have no URL or status !== "ready".
+  excludeFromMarkdown?: (node: JSONContent) => boolean;
+}
+```
+
+Output is GitHub-flavoured markdown. Nodes GFM cannot express use syntax GitHub renders plus
+`<!-- slash:<type> {json} -->` markers it hides: callout → `> [!TIP]` alert (💡 TIP, ℹ️ NOTE,
+❗ IMPORTANT, ⚠️ WARNING, ⛔ CAUTION; any other icon adds a `slash:callout` marker), toggle →
+`<details>`/`<summary>` (level n → `<summary><hn>…</hn></summary>`), columns →
+`slash:columns`/`slash:column`/`/slash:columns` markers around the column contents, image →
+`![alt](src)` (+ `slash:image {width}`), file/video/embed → `slash:<type>` marker + `[label](src)`,
+mention → `<!-- slash:mention {id,label} -->@label<!-- /slash:mention -->`. Comment marks are
+dropped. Every one of these round-trips; each node owns its `renderMarkdown`/`parseMarkdown`/
+`markdownTokenizer` in its own file, so an `extend` node with no `renderMarkdown` renders as
+nothing. Each manager uses its own `Marked` instance — never the global `marked`.
+
+```ts
 // link-editor.ts — selection-anchored link editing popover; owns only visibility + draft href.
 const LinkEditor: Extension<LinkEditorOptions, LinkEditorStorage>;
 function linkEditor(options?: Partial<LinkEditorOptions>): Extension;

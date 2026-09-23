@@ -1,0 +1,69 @@
+---
+title: Markdown
+description: Exporting a document to .md and importing it back.
+---
+
+Markdown import/export lives in its own entry, `@slash-editor/core/markdown`, so `marked` never
+lands in a bundle that doesn't use it. Add the extension through `extend`:
+
+```tsx
+import { markdown } from "@slash-editor/core/markdown";
+
+const editor = useSlashEditor({
+  blockKit: { extend: [markdown()] },
+});
+
+// Export
+const md = editor.getMarkdown();
+new Blob([md], { type: "text/markdown" }); // save as .md
+
+// Import
+editor.commands.setContent(md, { contentType: "markdown" });
+```
+
+`useSlashEditor({ content: md, contentType: "markdown", … })` loads markdown as the initial
+content the same way.
+
+## Without an editor
+
+`serializeMarkdown` and `parseMarkdown` need neither an editor nor a DOM, so they run on a
+server:
+
+```ts
+import { createBlockKit } from "@slash-editor/core";
+import { parseMarkdown, serializeMarkdown } from "@slash-editor/core/markdown";
+
+const extensions = createBlockKit({ mention: { items } });
+const md = serializeMarkdown(doc, extensions);
+const json = parseMarkdown(md, extensions);
+```
+
+Pass the extensions the document was written with — a node the schema doesn't know renders as
+nothing. Omitted, they default to `createBlockKit()`. Parsed documents carry no block ids; the
+editor assigns them on load.
+
+## What it writes
+
+GitHub-flavoured markdown. Blocks GFM has no syntax for use what GitHub renders, and carry the
+rest in `<!-- slash:… -->` comments, which GitHub and Obsidian hide. Every node below survives the
+round trip.
+
+| Block              | Markdown                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| Callout            | `> [!TIP]` alert: 💡 TIP, ℹ️ NOTE, ❗ IMPORTANT, ⚠️ WARNING, ⛔ CAUTION. Other icons add a marker |
+| Toggle             | `<details>` / `<summary>`; a toggle heading wraps its title in `<h1>`–`<h3>`                      |
+| Columns            | Column contents one after another, between `slash:columns` / `slash:column` markers               |
+| Image              | `![alt](src)`, plus a marker when it has a width                                                  |
+| File, video, embed | A marker with their metadata, then `[label](url)`                                                 |
+| Mention            | `@label`, wrapped in markers that keep the id                                                     |
+
+Left out: comment anchors (their text stays; threads live in your `CommentThreadStore`), AI
+drafts not yet kept, and uploads that haven't finished.
+
+On import, GitHub alerts and `<details>` written by hand come in as callouts and toggles. A marker
+that can't be used — hand-edited into invalid JSON, say — is dropped and the block after it
+imports as plain markdown.
+
+<Callout type="warn">
+  `setContent` on a [collaborative](/docs/guides/collaboration) document replaces it for every peer.
+</Callout>

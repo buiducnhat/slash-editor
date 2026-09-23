@@ -6,19 +6,20 @@ A test must fail for a plausible bug in observable behavior: document output, ra
 
 Current suites (`vp test`, Node environment, no DOM):
 
-| File                                         | Covers                                                                                                                                                      |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core/tests/ai-block.test.ts`       | opt-in wiring (no `StreamAdapter` -> no `aiBlock`), `node: false` opt-out, `createAiSlashItems` action list, schema defaults/JSON round trip, `when` gating |
-| `packages/core/tests/block-kit.test.ts`      | schema node/mark inventory, doc JSON round trip, `extend` registration, `history: false`, heading levels, slash/bubble opt-out                              |
-| `packages/core/tests/block-nodes.test.ts`    | callout icon default, task item checked default, toggle (`details`) open/`level` defaults, JSON round trips                                                 |
-| `packages/core/tests/bubble-toolbar.test.ts` | default items per baseline mark, `when` gating, `isActive` reflecting the live selection                                                                    |
-| `packages/core/tests/link-editor.test.ts`    | `canOpenLinkEditor` gating (mark presence, editability, selection/active-link), kit opt-out, `link` mark editing config                                     |
-| `packages/core/tests/media-nodes.test.ts`    | image/file/video/embed attribute defaults, JSON round trips, `false` opt-out                                                                                |
-| `packages/core/tests/mention.test.ts`        | opt-in wiring (no provider -> no `mention`), schema defaults/JSON round trip, `char`/`debounce`/`minQueryLength` pass-through                               |
-| `packages/core/tests/placeholder.test.ts`    | placeholder slot resolution per node type, heading level and containing block; code blocks excluded; kit opt-out                                            |
-| `packages/core/tests/slash-items.test.ts`    | empty-query ordering, ranking precedence, keyword shorthands, no-match, `when` gating, tie stability                                                        |
-| `packages/core/tests/table-columns.test.ts`  | table/columns/column schema inventory, JSON round trip, `columns{2,}` minimum enforced by the schema, `false` opt-out                                       |
-| `packages/core/tests/upload.test.ts`         | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                                                   |
+| File                                         | Covers                                                                                                                                                                                                                                             |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core/tests/ai-block.test.ts`       | opt-in wiring (no `StreamAdapter` -> no `aiBlock`), `node: false` opt-out, `createAiSlashItems` action list, schema defaults/JSON round trip, `when` gating                                                                                        |
+| `packages/core/tests/block-kit.test.ts`      | schema node/mark inventory, doc JSON round trip, `extend` registration, `history: false`, heading levels, slash/bubble opt-out                                                                                                                     |
+| `packages/core/tests/block-nodes.test.ts`    | callout icon default, task item checked default, toggle (`details`) open/`level` defaults, JSON round trips                                                                                                                                        |
+| `packages/core/tests/bubble-toolbar.test.ts` | default items per baseline mark, `when` gating, `isActive` reflecting the live selection                                                                                                                                                           |
+| `packages/core/tests/link-editor.test.ts`    | `canOpenLinkEditor` gating (mark presence, editability, selection/active-link), kit opt-out, `link` mark editing config                                                                                                                            |
+| `packages/core/tests/media-nodes.test.ts`    | image/file/video/embed attribute defaults, JSON round trips, `false` opt-out                                                                                                                                                                       |
+| `packages/core/tests/markdown.test.ts`       | every custom node round-trips through markdown, empty-paragraph counts in containers, GitHub-facing syntax + marker grammar, exclusions leave no residue, unusable/unclosed markers fall back, inline images stay valid, global `marked` untouched |
+| `packages/core/tests/mention.test.ts`        | opt-in wiring (no provider -> no `mention`), schema defaults/JSON round trip, `char`/`debounce`/`minQueryLength` pass-through                                                                                                                      |
+| `packages/core/tests/placeholder.test.ts`    | placeholder slot resolution per node type, heading level and containing block; code blocks excluded; kit opt-out                                                                                                                                   |
+| `packages/core/tests/slash-items.test.ts`    | empty-query ordering, ranking precedence, keyword shorthands, no-match, `when` gating, tie stability                                                                                                                                               |
+| `packages/core/tests/table-columns.test.ts`  | table/columns/column schema inventory, JSON round trip, `columns{2,}` minimum enforced by the schema, `false` opt-out                                                                                                                              |
+| `packages/core/tests/upload.test.ts`         | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                                                                                                                                          |
 
 Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function. Anything that needs a live `Editor` is verified in a browser instead of mocked.
 
@@ -91,3 +92,6 @@ Assert on DOM facts, not screenshots alone: `[data-slot=popover-content]` presen
    paragraph in one undo step, Discard removes it, and Try again restarts the same request.
 10. Typing `/` shows the "Type to search" hint next to the caret, which disappears at the first
     character; applying a block leaves an empty block naming itself ("Heading 1", "List", "To-do").
+11. The playground's **Markdown** button opens a panel mirroring `getMarkdown()` as you type; editing
+    it holds a draft ("edited, not applied") that **Apply to editor** loads and **Revert** drops;
+    **Import .md** / **Download .md** round-trip a file with callouts, toggles, columns, and mentions intact.

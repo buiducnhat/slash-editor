@@ -26,7 +26,8 @@ The rule that keeps the layers honest: **core computes, react coordinates, regis
 
 - `@tiptap/core`, `@tiptap/pm`, `@tiptap/react`, `react`, `react-dom` are **peer dependencies** of both packages. Two copies of `prosemirror-model`/`prosemirror-state` in one app produce schema mismatches that fail at runtime, so the host app owns those versions.
 - `@tiptap/starter-kit` and `@tiptap/suggestion` are regular dependencies of `core`; both declare the ProseMirror packages as peers, so they deduplicate against the host.
-- `site` aliases `@slash-editor/*` to package **sources** via `next.config.mjs`'s `outputFileTracingRoot` and `tsconfig.json` path aliases (`@slash-editor/core`/`@slash-editor/react` → `../packages/*/src/index.ts`), so HMR covers the whole workspace during development.
+- `@tiptap/markdown` and `marked` are regular dependencies of `core`, imported only by the `@slash-editor/core/markdown` subpath entry (`dist/markdown.mjs`; both entries share one chunk), so bundles that never import it stay free of them. `core`'s `build` script lists both entries; `vp pack` writes the `exports` map.
+- `site` aliases `@slash-editor/*` to package **sources** via `next.config.mjs`'s `outputFileTracingRoot` and `tsconfig.json` path aliases (`@slash-editor/core`/`@slash-editor/react` → `../packages/*/src/index.ts`, `@slash-editor/core/markdown` → `../packages/core/src/markdown.ts`), so HMR covers the whole workspace during development.
 
 ## Build graph
 

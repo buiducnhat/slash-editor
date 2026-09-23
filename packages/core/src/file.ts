@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { mediaMarkdown } from "./markdown-syntax.ts";
 import {
   PendingUploadRegistry,
   retryUpload,
@@ -134,6 +135,12 @@ export const File = Node.create<FileOptions, FileStorage>({
       ],
     ];
   },
+  ...mediaMarkdown({
+    type: "file",
+    hrefAttr: "src",
+    labelAttr: "name",
+    markerKeys: ["size", "mime"],
+  }),
   addCommands() {
     return {
       setFile:

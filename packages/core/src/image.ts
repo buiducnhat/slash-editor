@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { mediaMarkdown } from "./markdown-syntax.ts";
 import {
   PendingUploadRegistry,
   retryUpload,
@@ -120,6 +121,13 @@ export const Image = Node.create<ImageOptions, ImageStorage>({
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { "data-type": this.name }),
     ];
   },
+  ...mediaMarkdown({
+    type: "image",
+    hrefAttr: "src",
+    labelAttr: "alt",
+    markerKeys: ["width"],
+    image: true,
+  }),
   addCommands() {
     return {
       setImage:

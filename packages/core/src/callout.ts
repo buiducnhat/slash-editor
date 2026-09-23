@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { blockChildren, markerStart, readMarker, renderMarker } from "./markdown-syntax.ts";
 
 export interface CalloutOptions {
   /**
@@ -23,6 +24,27 @@ declare module "@tiptap/core" {
     };
   }
 }
+
+/**
+ * GitHub alert type per icon. Only these five exist, so any other icon rides
+ * along in a `slash:callout` marker on a `NOTE` alert.
+ */
+const ALERT_BY_ICON: Record<string, string> = {
+  "💡": "TIP",
+  ℹ️: "NOTE",
+  "❗": "IMPORTANT",
+  "⚠️": "WARNING",
+  "⛔": "CAUTION",
+};
+const ICON_BY_ALERT = Object.fromEntries(
+  Object.entries(ALERT_BY_ICON).map(([icon, alert]) => [alert, icon]),
+);
+
+// Consecutive `>` lines opening with a bare alert tag; a lazy continuation
+// line (no `>`) ends the alert, since the serializer never writes one.
+const ALERT =
+  /^( {0,3}> ?\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*(?:\n|$))((?: {0,3}>[^\n]*(?:\n|$))*)/i;
+const startMarker = markerStart("callout");
 
 /**
  * A highlighted aside with a leading emoji, wrapping arbitrary block content
@@ -72,6 +94,49 @@ export const Callout = Node.create<CalloutOptions>({
           commands.lift(this.name),
     };
   },
+  // Markdown hooks are called unbound — no `this.options` — so a JSON node
+  // missing its icon falls back to the built-in default.
+  renderMarkdown(node, h) {
+    const icon: string = node.attrs?.icon ?? "💡";
+    const alert = ALERT_BY_ICON[icon];
+    const body = h.renderChildren(node.content ?? [], "\n\n");
+    const quoted = `[!${alert ?? "NOTE"}]\n${body}`
+      .split("\n")
+      .map((line) => (line ? `> ${line}` : ">"))
+      .join("\n");
+
+    return alert ? quoted : `${renderMarker("callout", { icon })}\n${quoted}`;
+  },
+  markdownTokenizer: {
+    name: "callout",
+    level: "block",
+    start: (src) => {
+      const indexes = [startMarker(src), src.search(/^ {0,3}> ?\[!/m)].filter((i) => i >= 0);
+
+      return indexes.length ? Math.min(...indexes) : -1;
+    },
+    tokenize(src, _tokens, lexer) {
+      const marker = readMarker(src, "callout");
+      const rest = marker ? src.slice(marker.raw.length) : src;
+      const match = ALERT.exec(rest);
+
+      if (!match) {
+        return undefined;
+      }
+
+      const body = match[3]!.replace(/^ {0,3}> ?/gm, "");
+      const icon = marker?.attrs.icon;
+
+      return {
+        type: "callout",
+        raw: (marker?.raw ?? "") + match[0],
+        icon: typeof icon === "string" ? icon : ICON_BY_ALERT[match[2]!.toUpperCase()],
+        tokens: lexer.blockTokens(body),
+      };
+    },
+  },
+  parseMarkdown: (token, h) =>
+    h.createNode("callout", { icon: token.icon }, blockChildren(token.tokens ?? [], h)),
 });
 
 /** Configures the callout node. */
