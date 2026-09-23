@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { expect, test } from "vite-plus/test";
-import { defaultSlashItems, filterSlashItems, type SlashItem } from "../src/index.ts";
+import { defaultSlashItems, filterSlashItems, slashCommand, type SlashItem } from "../src/index.ts";
 
 /** Only the schema is read by `SlashItem.when`. */
 function editorWith(nodes: string[]): Editor {
@@ -73,4 +73,58 @@ test("ranking is stable for equally scored items", () => {
   ];
 
   expect(ids(filterSlashItems(items, "bo"))).toEqual(["b", "a"]);
+});
+
+test("openAtCaret opens slash menu state and select executes chosen item", () => {
+  let chosenItem: SlashItem | null = null;
+  const items: SlashItem[] = [
+    {
+      id: "test-item",
+      title: "Test Item",
+      group: "Basic",
+      run: () => {
+        chosenItem = items[0];
+      },
+    },
+  ];
+
+  const slashExtension = slashCommand({ items });
+  const rawConfig = slashExtension.config as unknown as {
+    addStorage: () => typeof slashExtension.storage;
+  };
+  const storage = rawConfig.addStorage.call(slashExtension) as {
+    -readonly [K in keyof typeof slashExtension.storage]: (typeof slashExtension.storage)[K];
+  };
+  Object.defineProperty(slashExtension, "storage", {
+    value: storage,
+    configurable: true,
+    writable: true,
+  });
+
+  const fakeEditor = {
+    isDestroyed: false,
+    schema: { nodes: {} },
+    state: {
+      selection: { from: 1, to: 1 },
+    },
+    view: {
+      coordsAtPos: () => ({ left: 50, top: 100, right: 50, bottom: 120 }),
+    },
+  } as unknown as Editor;
+
+  storage.editor = fakeEditor;
+  storage.resolveItems = () => items;
+  expect(storage.state.open).toBe(false);
+
+  storage.openAtCaret();
+  expect(storage.state.open).toBe(true);
+  expect(storage.state.items.length).toBe(1);
+  expect(storage.state.items[0].id).toBe("test-item");
+  expect(storage.openedViaApi).toBe(true);
+
+  // Selecting item executes its command and closes menu
+  storage.select(0);
+  expect(chosenItem).toBe(items[0]);
+  expect(storage.state.open).toBe(false);
+  expect(storage.openedViaApi).toBe(false);
 });

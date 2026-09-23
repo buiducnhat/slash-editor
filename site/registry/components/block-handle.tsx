@@ -1,16 +1,41 @@
 import { useBlockDrag } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
-import { CopyIcon, GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { DOMSerializer } from "@tiptap/pm/model";
+import {
+  ChevronRightIcon,
+  ClipboardPasteIcon,
+  CodeIcon,
+  CopyIcon,
+  CopyPlusIcon,
+  GripVerticalIcon,
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  ListChecksIcon,
+  ListIcon,
+  ListOrderedIcon,
+  MessageSquareIcon,
+  PlusIcon,
+  QuoteIcon,
+  SparklesIcon,
+  Trash2Icon,
+  TypeIcon,
+} from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 
-// Button group is 2 × 28px (icon-sm) + 2px gap = 58px wide; offset leaves a
+let lastCopiedContent: { html: string; text: string } | null = null;
 // 14px gap to the text and 8px of clearance from the card's own edge, given
 // `.slash-content`'s pl-20 (80px) left padding in app.tsx.
 const GUTTER_OFFSET = 72;
@@ -23,20 +48,30 @@ const GUTTER_OFFSET = 72;
  */
 export function BlockHandle({ editor }: { editor: Editor }) {
   const drag = useBlockDrag(editor);
-  const hoverRect =
-    drag.hovered && !drag.dragging ? drag.hoverAnchor?.getBoundingClientRect() : null;
-  const dropRect = drag.dragging ? drag.dropAnchor?.getBoundingClientRect() : null;
-  const menuRect = drag.menuTarget ? drag.menuAnchor?.getBoundingClientRect() : null;
+  const gripRef = useRef<HTMLButtonElement | null>(null);
+  const gripRectRef = useRef<DOMRect | null>(null);
 
+  if (drag.menuTarget && gripRef.current && !gripRectRef.current) {
+    gripRectRef.current = gripRef.current.getBoundingClientRect();
+  } else if (!drag.menuTarget && gripRectRef.current) {
+    gripRectRef.current = null;
+  }
+
+  const activeAnchor = drag.menuTarget ? drag.menuAnchor : drag.hoverAnchor;
+  const activeRect =
+    drag.menuTarget || (drag.hovered && !drag.dragging)
+      ? activeAnchor?.getBoundingClientRect()
+      : null;
+  const dropRect = drag.dragging ? drag.dropAnchor?.getBoundingClientRect() : null;
   return (
     <>
-      {hoverRect && drag.hovered && (
+      {activeRect && (drag.menuTarget || drag.hovered) && (
         <div
           className="fixed z-40 flex items-center gap-0.5"
           style={{
-            top: hoverRect.top,
-            left: hoverRect.left - GUTTER_OFFSET,
-            height: hoverRect.height,
+            top: activeRect.top,
+            left: activeRect.left - GUTTER_OFFSET,
+            height: activeRect.height,
           }}
         >
           <Tooltip>
@@ -58,6 +93,9 @@ export function BlockHandle({ editor }: { editor: Editor }) {
                       .insertContentAt(pos, { type: "paragraph" })
                       .setTextSelection(pos + 1)
                       .run();
+
+                    // Open slash command at the newly created line's caret
+                    editor.storage.slashCommand?.openAtCaret();
                   }}
                 >
                   <PlusIcon />
@@ -66,10 +104,11 @@ export function BlockHandle({ editor }: { editor: Editor }) {
             />
             <TooltipContent>Insert block below</TooltipContent>
           </Tooltip>
-          <Tooltip>
+          <Tooltip disabled={!!drag.menuTarget}>
             <TooltipTrigger
               render={
                 <Button
+                  ref={gripRef}
                   type="button"
                   variant="ghost"
                   size="icon-sm"
@@ -93,13 +132,383 @@ export function BlockHandle({ editor }: { editor: Editor }) {
       )}
       <DropdownMenu
         open={!!drag.menuTarget}
-        onOpenChange={(open) => {
+        modal={false}
+        onOpenChange={(open, eventDetails) => {
           if (!open) {
+            if (eventDetails?.reason === "sibling-open") {
+              return;
+            }
             drag.closeMenu();
           }
         }}
       >
-        <DropdownMenuContent anchor={menuRect ? { getBoundingClientRect: () => menuRect } : null}>
+        <DropdownMenuContent
+          anchor={{
+            getBoundingClientRect: () => {
+              if (gripRectRef.current) {
+                return gripRectRef.current;
+              }
+              if (gripRef.current) {
+                const rect = gripRef.current.getBoundingClientRect();
+                gripRectRef.current = rect;
+                return rect;
+              }
+              const fallbackRect = activeAnchor?.getBoundingClientRect();
+              if (fallbackRect) {
+                // Offset to where the grip button sits in the gutter
+                return new DOMRect(
+                  fallbackRect.left - GUTTER_OFFSET + 28,
+                  fallbackRect.top,
+                  28,
+                  28,
+                );
+              }
+              return new DOMRect(0, 0, 0, 0);
+            },
+          }}
+          align="start"
+          side="right"
+          sideOffset={8}
+          className="w-68 min-w-64 max-w-72 p-1"
+        >
+          {/* Ask AI */}
+          <DropdownMenuItem
+            onClick={() => {
+              if (!drag.menuTarget) {
+                return;
+              }
+              const target = drag.menuTarget;
+              drag.closeMenu();
+              editor
+                .chain()
+                .focus()
+                .setTextSelection(target.pos + 1)
+                .run();
+              // If AI action command exists, run it
+              const aiBlockRegistered = editor.schema.nodes.aiBlock !== undefined;
+              if (aiBlockRegistered && typeof editor.commands.runAiAction === "function") {
+                const context = editor.state.doc.textBetween(
+                  target.pos,
+                  target.pos + target.size,
+                  "\n",
+                );
+                const runAiAction = editor.commands.runAiAction as unknown as (options: {
+                  action: string;
+                  prompt: string;
+                  context: string;
+                }) => boolean;
+                runAiAction({
+                  action: "continue-writing",
+                  prompt: "Improve or continue writing for this block:",
+                  context,
+                });
+              } else {
+                editor.storage.slashCommand?.openAtCaret();
+              }
+            }}
+          >
+            <SparklesIcon />
+            <span>Ask AI</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Turn into submenu */}
+          <DropdownMenuSub
+            onOpenChange={(open, eventDetails) => {
+              if (!open && eventDetails?.reason === "focus-out") {
+                eventDetails.cancel();
+              }
+            }}
+          >
+            <DropdownMenuSubTrigger>
+              <TypeIcon />
+              <span>Turn into</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-56 p-1">
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setParagraph()
+                    .run();
+                }}
+              >
+                <TypeIcon />
+                <span>Text</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setNode("heading", { level: 1 })
+                    .run();
+                }}
+              >
+                <Heading1Icon />
+                <span>Heading 1</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setNode("heading", { level: 2 })
+                    .run();
+                }}
+              >
+                <Heading2Icon />
+                <span>Heading 2</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setNode("heading", { level: 3 })
+                    .run();
+                }}
+              >
+                <Heading3Icon />
+                <span>Heading 3</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .toggleBulletList()
+                    .run();
+                }}
+              >
+                <ListIcon />
+                <span>Bulleted list</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .toggleOrderedList()
+                    .run();
+                }}
+              >
+                <ListOrderedIcon />
+                <span>Numbered list</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .toggleTaskList()
+                    .run();
+                }}
+              >
+                <ListChecksIcon />
+                <span>To-do list</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setToggle()
+                    .run();
+                }}
+              >
+                <ChevronRightIcon />
+                <span>Toggle list</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setCodeBlock()
+                    .run();
+                }}
+              >
+                <CodeIcon />
+                <span>Code</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .toggleBlockquote()
+                    .run();
+                }}
+              >
+                <QuoteIcon />
+                <span>Quote</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const target = drag.menuTarget;
+                  drag.closeMenu();
+                  if (!target) return;
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection(target.pos + 1)
+                    .setCallout()
+                    .run();
+                }}
+              >
+                <MessageSquareIcon />
+                <span>Callout</span>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSeparator />
+
+          {/* Copy */}
+          <DropdownMenuItem
+            onClick={() => {
+              if (!drag.menuTarget) {
+                return;
+              }
+              const node = editor.state.doc.nodeAt(drag.menuTarget.pos);
+              if (!node) {
+                return;
+              }
+              const dom = DOMSerializer.fromSchema(editor.schema).serializeNode(node);
+              const container = document.createElement("div");
+              container.appendChild(dom);
+              const html = container.innerHTML;
+              const text = node.textContent;
+
+              lastCopiedContent = { html, text };
+
+              if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+                const blobHtml = new Blob([html], { type: "text/html" });
+                const blobText = new Blob([text], { type: "text/plain" });
+                void navigator.clipboard
+                  .write([
+                    new ClipboardItem({
+                      "text/html": blobHtml,
+                      "text/plain": blobText,
+                    }),
+                  ])
+                  .catch(() => {
+                    void navigator.clipboard?.writeText(text);
+                  });
+              } else {
+                void navigator.clipboard?.writeText(text);
+              }
+
+              editor.chain().focus().run();
+              drag.closeMenu();
+            }}
+          >
+            <CopyIcon />
+            <span>Copy</span>
+          </DropdownMenuItem>
+
+          {/* Paste below */}
+          <DropdownMenuItem
+            onClick={async () => {
+              if (!drag.menuTarget) {
+                return;
+              }
+              const insertPos = drag.menuTarget.pos + drag.menuTarget.size;
+              let inserted = false;
+
+              try {
+                if (navigator.clipboard?.read) {
+                  const items = await navigator.clipboard.read();
+                  for (const item of items) {
+                    if (item.types.includes("text/html")) {
+                      const blob = await item.getType("text/html");
+                      const html = await blob.text();
+                      editor.chain().focus().insertContentAt(insertPos, html).run();
+                      inserted = true;
+                      break;
+                    }
+                  }
+                }
+                if (!inserted && navigator.clipboard?.readText) {
+                  const text = await navigator.clipboard.readText();
+                  if (text) {
+                    editor.chain().focus().insertContentAt(insertPos, text).run();
+                    inserted = true;
+                  }
+                }
+              } catch {
+                // Clipboard read permission might be denied
+              }
+
+              if (!inserted && lastCopiedContent) {
+                editor
+                  .chain()
+                  .focus()
+                  .insertContentAt(insertPos, lastCopiedContent.html || lastCopiedContent.text)
+                  .run();
+                inserted = true;
+              }
+
+              if (!inserted) {
+                editor
+                  .chain()
+                  .focus()
+                  .insertContentAt(insertPos, { type: "paragraph" })
+                  .setTextSelection(insertPos + 1)
+                  .run();
+              }
+
+              drag.closeMenu();
+            }}
+          >
+            <ClipboardPasteIcon />
+            <span>Paste below</span>
+          </DropdownMenuItem>
+
+          {/* Duplicate */}
           <DropdownMenuItem
             onClick={() => {
               if (!drag.menuTarget) {
@@ -112,9 +521,10 @@ export function BlockHandle({ editor }: { editor: Editor }) {
               drag.closeMenu();
             }}
           >
-            <CopyIcon />
-            Duplicate
+            <CopyPlusIcon />
+            <span>Duplicate</span>
           </DropdownMenuItem>
+          {/* Delete */}
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {
@@ -129,7 +539,7 @@ export function BlockHandle({ editor }: { editor: Editor }) {
             }}
           >
             <Trash2Icon />
-            Delete
+            <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

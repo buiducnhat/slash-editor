@@ -1,6 +1,6 @@
 import { Extension } from "@tiptap/core";
 import type { Editor } from "@tiptap/core";
-import { PluginKey } from "@tiptap/pm/state";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Suggestion, type SuggestionProps } from "@tiptap/suggestion";
 import { defaultSlashItems, filterSlashItems, type SlashItem } from "./slash-items.ts";
 
@@ -22,6 +22,14 @@ export interface SlashCommandStorage {
   listeners: Set<() => void>;
   /** @internal Live suggestion handle; `null` while the menu is closed. */
   active: SuggestionProps<SlashItem, SlashItem> | null;
+  /** @internal Live editor instance. */
+  editor: Editor | null;
+  /** @internal Resolves live slash items from extension options. */
+  resolveItems?: (editor: Editor) => SlashItem[];
+  /** @internal Error handler from options. */
+  onError?: (error: unknown, context: { item: SlashItem; editor: Editor }) => void;
+  /** @internal Whether the menu was opened programmatically at caret. */
+  openedViaApi: boolean;
   /** Subscribes to menu state changes. Returns an unsubscribe function. */
   subscribe(this: SlashCommandStorage, listener: () => void): () => void;
   /** Moves the keyboard highlight; the index wraps around the item list. */
@@ -32,6 +40,8 @@ export interface SlashCommandStorage {
   close(this: SlashCommandStorage): void;
   /** @internal Called by the suggestion plugin on start/update/exit. */
   setActive(this: SlashCommandStorage, props: SuggestionProps<SlashItem, SlashItem> | null): void;
+  /** Opens the slash menu programmatically at the current editor selection. */
+  openAtCaret(this: SlashCommandStorage): void;
 }
 
 export interface SlashCommandOptions {
@@ -81,12 +91,22 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
 
   // Methods read and write through `this` because Tiptap hands each editor its
   // own storage object; closing over a local would update the wrong copy.
+  onCreate() {
+    this.storage.editor = this.editor;
+    this.storage.resolveItems = () =>
+      typeof this.options.items === "function"
+        ? this.options.items(this.editor)
+        : this.options.items;
+    this.storage.onError = this.options.onError;
+  },
+
   addStorage() {
     return {
       state: CLOSED,
       listeners: new Set<() => void>(),
       active: null,
-
+      editor: null,
+      openedViaApi: false,
       subscribe(listener) {
         this.listeners.add(listener);
         return () => this.listeners.delete(listener);
@@ -96,6 +116,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
         this.active = props;
 
         if (!props) {
+          this.openedViaApi = false;
           if (this.state !== CLOSED) {
             this.state = CLOSED;
             this.listeners.forEach((listener) => listener());
@@ -142,8 +163,69 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
       },
 
       close() {
+        this.openedViaApi = false;
         this.active?.editor.commands.focus();
         this.setActive(null);
+      },
+
+      openAtCaret() {
+        const editor = this.editor;
+        if (!editor || editor.isDestroyed) {
+          return;
+        }
+
+        const { state, view } = editor;
+        const { from, to } = state.selection;
+
+        const rawItems = this.resolveItems ? this.resolveItems(editor) : defaultSlashItems;
+        const items = filterSlashItems(rawItems, "", editor);
+
+        if (items.length === 0) {
+          return;
+        }
+
+        const range = { from, to };
+        const getClientRect = () => {
+          if (editor.isDestroyed) {
+            return null;
+          }
+          try {
+            const coords = view.coordsAtPos(editor.state.selection.from);
+            return new DOMRect(
+              coords.left,
+              coords.top,
+              0,
+              Math.max(20, coords.bottom - coords.top),
+            );
+          } catch {
+            return null;
+          }
+        };
+
+        const syntheticActive = {
+          editor,
+          range,
+          query: "",
+          text: "",
+          items,
+          command: (item: SlashItem) => {
+            try {
+              item.run({ editor, range });
+            } catch (error) {
+              if (this.onError) {
+                this.onError(error, { item, editor });
+              } else {
+                throw error;
+              }
+            } finally {
+              this.setActive(null);
+            }
+          },
+          decorationNode: null,
+          clientRect: getClientRect,
+        } as unknown as SuggestionProps<SlashItem, SlashItem>;
+        this.openedViaApi = true;
+        this.setActive(syntheticActive);
       },
     };
   },
@@ -207,6 +289,57 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
             }
           },
         }),
+      }),
+      new Plugin({
+        props: {
+          handleKeyDown: (view, event) => {
+            const storage = getStorage();
+
+            if (!storage.state.open) {
+              return false;
+            }
+
+            const suggestionState = slashCommandPluginKey.getState(view.state);
+            if (suggestionState?.active) {
+              return false;
+            }
+
+            switch (event.key) {
+              case "ArrowDown":
+                storage.setActiveIndex(storage.state.activeIndex + 1);
+                return true;
+              case "ArrowUp":
+                storage.setActiveIndex(storage.state.activeIndex - 1);
+                return true;
+              case "Enter":
+              case "Tab":
+                if (storage.state.items.length === 0) {
+                  return false;
+                }
+                storage.select();
+                return true;
+              case "Escape":
+                storage.close();
+                return true;
+              default:
+                return false;
+            }
+          },
+        },
+        appendTransaction(transactions) {
+          const storage = getStorage();
+
+          if (!storage.openedViaApi || !storage.state.open) {
+            return null;
+          }
+
+          const changed = transactions.some((tr) => tr.docChanged || tr.selectionSet);
+          if (changed) {
+            storage.close();
+          }
+
+          return null;
+        },
       }),
     ];
   },
