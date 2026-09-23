@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.2.0] — 2026-09-23
+
+Markdown import/export (`@slash-editor/core` 0.2.0, `@slash-editor/react` 0.2.0):
+
+- **New `@slash-editor/core/markdown` entry.** `markdown()` adds `editor.getMarkdown()` and
+  `setContent(md, { contentType: "markdown" })`; `serializeMarkdown`/`parseMarkdown` do the
+  same without an editor or a DOM. A separate entry, so `marked` (~20 KB gzipped) stays out of
+  bundles that never import it.
+- **GitHub-flavoured output that round-trips.** Callouts become `> [!TIP]`-style alerts, toggles
+  `<details>`, and columns, media metadata, and mention ids ride in `<!-- slash:… -->` comments
+  GitHub hides. AI drafts and unfinished uploads are left out; comment anchors keep their text.
+- **Playground.** A Markdown panel mirrors the document live, and imports/downloads `.md` files.
+
 ## [0.1.1] — 2026-09-23
 
 Two block-chrome fixes, both in the shared core (`@slash-editor/core` 0.1.1,

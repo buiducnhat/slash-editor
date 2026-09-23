@@ -1,9 +1,12 @@
 # @slash-editor/react
 
-## 0.1.2
+## 0.2.0
 
 ### Patch Changes
 
+- Ships with `@slash-editor/core` 0.2.0 (the two packages are released in lockstep), which adds
+  markdown import/export through `@slash-editor/core/markdown`. No API change here — add
+  `markdown()` to `useSlashEditor({ blockKit: { extend: [markdown()] } })`.
 - Updated dependencies
   - @slash-editor/core@0.2.0
 
