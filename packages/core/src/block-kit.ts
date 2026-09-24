@@ -3,10 +3,11 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import {
+  ai,
   aiBlock,
-  type AiKitOptions,
   createAiSlashItems,
-  defaultAiSlashActions,
+  defaultAiActions,
+  type AiKitOptions,
 } from "./ai-block.ts";
 import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
@@ -22,6 +23,12 @@ import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
 import { mention, type MentionOptions } from "./mention.ts";
 import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
 import { quote } from "./quote.ts";
+import {
+  blockTypes as blockTypesExtension,
+  blockTypeSlashItems,
+  defaultBlockTypes,
+  type BlockType,
+} from "./block-types.ts";
 import { defaultSlashItems, type SlashItem } from "./slash-items.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 import { table, type TableKitOptions } from "./table.ts";
@@ -31,6 +38,8 @@ import { video, type VideoOptions } from "./video.ts";
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface BlockKitOptions {
+  /** Block conversions shared by slash, bubble, and block menus. */
+  blockTypes?: BlockType[];
   /**
    * Heading levels offered by the editor.
    *
@@ -181,6 +190,7 @@ const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
  */
 export function createBlockKit(options: BlockKitOptions = {}): Extensions {
   const {
+    blockTypes = defaultBlockTypes,
     headingLevels = DEFAULT_HEADING_LEVELS,
     history = true,
     slash,
@@ -197,14 +207,13 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     linkEditor: linkEditorOptions,
     mention: mentionOptions,
     ai: aiOptions,
-    collaboration: collaborationOptions,
     comment: commentOptions,
+    collaboration: collaborationOptions,
     toggle: toggleOptions,
     extend = [],
   } = options;
-
   const resolvedAi: AiKitOptions | undefined = aiOptions
-    ? { actions: defaultAiSlashActions, node: true, ...aiOptions }
+    ? { actions: defaultAiActions, node: true, ...aiOptions }
     : undefined;
 
   // Yjs owns the undo stack once a document is shared; running StarterKit's
@@ -236,6 +245,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     TaskItem.configure({ nested: true }),
     Callout,
     toggle({ persist: true, ...toggleOptions }),
+    blockTypesExtension(blockTypes),
     DetailsSummary,
     DetailsContent,
     ...(imageOptions === false ? [] : [image(imageOptions)]),
@@ -244,6 +254,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(embedOptions === false ? [] : [embed(embedOptions)]),
     ...(tableOptions === false ? [] : [table(tableOptions)]),
     ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
+    ...(resolvedAi ? [ai(resolvedAi)] : []),
     ...(resolvedAi && resolvedAi.node !== false ? [aiBlock()] : []),
     ...(mentionOptions === false || !mentionOptions ? [] : [mention(mentionOptions)]),
     ...(slash === false
@@ -251,12 +262,13 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
       : [
           slashCommand({
             ...slash,
-            items:
-              slash?.items ??
-              ((): SlashItem[] => [
-                ...defaultSlashItems,
-                ...(resolvedAi ? createAiSlashItems(resolvedAi) : []),
-              ])(),
+            items: ((): SlashItem[] => [
+              ...blockTypeSlashItems(blockTypes),
+              ...defaultSlashItems.filter(
+                (item) => !blockTypes.some((type) => type.id === item.id),
+              ),
+              ...(resolvedAi ? createAiSlashItems(resolvedAi.actions) : []),
+            ])(),
           }),
         ]),
     ...(placeholderOptions === false ? [] : [placeholder(placeholderOptions)]),

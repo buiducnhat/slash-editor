@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.3.0] — 2026-09-25
+
+Unified action registries, AI storage, and comment composer (`@slash-editor/core` 0.3.0,
+`@slash-editor/react` 0.3.0):
+
+- **Unified block types.** `defaultBlockTypes` in core acts as the single source of truth for
+  slash command blocks, bubble toolbar block-type switcher, and the block handle "Turn into"
+  menu.
+- **Centralized AI extension.** `ai` extension now lives on editor storage, holding the configured
+  `StreamAdapter` and `AiAction` items across slash, selection, and block contexts.
+  `runAiAction` defaults to storage adapter and tracks mapped source ranges, supporting both
+  `Replace` and `Insert below` actions.
+- **Integrated comment store & composer.** `CommentThreadStore` registers via `comment({ store })`
+  with required `subscribe(listener)` updates. An inline `CommentComposer` popover attaches to the
+  bubble toolbar and syncs with the comment sidebar panel.
+- **Headless React bindings & clean cutover.** Added `useBlockTypes`, `useAiActions`, `useBlockMenu`,
+  unified `VirtualAnchor`, and updated `useComments`. Deleted empty directories in `@slash-editor/react`.
+
 ## [0.2.1] — 2026-09-24
 
 One block-gutter fix in the shared core (`@slash-editor/core` 0.2.1, `@slash-editor/react`

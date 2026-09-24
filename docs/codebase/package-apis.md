@@ -642,16 +642,19 @@ interface LinkEditor extends LinkEditorState {
   close(): void;
 }
 
-function useComments(editor: Editor | null, options?: UseCommentsOptions): Comments;
-interface UseCommentsOptions {
-  store?: CommentThreadStore; // bring-your-own; omit to read anchors without create/resolve support
-}
-interface Comments extends CommentState {
-  addComment(body: string): Promise<string | null>; // creates via store, then setComment(id) in one chain
+function useComments(editor: Editor | null): Comments;
+interface Comments extends Omit<CommentState, "composer"> {
+  threads: CommentThread[];
+  composer: { open: boolean; anchor: VirtualAnchor | null; close(): void };
+  addComment(body: string): Promise<string | null>;
   resolveThread(threadId: string): Promise<void>;
   reopenThread(threadId: string): Promise<void>;
-  removeAnchor(threadId: string): void; // unsetComment(threadId); thread itself stays in `store`
+  removeAnchor(threadId: string): void;
 }
+
+function useBlockTypes(editor: Editor | null): BlockTypes;
+function useAiActions(editor: Editor | null, context: AiActionContext): AiActions;
+function useBlockMenu(editor: Editor | null): BlockMenu;
 
 function usePresence(provider: PresenceProvider | null | undefined): PresencePeer[];
 interface PresencePeer {

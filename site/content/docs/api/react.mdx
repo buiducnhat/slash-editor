@@ -76,13 +76,12 @@ own `setLink`/`unsetLink` directly.
 ## useComments
 
 ```tsx
-useComments(editor: Editor | null, options?: UseCommentsOptions): Comments
+useComments(editor: Editor | null): Comments
 ```
 
-<AutoTypeTable path="../packages/react/src/use-comments.ts" name="UseCommentsOptions" />
-
-See the [comments guide](/docs/guides/comments) for the `CommentThreadStore` contract `store`
-expects.
+Reads the `CommentThreadStore` configured through `createBlockKit({ comment: { store } })`,
+subscribes to store changes, and exposes the selection-driven composer state. See the
+[comments guide](/docs/guides/comments).
 
 ## usePresence
 

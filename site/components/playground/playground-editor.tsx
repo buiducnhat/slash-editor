@@ -11,6 +11,7 @@ import { ArrowLeftIcon, FileCodeIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
+import { CommentComposer } from "@/components/comment-composer.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
@@ -182,9 +183,12 @@ function RoomJoinForm({ className }: { className?: string } = {}) {
 
 function SoloEditor() {
   const [showMarkdown, setShowMarkdown] = useState(false);
+  const storeRef = useRef<CommentThreadStore | null>(null);
+  storeRef.current ??= createMockCommentThreadStore();
+  const store = storeRef.current;
   const editor = useDemoEditor({
     content: INITIAL_CONTENT,
-    blockKit: BLOCK_KIT_DEFAULTS,
+    blockKit: { ...BLOCK_KIT_DEFAULTS, comment: { store } },
     editorProps: {
       attributes: {
         class: "slash-content min-h-[60vh] pl-24 pr-8 py-10",
@@ -224,7 +228,9 @@ function SoloEditor() {
         {editor && <BlockHandle editor={editor} />}
         {editor && <BubbleToolbar editor={editor} />}
         {editor && <LinkEditorPopover editor={editor} />}
+        {editor && <CommentComposer editor={editor} />}
       </div>
+      {editor && <CommentPanel editor={editor} />}
 
       {editor && showMarkdown && (
         <div className="mt-6">
@@ -264,6 +270,7 @@ function CollabEditor({ room }: { room: string }) {
     blockKit: {
       ...BLOCK_KIT_DEFAULTS,
       collaboration: { document: collab.document, provider: collab.provider, user: collab.user },
+      comment: { store },
     },
     editorProps: {
       attributes: {
@@ -325,9 +332,10 @@ function CollabEditor({ room }: { room: string }) {
           {editor && <BlockHandle editor={editor} />}
           {editor && <BubbleToolbar editor={editor} />}
           {editor && <LinkEditorPopover editor={editor} />}
+          {editor && <CommentComposer editor={editor} />}
         </div>
       </div>
-      {editor && <CommentPanel editor={editor} store={store} />}
+      {editor && <CommentPanel editor={editor} />}
     </div>
   );
 }

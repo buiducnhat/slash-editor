@@ -22,9 +22,9 @@
         "separator",
         "tooltip",
         "@slash-editor/popover",
-        "@slash-editor/dropdown-menu"
+        "@slash-editor/dropdown-menu",
+        "@slash-editor/icons"
       ],
-      "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react"],
       "files": [{ "path": "registry/components/bubble-toolbar.tsx", "type": "registry:component" }]
     },
     {
@@ -32,7 +32,12 @@
       "type": "registry:component",
       "title": "Block Handle",
       "description": "Gutter overlay: hover handle for insert-below/drag/click grip, drop indicator, and the block context menu. Requires a TooltipProvider ancestor.",
-      "registryDependencies": ["button", "@slash-editor/dropdown-menu", "tooltip"],
+      "registryDependencies": [
+        "button",
+        "@slash-editor/dropdown-menu",
+        "tooltip",
+        "@slash-editor/icons"
+      ],
       "dependencies": ["@slash-editor/react", "@tiptap/core", "lucide-react"],
       "files": [{ "path": "registry/components/block-handle.tsx", "type": "registry:component" }]
     },
@@ -59,8 +64,7 @@
     {
       "name": "comment-panel",
       "type": "registry:component",
-      "title": "Comment Panel",
-      "description": "Sidebar comment surface composing useComments (document anchors) with a host-provided CommentThreadStore (thread bodies).",
+      "description": "Sidebar comment surface reading thread data from the CommentThreadStore configured on the editor.",
       "registryDependencies": ["button", "textarea"],
       "dependencies": [
         "@slash-editor/core",
@@ -69,6 +73,25 @@
         "@tiptap/react"
       ],
       "files": [{ "path": "registry/components/comment-panel.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "comment-composer",
+      "type": "registry:component",
+      "title": "Comment Composer",
+      "description": "Selection-anchored comment composer backed by the editor's configured CommentThreadStore.",
+      "registryDependencies": ["button", "textarea", "@slash-editor/popover"],
+      "dependencies": ["@slash-editor/react", "@tiptap/core"],
+      "files": [
+        { "path": "registry/components/comment-composer.tsx", "type": "registry:component" }
+      ]
+    },
+    {
+      "name": "icons",
+      "type": "registry:lib",
+      "title": "Slash Editor Icons",
+      "description": "Shared icon-key resolver with a visible fallback icon.",
+      "dependencies": ["lucide-react"],
+      "files": [{ "path": "registry/lib/icons.ts", "type": "registry:lib" }]
     },
     {
       "name": "presence-avatars",
@@ -104,7 +127,7 @@
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover (anchor-aware)",
-      "description": "shadcn Popover with an `anchor` prop forwarded to the Positioner, so a surface can anchor to the caret or a block's rect instead of a trigger element. Overrides the default shadcn `popover` — every slash-editor surface that anchors off-element depends on this, not the stock component.",
+      "description": "shadcn Popover with an `anchor` prop forwarded to the Positioner, so a surface can anchor to the caret or a block's rect instead of a trigger element.",
       "files": [{ "path": "registry/components/ui/popover.tsx", "type": "registry:ui" }]
     },
     {
@@ -127,6 +150,8 @@
         "@slash-editor/link-editor-popover",
         "@slash-editor/comment-panel",
         "@slash-editor/presence-avatars",
+        "@slash-editor/comment-composer",
+        "@slash-editor/icons",
         "@slash-editor/node-views"
       ],
       "css": {

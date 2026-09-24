@@ -1,17 +1,14 @@
 import type { MentionItem, MentionState, MentionStorage } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo } from "react";
+import { useExtensionState } from "./use-extension-state.ts";
+import { toVirtualAnchor, type VirtualAnchor } from "./virtual-anchor.ts";
 
-/** Minimal anchor accepted by floating-ui based popovers. */
-export interface MentionMenuAnchor {
-  getBoundingClientRect: () => DOMRect;
-}
+export type MentionMenuAnchor = VirtualAnchor;
 
 export interface MentionMenu extends MentionState {
-  /** Highlighted item, or `null` when nothing matches. */
   activeItem: MentionItem | null;
-  /** Virtual anchor tracking the caret; `null` while the menu is closed. */
-  anchor: MentionMenuAnchor | null;
+  anchor: VirtualAnchor | null;
   setActiveIndex: (index: number) => void;
   select: (index?: number) => void;
   close: () => void;
@@ -26,45 +23,22 @@ const CLOSED: MentionState = {
   getClientRect: null,
 };
 
-const EMPTY_RECT = new DOMRect(0, 0, 0, 0);
-
-const noop = () => {};
-
-function getStorage(editor: Editor | null): MentionStorage | null {
-  return editor?.storage.mention ?? null;
+function getStorage(editor: Editor): MentionStorage | null {
+  return editor.storage.mention ?? null;
 }
 
-/**
- * Subscribes to the mention menu state owned by `@slash-editor/core`.
- *
- * Same shape as `useSlashMenu` plus `loading`, since the provider behind a
- * mention query is async and the slash registry never is.
- */
 export function useMention(editor: Editor | null): MentionMenu {
-  const subscribe = useCallback(
-    (listener: () => void) => getStorage(editor)?.subscribe(listener) ?? noop,
-    [editor],
-  );
-  const getSnapshot = useCallback(() => getStorage(editor)?.state ?? CLOSED, [editor]);
-
-  const state = useSyncExternalStore(subscribe, getSnapshot, () => CLOSED);
-
+  const state = useExtensionState(editor, getStorage, CLOSED);
   const setActiveIndex = useCallback(
-    (index: number) => getStorage(editor)?.setActiveIndex(index),
+    (index: number) => (editor ? getStorage(editor)?.setActiveIndex(index) : undefined),
     [editor],
   );
-  const select = useCallback((index?: number) => getStorage(editor)?.select(index), [editor]);
-  const close = useCallback(() => getStorage(editor)?.close(), [editor]);
-
-  const anchor = useMemo<MentionMenuAnchor | null>(() => {
-    const { getClientRect } = state;
-
-    if (!getClientRect) {
-      return null;
-    }
-
-    return { getBoundingClientRect: () => getClientRect() ?? EMPTY_RECT };
-  }, [state]);
+  const select = useCallback(
+    (index?: number) => (editor ? getStorage(editor)?.select(index) : undefined),
+    [editor],
+  );
+  const close = useCallback(() => (editor ? getStorage(editor)?.close() : undefined), [editor]);
+  const anchor = useMemo(() => toVirtualAnchor(state.getClientRect), [state.getClientRect]);
 
   return {
     ...state,

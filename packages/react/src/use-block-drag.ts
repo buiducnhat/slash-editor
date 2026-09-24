@@ -1,11 +1,9 @@
 import type { BlockDragState, BlockDragStorage, BlockTarget, DropTarget } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { toVirtualAnchor, type VirtualAnchor } from "./virtual-anchor.ts";
 
-/** Minimal anchor accepted by floating-ui based popovers and absolutely positioned elements. */
-export interface BlockDragAnchor {
-  getBoundingClientRect: () => DOMRect;
-}
+export type BlockDragAnchor = VirtualAnchor;
 
 export interface BlockDrag extends BlockDragState {
   /** Anchor tracking the hovered block; `null` while nothing is hovered. */
@@ -23,19 +21,13 @@ export interface BlockDrag extends BlockDragState {
 }
 
 const CLOSED: BlockDragState = { hovered: null, dragging: null, drop: null };
-const EMPTY_RECT = new DOMRect(0, 0, 0, 0);
 
-/** Pointer travel, in px, under which a press-and-release on the handle opens the context menu instead of dragging. */
 const CLICK_THRESHOLD_PX = 4;
 
 const noop = () => {};
 
 function getStorage(editor: Editor | null): BlockDragStorage | null {
   return editor?.storage.blockDrag ?? null;
-}
-
-function toAnchor(target: { getClientRect: () => DOMRect | null } | null): BlockDragAnchor | null {
-  return target ? { getBoundingClientRect: () => target.getClientRect() ?? EMPTY_RECT } : null;
 }
 
 /**
@@ -119,9 +111,9 @@ export function useBlockDrag(editor: Editor | null): BlockDrag {
 
   return {
     ...state,
-    hoverAnchor: toAnchor(state.hovered),
-    dropAnchor: toAnchor(state.drop),
-    menuAnchor: toAnchor(menuTarget),
+    hoverAnchor: toVirtualAnchor(state.hovered?.getClientRect ?? null),
+    dropAnchor: toVirtualAnchor(state.drop?.getClientRect ?? null),
+    menuAnchor: toVirtualAnchor(menuTarget?.getClientRect ?? null),
     menuTarget,
     closeMenu,
     handleProps,

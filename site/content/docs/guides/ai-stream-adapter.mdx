@@ -1,6 +1,6 @@
 ---
 title: AI Stream Adapter
-description: The StreamAdapter contract behind AI slash actions.
+description: The StreamAdapter contract behind AI actions.
 ---
 
 `ai` has no default adapter — it stays unregistered until you pass one:
@@ -9,12 +9,13 @@ description: The StreamAdapter contract behind AI slash actions.
 
 ```ts
 interface AiRequest {
-  action: string; // the triggering slash action id, e.g. "continue-writing"
+  action: string;
   prompt: string;
-  context: string; // plain-text context the prompt operates on
+  context: string;
+  scope: "cursor" | "selection" | "block";
 }
 interface StreamContext {
-  signal: AbortSignal; // aborted on retry or discard
+  signal: AbortSignal;
 }
 ```
 
@@ -26,17 +27,19 @@ useSlashEditor({
 });
 ```
 
-## Default actions
+## Actions and contexts
 
-`defaultAiSlashActions` ships four items: `continue-writing`, `summarize`, `brainstorm-ideas`,
-`fix-spelling-grammar`. Every generated slash item's `context` is the document text up to the
-slash trigger — an AI slash command never carries a real user text selection the way a bubble
-toolbar action does.
+`defaultAiActions` contains slash, selection, and block actions. Custom actions declare their
+available surfaces through `contexts: ["slash", "selection", "block"]`. The adapter is stored on
+the editor, so slash, bubble-toolbar, and block-handle actions use the same backend.
+
+Selection and block actions insert a transient result below their source. The node view offers
+`Replace` (mapped source range) and `Insert below`; if the source was deleted meanwhile, Replace
+falls back to Insert below.
 
 ## Lifecycle
 
 `runAiAction` inserts a transient node and starts streaming; `retryAiAction(id)` replays the last
-request from scratch; `acceptAiAction(id)` replaces the node with real paragraph(s) built from
-the streamed text; `discardAiAction(id)` removes the node and aborts any in-flight stream. Unlike
-upload's registry, `PendingAiRegistry` keeps successful entries around (for "try again") and only
-drops them on discard or accept.
+request from scratch; `acceptAiAction(id, { mode })` turns the result into regular paragraphs;
+`discardAiAction(id)` removes the node and aborts an in-flight stream. `PendingAiRegistry` keeps
+successful entries around for Try again and drops them after accept/discard.

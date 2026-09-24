@@ -45,10 +45,11 @@ Conventions, naming rules, tech stack versions, and development workflows.
 
 Product goals, use cases, business rules, and constraints.
 
-| File                                                                           | Description                                                                                 |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| [project-pdr/product-goals.md](project-pdr/product-goals.md)                   | Problem framing, licensing landscape, goals, non-goals, users, constraints                  |
-| [project-pdr/milestones.md](project-pdr/milestones.md)                         | M0–M4 and distribution status with per-slice checkboxes, deferred decisions                 |
-| [project-pdr/design-brief.md](project-pdr/design-brief.md)                     | Accepted design brief: foundation, technical details, delivery plan, risks                  |
-| [project-pdr/docs-site-design-brief.md](project-pdr/docs-site-design-brief.md) | Accepted design for the Fumadocs/Next.js docs site replacing the hand-rolled `/docs` routes |
-| [project-pdr/markdown-design-brief.md](project-pdr/markdown-design-brief.md)   | Accepted design for markdown import/export: mapping, marker grammar, subpath entry          |
+| File                                                                                     | Description                                                                                 |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [project-pdr/product-goals.md](project-pdr/product-goals.md)                             | Problem framing, licensing landscape, goals, non-goals, users, constraints                  |
+| [project-pdr/milestones.md](project-pdr/milestones.md)                                   | M0–M4 and distribution status with per-slice checkboxes, deferred decisions                 |
+| [project-pdr/design-brief.md](project-pdr/design-brief.md)                               | Accepted design brief: foundation, technical details, delivery plan, risks                  |
+| [project-pdr/docs-site-design-brief.md](project-pdr/docs-site-design-brief.md)           | Accepted design for the Fumadocs/Next.js docs site replacing the hand-rolled `/docs` routes |
+| [project-pdr/markdown-design-brief.md](project-pdr/markdown-design-brief.md)             | Accepted design for markdown import/export: mapping, marker grammar, subpath entry          |
+| [project-pdr/ui-consistency-design-brief.md](project-pdr/ui-consistency-design-brief.md) | Accepted design unifying slash/bubble/block menu, Ask AI, and comments on core registries   |

@@ -44,8 +44,8 @@ Shared by `image`, `file`, and `video`. See the [upload adapter guide](/docs/gui
 interface StreamAdapter {
   stream(request: AiRequest, context: StreamContext): AsyncIterable<string>;
 }
-defaultAiSlashActions: AiSlashAction[]
-createAiSlashItems(options): SlashItem[]
+defaultAiActions: AiAction[]
+createAiSlashItems(actions): SlashItem[]
 ```
 
 See the [AI stream adapter guide](/docs/guides/ai-stream-adapter).

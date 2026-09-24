@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { editor, focusTrailingParagraph } from "./support.ts";
 
 test.describe("AI slash actions", () => {
-  test("streams a continue-writing action and keeps it as a paragraph", async ({ page }) => {
+  test("streams a continue-writing action and inserts it below", async ({ page }) => {
     await page.goto("/playground");
     await focusTrailingParagraph(page);
     await page.keyboard.type("/continue");
@@ -15,12 +15,11 @@ test.describe("AI slash actions", () => {
     await expect(block).toBeVisible();
     await expect(block).toHaveAttribute("data-status", "done", { timeout: 5000 });
 
-    await block.getByRole("button", { name: "Keep" }).click();
+    await block.getByRole("button", { name: "Insert below" }).click();
 
     await expect(editor(page).locator("[data-status]")).toHaveCount(0);
-    // Not `.last()`: accepting replaces the aiBlock in place, and the doc's
-    // actual trailing node is the empty paragraph Tiptap always keeps at
-    // the end for a caret to land in.
+    // Accepting replaces the transient aiBlock with regular paragraphs;
+    // Tiptap still keeps a trailing empty paragraph for the caret.
     await expect(editor(page).locator("p", { hasText: "container nodes" })).toBeVisible();
   });
 

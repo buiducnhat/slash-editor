@@ -1,16 +1,23 @@
 export {
+  Ai,
   AiBlock,
+  ai,
   aiBlock,
+  type AiAcceptMode,
+  type AiAction,
+  type AiActionContext,
   type AiActionStatus,
   type AiBlockOptions,
   type AiBlockStorage,
   type AiKitOptions,
   type AiRequest,
-  type AiSlashAction,
+  type AiScope,
+  type AiStorage,
   createAiSlashItems,
-  defaultAiSlashActions,
+  defaultAiActions,
   PendingAiRegistry,
   type RunAiActionOptions,
+  type AcceptAiActionOptions,
   type StreamAdapter,
   type StreamContext,
 } from "./ai-block.ts";
@@ -35,6 +42,17 @@ export {
   type BlockIdOptions,
   blockIdPluginKey,
 } from "./block-id.ts";
+export {
+  activeBlockType,
+  BlockTypes,
+  blockTypes,
+  blockTypeSlashItems,
+  defaultBlockTypes,
+  type BlockType,
+  type BlockTypeContext,
+  type BlockTypesStorage,
+} from "./block-types.ts";
+export { defaultBlockMenuItems, type BlockMenuContext, type BlockMenuItem } from "./block-menu.ts";
 export { type BlockKitOptions, createBlockKit, type HeadingLevel } from "./block-kit.ts";
 export {
   BubbleToolbar,
@@ -65,6 +83,7 @@ export {
   activeThreadIds,
   Comment,
   comment,
+  type CommentComposerState,
   type CommentMessage,
   type CommentOptions,
   type CommentState,

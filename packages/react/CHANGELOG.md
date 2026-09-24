@@ -1,5 +1,18 @@
 # @slash-editor/react
 
+## 0.3.0
+
+### Minor Changes
+
+- Unify slash, bubble-toolbar, and block-menu actions around shared block and AI registries. AI adapters now live on editor storage and support cursor, selection, and block contexts with Replace/Insert-below acceptance modes.
+
+  Move comment stores onto the comment extension, add store subscriptions and an anchored comment composer, add shared virtual-anchor helpers and the `useBlockTypes`, `useAiActions`, and `useBlockMenu` hooks. This removes `AiSlashAction`, `defaultAiSlashActions`, and the store argument from `useComments`.
+
+### Patch Changes
+
+- Updated dependencies
+  - @slash-editor/core@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

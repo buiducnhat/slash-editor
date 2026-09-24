@@ -1,42 +1,24 @@
-import type { CommentThread, CommentThreadStore } from "@slash-editor/core";
 import { useComments } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { cn } from "@/lib/utils.ts";
 
-/**
- * Sidebar comment surface: composes `useComments` (anchors in the document,
- * owned by core) with a host `CommentThreadStore` (thread bodies, owned by
- * the host). Core never sees `store` — it only ever gets a `threadId`.
- */
-export function CommentPanel({ editor, store }: { editor: Editor; store: CommentThreadStore }) {
-  const comments = useComments(editor, { store });
-  const [threads, setThreads] = useState<CommentThread[]>([]);
+export function CommentPanel({ editor }: { editor: Editor }) {
+  const comments = useComments(editor);
   const [draft, setDraft] = useState("");
   const canAdd = useEditorState({
     editor,
     selector: ({ editor: instance }) => !instance.state.selection.empty,
   });
 
-  const refresh = async () => setThreads(await store.listThreads());
-
-  useEffect(() => {
-    // Re-list whenever the anchored threads under the selection change —
-    // the cheapest signal available that the document's comments moved.
-    void refresh();
-  }, [comments.activeThreadIds.join(",")]);
-
   const submit = async () => {
     const body = draft.trim();
-    if (!body) {
-      return;
-    }
-    await comments.addComment(body);
-    setDraft("");
-    await refresh();
+    if (!body) return;
+    const id = await comments.addComment(body);
+    if (id) setDraft("");
   };
 
   return (
@@ -59,7 +41,7 @@ export function CommentPanel({ editor, store }: { editor: Editor; store: Comment
         </Button>
       </div>
       <ul className="flex flex-col gap-2 overflow-y-auto">
-        {threads.map((thread) => {
+        {comments.threads.map((thread) => {
           const active = comments.activeThreadIds.includes(thread.id);
           return (
             <li
@@ -81,10 +63,7 @@ export function CommentPanel({ editor, store }: { editor: Editor; store: Comment
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={async () => {
-                      await comments.resolveThread(thread.id);
-                      await refresh();
-                    }}
+                    onClick={() => comments.resolveThread(thread.id)}
                   >
                     Resolve
                   </Button>
@@ -92,10 +71,7 @@ export function CommentPanel({ editor, store }: { editor: Editor; store: Comment
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={async () => {
-                      await comments.reopenThread(thread.id);
-                      await refresh();
-                    }}
+                    onClick={() => comments.reopenThread(thread.id)}
                   >
                     Reopen
                   </Button>

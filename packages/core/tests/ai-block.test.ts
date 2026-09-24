@@ -3,7 +3,8 @@ import { expect, test } from "vite-plus/test";
 import {
   createAiSlashItems,
   createBlockKit,
-  defaultAiSlashActions,
+  defaultAiActions,
+  type AiAction,
   type SlashItem,
   type StreamAdapter,
 } from "../src/index.ts";
@@ -18,32 +19,50 @@ test("ai is left out of the baseline kit until a StreamAdapter is configured", (
   const names = (options?: Parameters<typeof createBlockKit>[0]) =>
     createBlockKit(options).map((extension) => extension.name);
 
+  expect(names()).not.toContain("ai");
   expect(names()).not.toContain("aiBlock");
+  expect(names({ ai: { adapter } })).toContain("ai");
   expect(names({ ai: { adapter } })).toContain("aiBlock");
 });
 
-test("ai: { node: false } keeps the slash actions but skips registering the built-in node", () => {
+test("ai: { node: false } keeps slash actions but skips the built-in node", () => {
   const kit = createBlockKit({ ai: { adapter, node: false } });
   const names = kit.map((extension) => extension.name);
   const slash = kit.find((extension) => extension.name === "slashCommand");
   const aiItems = (slash!.options.items as SlashItem[]).filter((item) => item.group === "AI");
+  const slashActions = defaultAiActions.filter((action) => action.contexts.includes("slash"));
 
+  expect(names).toContain("ai");
   expect(names).not.toContain("aiBlock");
-  expect(aiItems.map((item) => item.id)).toEqual(defaultAiSlashActions.map((action) => action.id));
+  expect(aiItems.map((item) => item.id)).toEqual(slashActions.map((action) => action.id));
 });
 
-test("a custom actions list overrides the defaults in the generated slash items", () => {
-  const items = createAiSlashItems({
-    adapter,
-    actions: [{ id: "translate", title: "Translate", prompt: "Translate the text." }],
-  });
+test("a custom action list controls generated slash items", () => {
+  const actions: AiAction[] = [
+    {
+      id: "translate",
+      title: "Translate",
+      prompt: "Translate the text.",
+      contexts: ["slash"],
+    },
+  ];
+  expect(createAiSlashItems(actions).map((item) => item.id)).toEqual(["translate"]);
+});
 
-  expect(items.map((item) => item.id)).toEqual(["translate"]);
+test("actions without slash context are not generated as slash items", () => {
+  const actions: AiAction[] = [
+    {
+      id: "selection-only",
+      title: "Selection only",
+      prompt: "Rewrite.",
+      contexts: ["selection"],
+    },
+  ];
+  expect(createAiSlashItems(actions)).toEqual([]);
 });
 
 test("aiBlock defaults to an empty streaming state and persists a JSON round trip", () => {
   const schema = getSchema(createBlockKit({ ai: { adapter } }));
-
   const empty = schema.nodes.aiBlock!.create();
   expect(empty.attrs).toMatchObject({
     action: "",
@@ -73,10 +92,10 @@ test("aiBlock defaults to an empty streaming state and persists a JSON round tri
 });
 
 test("AI slash items are hidden when the aiBlock node is not in the schema", () => {
-  const editor = { schema: { nodes: {} } } as unknown as Parameters<
+  const editor = { schema: { nodes: {} }, storage: { ai: { adapter } } } as unknown as Parameters<
     NonNullable<SlashItem["when"]>
   >[0];
 
-  const items = createAiSlashItems({ adapter, actions: defaultAiSlashActions });
+  const items = createAiSlashItems(defaultAiActions);
   expect(items.every((item) => item.when?.(editor) === false)).toBe(true);
 });

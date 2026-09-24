@@ -106,8 +106,10 @@ export function LinkEditorDemo() {
 export function CommentPanelDemo() {
   const storeRef = useRef<CommentThreadStore | null>(null);
   storeRef.current ??= createMockCommentThreadStore();
+  const store = storeRef.current;
   const editor = useDemoEditor({
     content: "<p>Select some text in this paragraph, then add a comment from the panel.</p>",
+    blockKit: { comment: { store } },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
   if (!editor) return null;
@@ -116,7 +118,7 @@ export function CommentPanelDemo() {
       <div className={cn(CARD_CLASS, "min-w-0 flex-1")}>
         <EditorContent editor={editor} />
       </div>
-      <CommentPanel editor={editor} store={storeRef.current} />
+      <CommentPanel editor={editor} />
     </div>
   );
 }

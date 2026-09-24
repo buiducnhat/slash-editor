@@ -194,6 +194,8 @@ export interface BlockDragStorage {
   listeners: Set<() => void>;
   /** @internal Set once in `onCreate`; lets `setDragging` nudge a decoration recompute. */
   editor: Editor | null;
+  /** Last copied block fallback, scoped to this editor instance. */
+  clipboard: { html: string; text: string } | null;
   /** Subscribes to drag state changes. Returns an unsubscribe function. */
   subscribe(this: BlockDragStorage, listener: () => void): () => void;
   setHovered(this: BlockDragStorage, target: BlockTarget | null): void;
@@ -217,6 +219,8 @@ declare module "@tiptap/core" {
       duplicateBlock: (options: { pos: number; size: number }) => ReturnType;
       /** Deletes the node at `pos`/`size`. */
       deleteBlock: (options: { pos: number; size: number }) => ReturnType;
+      copyBlock: (options: { pos: number; size: number }) => ReturnType;
+      pasteBlockBelow: (options: { pos: number; size: number }) => ReturnType;
     };
   }
 }
@@ -447,6 +451,7 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
       state: CLOSED_STATE,
       listeners: new Set<() => void>(),
       editor: null,
+      clipboard: null,
 
       subscribe(listener) {
         this.listeners.add(listener);
@@ -563,6 +568,29 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
             tr.delete(pos, pos + size);
           }
 
+          return true;
+        },
+      copyBlock:
+        ({ pos, size }) =>
+        ({ state }) => {
+          const node = state.doc.nodeAt(pos);
+          if (!node || node.nodeSize !== size) return false;
+          this.storage.clipboard = { html: node.toString(), text: node.textContent };
+          return true;
+        },
+      pasteBlockBelow:
+        ({ pos, size }) =>
+        ({ tr, dispatch, state }) => {
+          const node = state.doc.nodeAt(pos);
+          if (!node || node.nodeSize !== size || !this.storage.clipboard) return false;
+          if (dispatch) {
+            const paragraph = state.schema.nodes.paragraph;
+            if (!paragraph) return false;
+            tr.insert(
+              pos + size,
+              paragraph.create(null, state.schema.text(this.storage.clipboard.text)),
+            );
+          }
           return true;
         },
     };

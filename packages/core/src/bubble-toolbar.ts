@@ -6,12 +6,12 @@ export interface BubbleToolbarItem {
   /** Stable identity for React keys. */
   id: string;
   label: string;
-  /** Icon key resolved by the UI layer; the core ships no components. */
+  /** Icon key resolved by the UI layer. */
   icon?: string;
-  /** Whether the button should render pressed for the current selection. */
+  group?: string;
+  shortcut?: string;
   isActive: (editor: Editor) => boolean;
   run: (editor: Editor) => void;
-  /** Hides the item when the current editor cannot run it. */
   when?: (editor: Editor) => boolean;
 }
 
@@ -63,6 +63,7 @@ export const defaultBubbleToolbarItems: BubbleToolbarItem[] = [
     id: "bold",
     label: "Bold",
     icon: "bold",
+    shortcut: "⌘B",
     when: (editor) => hasMark(editor, "bold"),
     isActive: (editor) => editor.isActive("bold"),
     run: (editor) => {
@@ -73,6 +74,7 @@ export const defaultBubbleToolbarItems: BubbleToolbarItem[] = [
     id: "italic",
     label: "Italic",
     icon: "italic",
+    shortcut: "⌘I",
     when: (editor) => hasMark(editor, "italic"),
     isActive: (editor) => editor.isActive("italic"),
     run: (editor) => {
@@ -83,6 +85,7 @@ export const defaultBubbleToolbarItems: BubbleToolbarItem[] = [
     id: "strike",
     label: "Strikethrough",
     icon: "strikethrough",
+    shortcut: "⌘⇧S",
     when: (editor) => hasMark(editor, "strike"),
     isActive: (editor) => editor.isActive("strike"),
     run: (editor) => {
@@ -93,6 +96,7 @@ export const defaultBubbleToolbarItems: BubbleToolbarItem[] = [
     id: "code",
     label: "Inline code",
     icon: "code",
+    shortcut: "⌘E",
     when: (editor) => hasMark(editor, "code"),
     isActive: (editor) => editor.isActive("code"),
     run: (editor) => {
@@ -103,6 +107,7 @@ export const defaultBubbleToolbarItems: BubbleToolbarItem[] = [
     id: "link",
     label: "Link",
     icon: "link",
+    shortcut: "⌘K",
     when: (editor) => canOpenLinkEditor(editor),
     isActive: (editor) => editor.isActive("link"),
     run: (editor) => {

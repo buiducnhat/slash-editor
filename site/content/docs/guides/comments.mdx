@@ -8,6 +8,9 @@ and resolution state never live in the document:
 
 <AutoTypeTable path="../packages/core/src/comment.ts" name="CommentThreadStore" />
 
+The store must also expose `subscribe(listener)`, which lets the React bindings update the
+sidebar when local or remote thread data changes.
+
 ```ts
 interface CommentThread {
   id: string;
@@ -22,19 +25,18 @@ interface CommentMessage {
 }
 ```
 
-## Why a store, not a prop
-
-Core never calls `CommentThreadStore` itself — `@slash-editor/react`'s `useComments` composes it
-with the mark's own `setComment`/`unsetComment` commands, the same way `useLinkEditor` composes
-the `link` mark's own commands rather than owning link application itself. `unsetComment` removes
-only that `threadId`'s mark instances from the selection: ProseMirror's built-in `unsetMark` would
-strip every distinct thread anchored there, since the mark type sets `excludes: ""` so overlapping
-threads can coexist.
+## Configure the store once
 
 ```tsx
 const store = createYourCommentThreadStore();
-const comments = useComments(editor, { store });
+const editor = useSlashEditor({ blockKit: { comment: { store } } });
+const comments = useComments(editor);
 ```
 
-See [Comment Panel](/docs/components/comment-panel) for the rendered sidebar surface — selection
-anchoring, thread list, and reply composer.
+Core anchors comments in the document and owns the inline composer anchor. The store remains
+host-owned; it is not serialized into the document. `unsetComment` removes only that `threadId`'s
+mark instances from the selection: ProseMirror's built-in `unsetMark` would strip every distinct
+thread anchored there, since the mark type sets `excludes: ""` so overlapping threads can coexist.
+
+See [Comment Panel](/docs/components/comment-panel) for the rendered sidebar surface and the
+bubble toolbar composer.
