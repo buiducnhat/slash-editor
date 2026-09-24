@@ -11,7 +11,7 @@ For questions about using slash-editor:
 
 ## Documentation
 
-- [slash-editor docs site](https://slash-editor-eta.vercel.app) — Full documentation,
+- [slash-editor docs site](https://slasheditor.dev) — Full documentation,
   guides, and API reference.
 - [docs/SUMMARY.md](docs/SUMMARY.md) — Local doc index: architecture, codebase, code standards.
 

@@ -16,6 +16,7 @@ import { MentionMenu } from "@/components/mention-menu.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { type DemoCollaboration, createDemoCollaboration } from "@/lib/collaboration.ts";
 import { createMockCommentThreadStore } from "@/lib/comment-store.ts";
 import { mockMentionProvider } from "@/lib/mention-provider.ts";
@@ -150,7 +151,7 @@ function DocumentStats({ editor }: { editor: Editor }) {
 }
 
 /** Joins (or switches) a collaborative room by pushing `?collab=<room>` onto the URL. */
-function RoomJoinForm() {
+function RoomJoinForm({ className }: { className?: string } = {}) {
   const router = useRouter();
   const [value, setValue] = useState("");
 
@@ -162,21 +163,19 @@ function RoomJoinForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <UsersIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
-      <input
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="Room name"
-        aria-label="Collaboration room name"
-        className="border-input bg-background placeholder:text-muted-foreground h-8 w-32 rounded-md border px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:w-40"
-      />
-      <button
-        type="submit"
-        className="bg-primary text-primary-foreground h-8 shrink-0 rounded-md px-3 text-sm font-medium transition-opacity hover:opacity-90"
-      >
-        Join
-      </button>
+    <form onSubmit={handleSubmit} className={cn("flex items-center gap-2", className)}>
+      <InputGroup className="bg-background w-36 sm:w-44">
+        <InputGroupAddon>
+          <UsersIcon className="size-4" aria-hidden />
+        </InputGroupAddon>
+        <InputGroupInput
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="Room name"
+          aria-label="Collaboration room name"
+        />
+      </InputGroup>
+      <Button type="submit">Join</Button>
     </form>
   );
 }
@@ -204,7 +203,7 @@ function SoloEditor() {
         <p className="text-muted-foreground text-sm">
           A live, editable instance — every block, the slash menu, and inline formatting.
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Button
             variant={showMarkdown ? "secondary" : "outline"}
             size="sm"
@@ -214,7 +213,7 @@ function SoloEditor() {
             <FileCodeIcon data-icon="inline-start" />
             Markdown
           </Button>
-          <RoomJoinForm />
+          <RoomJoinForm className="ml-auto" />
         </div>
       </header>
 

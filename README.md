@@ -9,6 +9,7 @@
 A headless core on Tiptap/ProseMirror, React bindings, and shadcn/Tailwind UI you own.
 MIT top to bottom — no paid tier, no hosted dependency.
 
+[**slasheditor.dev**](https://slasheditor.dev) · [Documentation](https://slasheditor.dev/docs) · [Playground](https://slasheditor.dev/playground)
 [![CI](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@slash-editor/core?label=%40slash-editor%2Fcore)](https://www.npmjs.com/package/@slash-editor/core)
 [![npm version](https://img.shields.io/npm/v/@slash-editor/react?label=%40slash-editor%2Freact)](https://www.npmjs.com/package/@slash-editor/react)
@@ -59,14 +60,13 @@ export function Editor() {
 
 The rendered UI (slash menu, bubble toolbar, node views, …) is a real shadcn registry.
 Browse live examples and copy-paste install commands at
-[**slash-editor-eta.vercel.app/docs**](https://slash-editor-eta.vercel.app/docs).
-
+[**slasheditor.dev/docs**](https://slasheditor.dev/docs).
 Add the registry once:
 
 ```json
 {
   "registries": {
-    "@slash-editor": "https://slash-editor-eta.vercel.app/r/{name}.json"
+    "@slash-editor": "https://slasheditor.dev/r/{name}.json"
   }
 }
 ```
@@ -79,7 +79,7 @@ bunx --bun shadcn@latest add @slash-editor/slash-editor-kit
 
 ## Documentation
 
-Start at [`docs/SUMMARY.md`](docs/SUMMARY.md) — architecture, codebase map, code standards, and product docs.
+Visit the online documentation at [**slasheditor.dev/docs**](https://slasheditor.dev/docs), or browse [`docs/SUMMARY.md`](docs/SUMMARY.md) for architecture, codebase map, and code standards.
 
 ## Development
 

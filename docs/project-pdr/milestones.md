@@ -146,7 +146,7 @@ is asking, so a same-registry cross-reference needs either a namespace or a full
 was chosen since it doesn't hardcode a deploy origin into `registry.json`. Consumers add one entry
 to `components.json` (shown on `/docs`) before `shadcn add @slash-editor/<item>`.
 
-`demo-react` is deployed to Vercel at <https://slash-editor-eta.vercel.app> (root `vercel.json`:
+`demo-react` is deployed to Vercel at <https://slasheditor.dev> (root `vercel.json`:
 `cd demo-react && bun run registry:build && bun run build`, output `demo-react/dist`, SPA
 rewrite to `index.html` for the pushState router) — the registry and docs site are genuinely
 public, not just locally verified. `@slash-editor/core` and `@slash-editor/react` are published

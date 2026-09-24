@@ -15,7 +15,7 @@ export function InstallCommand({ item }: { item: string }) {
 /** `components.json` snippet every consumer adds once, before installing any item. */
 export function RegistrySnippet() {
   const code = JSON.stringify(
-    { registries: { [REGISTRY_NAMESPACE]: `https://slash-editor-eta.vercel.app/r/{name}.json` } },
+    { registries: { [REGISTRY_NAMESPACE]: `https://slasheditor.dev/r/{name}.json` } },
     null,
     2,
   );

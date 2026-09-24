@@ -3,6 +3,7 @@
   "version": "0.2.1",
   "private": true,
   "description": "Notion-style block editor for React: headless core, shadcn-native UI.",
+  "homepage": "https://slasheditor.dev",
   "license": "MIT",
   "repository": {
     "type": "git",
