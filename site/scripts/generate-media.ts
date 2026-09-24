@@ -1,5 +1,5 @@
 import { chromium } from "@playwright/test";
-import { execSync } from "node:child_process";
+import { execSync, spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -11,7 +11,33 @@ if (!fs.existsSync(galleryDir)) {
   fs.mkdirSync(galleryDir, { recursive: true });
 }
 
+function sleep(ms: number): Promise<void> {
+  const { promise, resolve } = Promise.withResolvers<void>();
+  setTimeout(resolve, ms);
+  return promise;
+}
+
 async function run() {
+  let serverProc: ChildProcess | null = null;
+  const baseUrl = "http://localhost:3000";
+
+  try {
+    const res = await fetch("http://localhost:3000", { method: "HEAD" });
+    if (!res.ok) throw new Error("not ok");
+  } catch {
+    console.log("Starting local Next.js server on port 3000...");
+    serverProc = spawn("bun", ["run", "start", "-p", "3000"], {
+      cwd: path.resolve(rootDir, "site"),
+      stdio: "ignore",
+    });
+    for (let i = 0; i < 30; i++) {
+      await sleep(500);
+      try {
+        const res = await fetch("http://localhost:3000");
+        if (res.ok) break;
+      } catch {}
+    }
+  }
   console.log("Launching Chromium...");
   const browser = await chromium.launch();
 
@@ -23,9 +49,8 @@ async function run() {
   });
 
   const page = await context.newPage();
-  await page.goto("https://slasheditor.dev/playground", { waitUntil: "networkidle" });
+  await page.goto(`${baseUrl}/playground`, { waitUntil: "networkidle" });
   await page.waitForTimeout(1000);
-
   // Screenshot 1: Full Playground Editor Overview
   await page.screenshot({
     path: path.join(galleryDir, "01-playground-overview.png"),
@@ -71,7 +96,7 @@ async function run() {
   console.log("✓ Captured 03-bubble-toolbar.png");
 
   // Screenshot 4: Landing page Hero
-  await page.goto("https://slasheditor.dev", { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
   await page.waitForTimeout(1000);
   await page.screenshot({
     path: path.join(galleryDir, "04-landing-hero.png"),
@@ -98,7 +123,7 @@ async function run() {
   });
 
   const recordPage = await recordContext.newPage();
-  await recordPage.goto("https://slasheditor.dev/playground", { waitUntil: "networkidle" });
+  await recordPage.goto(`${baseUrl}/playground`, { waitUntil: "networkidle" });
   await recordPage.waitForTimeout(800);
 
   const recEditor = recordPage.locator(".slash-content");
@@ -190,6 +215,9 @@ async function run() {
   }
 
   await browser.close();
+  if (serverProc) {
+    serverProc.kill();
+  }
   console.log("All media generated successfully!");
 }
 

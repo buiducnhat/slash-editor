@@ -17,7 +17,13 @@
       "type": "registry:component",
       "title": "Bubble Toolbar",
       "description": "Selection-anchored inline formatting toolbar (bold/italic/strike/code) rendered in a Popover, driven by useBubbleToolbar.",
-      "registryDependencies": ["button", "@slash-editor/popover"],
+      "registryDependencies": [
+        "button",
+        "separator",
+        "tooltip",
+        "@slash-editor/popover",
+        "@slash-editor/dropdown-menu"
+      ],
       "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react"],
       "files": [{ "path": "registry/components/bubble-toolbar.tsx", "type": "registry:component" }]
     },
