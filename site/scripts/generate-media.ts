@@ -50,14 +50,23 @@ async function run() {
   // Screenshot 3: Selection Bubble Toolbar
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
-  const firstP = editor.locator("p").first();
-  await firstP.click();
-  await page.keyboard.press("Meta+A"); // or select text
-  await page.waitForTimeout(500);
+  // Clear trailing line cleanly
+  await trailingP.click();
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("Rich inline formatting powered by shadcn.");
+  await page.waitForTimeout(200);
+  for (let i = 0; i < "powered by shadcn.".length; i++) {
+    await page.keyboard.press("ArrowLeft");
+  }
+  for (let i = 0; i < "inline formatting".length; i++) {
+    await page.keyboard.press("Shift+ArrowLeft");
+  }
+  await page.waitForSelector('[data-slot="popover-content"]', { state: "visible" });
+  await page.waitForTimeout(400);
 
   await page.screenshot({
     path: path.join(galleryDir, "03-bubble-toolbar.png"),
-    clip: { x: 120, y: 70, width: 1200, height: 450 },
+    clip: { x: 120, y: 350, width: 1200, height: 500 },
   });
   console.log("✓ Captured 03-bubble-toolbar.png");
 
@@ -96,51 +105,62 @@ async function run() {
   const p = recEditor.locator("p").last();
   await p.click();
   await recordPage.waitForTimeout(500);
+  // 1. Text selection and Bubble Toolbar demo
+  await recordPage.keyboard.type("Build Notion-style block editors", { delay: 40 });
+  await recordPage.waitForTimeout(300);
+  for (let i = 0; i < "block editors".length; i++) {
+    await recordPage.keyboard.press("Shift+ArrowLeft");
+    await recordPage.waitForTimeout(30);
+  }
+  await recordPage.waitForSelector('[data-slot="popover-content"]', { state: "visible" });
+  await recordPage.waitForTimeout(600);
 
-  // Type slash command
-  await recordPage.keyboard.type("/", { delay: 100 });
-  await recordPage.waitForTimeout(400);
-
-  // Type 'callout'
-  await recordPage.keyboard.type("callout", { delay: 70 });
-  await recordPage.waitForTimeout(400);
-  await recordPage.keyboard.press("Enter");
+  // Click Bold button on the bubble toolbar
+  const boldBtn = recordPage.getByRole("button", { name: "Bold" });
+  await boldBtn.click();
   await recordPage.waitForTimeout(500);
 
-  // Type text inside callout
-  await recordPage.keyboard.type("Notion-style blocks without the paywall — 100% MIT.", {
-    delay: 45,
-  });
-  await recordPage.waitForTimeout(800);
+  // Move cursor to end of line
+  await recordPage.keyboard.press("ArrowRight");
+  await recordPage.waitForTimeout(300);
+  await recordPage.keyboard.press("Enter");
+  await recordPage.waitForTimeout(400);
+
+  // 2. Type slash command for Callout
+  await recordPage.keyboard.type("/", { delay: 90 });
+  await recordPage.waitForTimeout(350);
+  await recordPage.keyboard.type("callout", { delay: 60 });
+  await recordPage.waitForTimeout(350);
+  await recordPage.keyboard.press("Enter");
+  await recordPage.waitForTimeout(400);
+
+  // 3. Type inside callout
+  await recordPage.keyboard.type("100% MIT — No paid tier, no hosted dependency.", { delay: 40 });
+  await recordPage.waitForTimeout(600);
 
   // Exit callout to new block
   await recordPage.keyboard.press("Enter");
   await recordPage.keyboard.press("Enter");
-  await recordPage.waitForTimeout(400);
+  await recordPage.waitForTimeout(300);
 
-  // Type slash again and navigate
-  await recordPage.keyboard.type("/", { delay: 90 });
-  await recordPage.waitForTimeout(400);
+  // 4. Type slash again and navigate
+  await recordPage.keyboard.type("/", { delay: 80 });
+  await recordPage.waitForTimeout(350);
   for (let i = 0; i < 4; i++) {
     await recordPage.keyboard.press("ArrowDown");
-    await recordPage.waitForTimeout(180);
+    await recordPage.waitForTimeout(160);
   }
-  await recordPage.waitForTimeout(500);
+  await recordPage.waitForTimeout(400);
   await recordPage.keyboard.press("Escape");
-  await recordPage.waitForTimeout(500);
+  await recordPage.waitForTimeout(400);
 
-  // Hover over a block to show gutter grip
+  // 5. Hover over a block to show gutter grip
   const calloutBlock = recEditor.locator('[data-type="callout"]').last();
   const box = await calloutBlock.boundingBox();
   if (box) {
-    await recordPage.mouse.move(box.x + 20, box.y + box.height / 2, { steps: 5 });
+    await recordPage.mouse.move(box.x - 10, box.y + box.height / 2, { steps: 5 });
     await recordPage.waitForTimeout(800);
   }
-
-  // Select text to reveal bubble toolbar
-  await calloutBlock.click();
-  await recordPage.keyboard.press("Meta+A");
-  await recordPage.waitForTimeout(1200);
 
   await recordPage.close();
   await recordContext.close();
