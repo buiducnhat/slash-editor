@@ -16,6 +16,9 @@ MIT top to bottom — no paid tier, no hosted dependency.
 [![License: MIT](https://img.shields.io/npm/l/@slash-editor/core)](#license)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)](https://www.typescriptlang.org/)
 
+<p align="center">
+  <img src=".github/assets/demo.gif" alt="slash-editor demo" width="100%">
+</p>
 ## Workspace
 
 | Path                               | Package               | Role                                                      |
