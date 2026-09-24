@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.2.1] — 2026-09-24
+
+One block-gutter fix in the shared core (`@slash-editor/core` 0.2.1, `@slash-editor/react`
+0.2.1):
+
+- **The gutter handle no longer sticks to the viewport on scroll.** `BlockDrag` cached block
+  rects in viewport coordinates and only invalidated them on a doc update, so a scroll left
+  both the hover match and the rect the gutter is positioned from stale: the handle held its
+  place on screen while its block moved away. Any scroll — the page, an ancestor, or a drag's
+  own auto-scroll — now invalidates the rects and re-resolves hover and drop from the last
+  pointer position, coalesced to one frame. A still pointer therefore re-targets whichever
+  block scrolls under it, and a drag's drop indicator tracks the pointer through auto-scroll.
+
 ## [0.2.0] — 2026-09-23
 
 Markdown import/export (`@slash-editor/core` 0.2.0, `@slash-editor/react` 0.2.0):

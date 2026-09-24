@@ -15,7 +15,7 @@
     },
     "packages/core": {
       "name": "@slash-editor/core",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "@tiptap/extension-blockquote": "^3.31.3",
         "@tiptap/extension-collaboration": "^3.31.3",
@@ -41,7 +41,7 @@
     },
     "packages/react": {
       "name": "@slash-editor/react",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "@slash-editor/core": "workspace:*",
       },

@@ -21,7 +21,7 @@ import {
   Trash2Icon,
   TypeIcon,
 } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -49,13 +49,36 @@ const GUTTER_OFFSET = 72;
 export function BlockHandle({ editor }: { editor: Editor }) {
   const drag = useBlockDrag(editor);
   const gripRef = useRef<HTMLButtonElement | null>(null);
-  const gripRectRef = useRef<DOMRect | null>(null);
+  // The grip's box relative to the menu block's gutter row, measured when the
+  // menu opens. The menu anchors to the live row plus this offset, so it
+  // tracks the block through scrolls instead of a stale viewport snapshot.
+  const gripOffsetRef = useRef<DOMRect | null>(null);
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
 
-  if (drag.menuTarget && gripRef.current && !gripRectRef.current) {
-    gripRectRef.current = gripRef.current.getBoundingClientRect();
-  } else if (!drag.menuTarget && gripRectRef.current) {
-    gripRectRef.current = null;
+  if (drag.menuTarget && drag.menuAnchor && gripRef.current && !gripOffsetRef.current) {
+    const grip = gripRef.current.getBoundingClientRect();
+    const row = drag.menuAnchor.getBoundingClientRect();
+    gripOffsetRef.current = new DOMRect(
+      grip.left - row.left,
+      grip.top - row.top,
+      grip.width,
+      grip.height,
+    );
+  } else if (!drag.menuTarget && gripOffsetRef.current) {
+    gripOffsetRef.current = null;
   }
+
+  // The gutter is positioned from a rect read at render time. The extension
+  // re-resolves hover on scroll, which re-renders a hovered gutter, but an open
+  // menu pins the gutter to its block regardless of hover: re-measure here.
+  const menuOpen = !!drag.menuTarget;
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+    document.addEventListener("scroll", rerender, { capture: true, passive: true });
+    return () => document.removeEventListener("scroll", rerender, { capture: true });
+  }, [menuOpen]);
 
   const activeAnchor = drag.menuTarget ? drag.menuAnchor : drag.hoverAnchor;
   const activeRect =
@@ -145,25 +168,21 @@ export function BlockHandle({ editor }: { editor: Editor }) {
         <DropdownMenuContent
           anchor={{
             getBoundingClientRect: () => {
-              if (gripRectRef.current) {
-                return gripRectRef.current;
+              const row = activeAnchor?.getBoundingClientRect();
+              if (!row) {
+                return new DOMRect(0, 0, 0, 0);
               }
-              if (gripRef.current) {
-                const rect = gripRef.current.getBoundingClientRect();
-                gripRectRef.current = rect;
-                return rect;
-              }
-              const fallbackRect = activeAnchor?.getBoundingClientRect();
-              if (fallbackRect) {
-                // Offset to where the grip button sits in the gutter
+              const offset = gripOffsetRef.current;
+              if (offset) {
                 return new DOMRect(
-                  fallbackRect.left - GUTTER_OFFSET + 28,
-                  fallbackRect.top,
-                  28,
-                  28,
+                  row.left + offset.x,
+                  row.top + offset.y,
+                  offset.width,
+                  offset.height,
                 );
               }
-              return new DOMRect(0, 0, 0, 0);
+              // Offset to where the grip button sits in the gutter
+              return new DOMRect(row.left - GUTTER_OFFSET + 28, row.top, 28, 28);
             },
           }}
           align="start"

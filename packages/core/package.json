@@ -1,6 +1,6 @@
 {
   "name": "@slash-editor/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Headless block-editor core: ProseMirror/Tiptap extensions, schema, commands.",
   "license": "MIT",
   "repository": {

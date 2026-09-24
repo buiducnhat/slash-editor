@@ -1,5 +1,14 @@
 # @slash-editor/react
 
+## 0.2.1
+
+### Patch Changes
+
+- Ships with `@slash-editor/core` 0.2.1 (the two packages are released in lockstep), which fixes
+  the block gutter handle sticking to the viewport on scroll. No API change here.
+- Updated dependencies
+  - @slash-editor/core@0.2.1
+
 ## 0.2.0
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @slash-editor/core
 
+## 0.2.1
+
+### Patch Changes
+
+- Block drag: re-resolve the hovered block and drop target when the page or an ancestor scrolls. The gutter handle no longer stays pinned to the viewport while scrolling, and a drag's drop indicator follows the pointer through scrolls, including its own auto-scroll.
+
 ## 0.2.0
 
 ### Minor Changes

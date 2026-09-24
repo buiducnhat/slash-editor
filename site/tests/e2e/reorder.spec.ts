@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { ElementHandle, Locator, Page } from "@playwright/test";
 import { dragBlock, editor } from "./support.ts";
 
 test("dragging a block's gutter handle reorders it relative to a sibling", async ({ page }) => {
@@ -49,4 +50,74 @@ test("a tall block's gutter handle rides its first line", async ({ page }) => {
   });
 
   expect(Math.abs(centre - line)).toBeLessThanOrEqual(2);
+});
+
+const GRIP = "Drag to reorder, click to open the block menu";
+
+/** Vertical centre of a block's first line of text — the row its gutter handle rides. */
+function firstLineCentre(block: ElementHandle<Element>): Promise<number> {
+  return block.evaluate((element) => {
+    const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode();
+    const range = document.createRange();
+    range.setStart(text!, 0);
+    range.setEnd(text!, 1);
+    const { top, height } = range.getBoundingClientRect();
+    return top + height / 2;
+  });
+}
+
+async function centreY(locator: Locator): Promise<number> {
+  const box = (await locator.boundingBox())!;
+  return box.y + box.height / 2;
+}
+
+/** Rests the pointer on the playground's intro paragraph; returns the paragraph and pointer. */
+async function hoverIntro(page: Page, height: number) {
+  await page.setViewportSize({ width: 1280, height });
+  await page.goto("/playground");
+
+  const paragraph = editor(page).locator("p", { hasText: "Notion-style block editing" });
+  await expect(paragraph).toBeVisible();
+  const box = (await paragraph.boundingBox())!;
+  const pointer = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.move(pointer.x, pointer.y);
+  return { paragraph, pointer };
+}
+
+test("the gutter handle follows the block under a still pointer as the page scrolls", async ({
+  page,
+}) => {
+  const { pointer } = await hoverIntro(page, 600);
+
+  const grip = page.getByRole("button", { name: GRIP });
+  await grip.waitFor({ state: "visible" });
+
+  await page.evaluate(() => window.scrollBy(0, 150));
+
+  // The block now under the (unmoved) pointer: the innermost hover target.
+  const hovered = await page.evaluateHandle(
+    ({ x, y }) => document.elementFromPoint(x, y)!.closest("li, .slash-content > *")!,
+    pointer,
+  );
+  const line = await firstLineCentre(hovered);
+
+  await expect.poll(async () => Math.abs((await centreY(grip)) - line)).toBeLessThanOrEqual(2);
+});
+
+test("an open block menu stays anchored to its block as the page scrolls", async ({ page }) => {
+  const { paragraph } = await hoverIntro(page, 900);
+
+  const grip = page.getByRole("button", { name: GRIP });
+  await grip.click();
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  const menuOffset = (await menu.boundingBox())!.y - (await grip.boundingBox())!.y;
+
+  await page.evaluate(() => window.scrollBy(0, 100));
+  const line = await firstLineCentre((await paragraph.elementHandle())!);
+
+  await expect.poll(async () => Math.abs((await centreY(grip)) - line)).toBeLessThanOrEqual(2);
+  await expect
+    .poll(async () => (await menu.boundingBox())!.y - (await grip.boundingBox())!.y)
+    .toBeCloseTo(menuOffset, 0);
 });

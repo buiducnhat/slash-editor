@@ -605,12 +605,12 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
         view: (view) => {
           let rects: BlockRect[] = [];
           let rectsDirty = true;
+          // Last non-touch pointer position, replayed when a scroll moves the
+          // blocks under a pointer that did not itself move.
+          let pointer: { x: number; y: number } | null = null;
+          let scrollFrame = 0;
 
-          const handlePointerMove = (event: PointerEvent) => {
-            if (event.pointerType === "touch") {
-              return;
-            }
-
+          const track = (clientX: number, clientY: number): boolean => {
             const storage = getStorage();
 
             if (rectsDirty) {
@@ -619,10 +619,8 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
             }
 
             if (!storage.state.dragging) {
-              storage.setHovered(
-                resolveHover(view, event.clientX, event.clientY, gutterWidth, rects),
-              );
-              return;
+              storage.setHovered(resolveHover(view, clientX, clientY, gutterWidth, rects));
+              return false;
             }
 
             const { dragging } = storage.state;
@@ -630,10 +628,10 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
 
             if (!source) {
               storage.setDrop(null);
-              return;
+              return false;
             }
 
-            const drop = resolveDropTarget(rects, { x: event.clientX, y: event.clientY }, source, {
+            const drop = resolveDropTarget(rects, { x: clientX, y: clientY }, source, {
               indentThreshold,
               canNest: (fromRect, toRect) => {
                 const targetNode = view.state.doc.nodeAt(toRect.pos);
@@ -670,7 +668,38 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
               },
             );
 
-            autoScroll(view, event.clientY, autoScrollMargin);
+            return true;
+          };
+
+          const handlePointerMove = (event: PointerEvent) => {
+            if (event.pointerType === "touch") {
+              return;
+            }
+
+            pointer = { x: event.clientX, y: event.clientY };
+
+            if (track(event.clientX, event.clientY)) {
+              autoScroll(view, event.clientY, autoScrollMargin);
+            }
+          };
+
+          // Cached rects are viewport coordinates, so any scroll — the page,
+          // an ancestor, or the drag's own auto-scroll — invalidates them and
+          // shifts which block sits under the pointer. Coalesced to a frame.
+          const handleScroll = () => {
+            rectsDirty = true;
+
+            if (!pointer || scrollFrame) {
+              return;
+            }
+
+            scrollFrame = requestAnimationFrame(() => {
+              scrollFrame = 0;
+
+              if (pointer) {
+                track(pointer.x, pointer.y);
+              }
+            });
           };
 
           const handlePointerUp = () => {
@@ -708,6 +737,8 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
           document.addEventListener("pointerup", handlePointerUp);
           document.addEventListener("pointercancel", handlePointerUp);
           document.addEventListener("keydown", handleKeyDown);
+          // Capture: element scroll events do not bubble.
+          document.addEventListener("scroll", handleScroll, { capture: true, passive: true });
 
           return {
             update: () => {
@@ -718,6 +749,8 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
               document.removeEventListener("pointerup", handlePointerUp);
               document.removeEventListener("pointercancel", handlePointerUp);
               document.removeEventListener("keydown", handleKeyDown);
+              document.removeEventListener("scroll", handleScroll, { capture: true });
+              cancelAnimationFrame(scrollFrame);
             },
           };
         },
