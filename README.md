@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/logo.png" alt="slash-editor" width="88" height="88">
+</p>
+
 # slash-editor
 
 🏗️ **slash-editor** — Notion-style block editor for React.
