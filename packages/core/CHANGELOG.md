@@ -1,5 +1,15 @@
 # @slash-editor/core
 
+## 0.3.2
+
+### Patch Changes
+
+- ## What's Changed
+  - **fix(core)**: Support `taskItem` as a drag-and-reorder unit (`autoScroll` tree walker, `resolveBlockAt` predicate, `computeRects` filter)
+  - **fix(site)**: Prevent block handle dropdown submenus from disappearing on hover via `DropdownMenuTrigger` overlay + `pointer-events-none` spacer
+
+  **Full Changelog**: https://github.com/buiducnhat/slash-editor/compare/v0.3.1...v0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
