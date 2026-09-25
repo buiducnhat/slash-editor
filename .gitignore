@@ -16,6 +16,10 @@ dist
 skills-lock.json/
 
 # Playwright
+test-results/
+playwright-report/
+blob-report/
+.last-run.json
 site/test-results/
 site/playwright-report/
 site/blob-report/

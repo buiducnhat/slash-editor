@@ -134,6 +134,7 @@ function resolveBlockAt($pos: ResolvedPos): { pos: number; node: ProseMirrorNode
     if (
       depth === 1 ||
       node.type.name === "listItem" ||
+      node.type.name === "taskItem" ||
       $pos.node(depth - 1).type.name === "detailsContent"
     ) {
       return { pos: $pos.before(depth), node };
@@ -301,8 +302,16 @@ function autoScroll(view: EditorView, clientY: number, margin: number): void {
  * puts to the left of its text (a toggle's disclosure button).
  */
 function gutterRowRect(dom: HTMLElement, rect: DOMRect): DOMRect {
-  const text = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT).nextNode();
-
+  const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      const nonEditable = node.parentElement?.closest('[contenteditable="false"]');
+      if (nonEditable && dom.contains(nonEditable)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  const text = walker.nextNode() as Text | null;
   if (text) {
     const range = document.createRange();
 
@@ -399,7 +408,8 @@ function computeRects(view: EditorView): BlockRect[] {
       !parent ||
       (parent.type.name !== "doc" &&
         parent.type.name !== "detailsContent" &&
-        node.type.name !== "listItem")
+        node.type.name !== "listItem" &&
+        node.type.name !== "taskItem")
     ) {
       return;
     }

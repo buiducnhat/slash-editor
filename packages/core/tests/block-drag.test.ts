@@ -334,3 +334,127 @@ test("deleteBlock is a no-op when pos/size no longer match a node", () => {
 
   expect(applied).toBe(false);
 });
+
+test("taskItem behaves as a drag unit", () => {
+  const schema = getSchema(createBlockKit());
+  const doc = schema.nodeFromJSON({
+    type: "doc",
+    content: [
+      {
+        type: "taskList",
+        content: [
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [{ type: "paragraph", content: [{ type: "text", text: "task 1" }] }],
+          },
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [{ type: "paragraph", content: [{ type: "text", text: "task 2" }] }],
+          },
+        ],
+      },
+    ],
+  });
+  const state = EditorState.create({ doc });
+  let taskItem1Pos = -1;
+  let taskItem1Size = 0;
+  doc.descendants((node, pos) => {
+    if (node.type.name === "taskItem" && taskItem1Pos === -1) {
+      taskItem1Pos = pos;
+      taskItem1Size = node.nodeSize;
+    }
+  });
+
+  const { applied, state: next } = run(
+    state,
+    commands().duplicateBlock({ pos: taskItem1Pos, size: taskItem1Size }),
+  );
+
+  expect(applied).toBe(true);
+  const list = next.doc.firstChild!;
+  expect(list.childCount).toBe(3);
+});
+
+test("moveBlockUp and moveBlockDown on taskItem", () => {
+  const schema = getSchema(createBlockKit());
+  const doc = schema.nodeFromJSON({
+    type: "doc",
+    content: [
+      {
+        type: "taskList",
+        content: [
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [{ type: "paragraph", content: [{ type: "text", text: "task 1" }] }],
+          },
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [{ type: "paragraph", content: [{ type: "text", text: "task 2" }] }],
+          },
+        ],
+      },
+    ],
+  });
+  let state = EditorState.create({ doc });
+  // Cursor inside task 2
+  let task2Pos = -1;
+  doc.descendants((node, pos) => {
+    if (node.type.name === "taskItem" && node.textContent === "task 2") {
+      task2Pos = pos;
+    }
+  });
+  state = state.apply(state.tr.setSelection(TextSelection.near(state.doc.resolve(task2Pos + 2))));
+
+  const { applied, state: next } = run(state, commands().moveBlockUp());
+  expect(applied).toBe(true);
+  const list = next.doc.firstChild!;
+  expect(list.child(0).textContent).toBe("task 2");
+  expect(list.child(1).textContent).toBe("task 1");
+});
+
+test("deleteBlock removes a taskItem from taskList", () => {
+  const schema = getSchema(createBlockKit());
+  const doc = schema.nodeFromJSON({
+    type: "doc",
+    content: [
+      {
+        type: "taskList",
+        content: [
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [{ type: "paragraph", content: [{ type: "text", text: "task 1" }] }],
+          },
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [{ type: "paragraph", content: [{ type: "text", text: "task 2" }] }],
+          },
+        ],
+      },
+    ],
+  });
+  const state = EditorState.create({ doc });
+  let task1Pos = -1;
+  let task1Size = 0;
+  doc.descendants((node, pos) => {
+    if (node.type.name === "taskItem" && task1Pos === -1) {
+      task1Pos = pos;
+      task1Size = node.nodeSize;
+    }
+  });
+
+  const { applied, state: next } = run(
+    state,
+    commands().deleteBlock({ pos: task1Pos, size: task1Size }),
+  );
+
+  expect(applied).toBe(true);
+  const list = next.doc.firstChild!;
+  expect(list.childCount).toBe(1);
+  expect(list.child(0).textContent).toBe("task 2");
+});

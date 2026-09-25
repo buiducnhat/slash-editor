@@ -52,12 +52,84 @@ test("a tall block's gutter handle rides its first line", async ({ page }) => {
   expect(Math.abs(centre - line)).toBeLessThanOrEqual(2);
 });
 
+test("each row in a todo list has its own control buttons", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto("/playground");
+
+  const taskItems = editor(page).locator('li[data-block-type="taskItem"]');
+  await expect(taskItems).toHaveCount(2);
+
+  const grip = page.getByRole("button", { name: GRIP });
+  const insertButton = page.getByRole("button", { name: "Insert block below" });
+
+  // Hover first task item
+  const box1 = (await taskItems.nth(0).boundingBox())!;
+  await page.mouse.move(box1.x + box1.width / 2, box1.y + box1.height / 2);
+  await expect(grip).toBeVisible();
+  await expect(insertButton).toBeVisible();
+
+  const gripBox1 = (await grip.boundingBox())!;
+  const line1 = await firstLineCentre((await taskItems.nth(0).elementHandle())!);
+  expect(Math.abs(gripBox1.y + gripBox1.height / 2 - line1)).toBeLessThanOrEqual(2);
+
+  // Verify that line1 matches the task paragraph, not an offset checkbox/hidden label
+  const p1Line = await taskItems
+    .nth(0)
+    .locator("p")
+    .evaluate((p) => {
+      const text = p.firstChild!;
+      const range = document.createRange();
+      range.setStart(text, 0);
+      range.setEnd(text, 1);
+      const rect = range.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    });
+  expect(Math.abs(line1 - p1Line)).toBeLessThanOrEqual(1);
+  // Hover second task item
+  const box2 = (await taskItems.nth(1).boundingBox())!;
+  await page.mouse.move(box2.x + box2.width / 2, box2.y + box2.height / 2);
+  await expect(grip).toBeVisible();
+  await expect(insertButton).toBeVisible();
+
+  const gripBox2 = (await grip.boundingBox())!;
+  const line2 = await firstLineCentre((await taskItems.nth(1).elementHandle())!);
+  expect(Math.abs(gripBox2.y + gripBox2.height / 2 - line2)).toBeLessThanOrEqual(2);
+  expect(gripBox2.y).toBeGreaterThan(gripBox1.y + 10);
+});
+
+test("dragging a todo item reorders it within the task list", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto("/playground");
+
+  const taskItems = editor(page).locator('li[data-block-type="taskItem"]');
+  const task1 = taskItems.nth(0);
+  const task2 = taskItems.nth(1);
+
+  await expect(task1).toContainText("Ship the slash menu");
+  await expect(task2).toContainText("Ship callout, toggle, and task-list nodes");
+
+  const box2 = (await task2.boundingBox())!;
+  await dragBlock(page, task1, { x: box2.x + 10, y: box2.y + box2.height - 2 });
+
+  await expect(taskItems.nth(0)).toContainText("Ship callout, toggle, and task-list nodes");
+  await expect(taskItems.nth(1)).toContainText("Ship the slash menu");
+});
+
 const GRIP = "Drag to reorder, click to open the block menu";
 
 /** Vertical centre of a block's first line of text — the row its gutter handle rides. */
 function firstLineCentre(block: ElementHandle<Element>): Promise<number> {
   return block.evaluate((element) => {
-    const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode();
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        const nonEditable = node.parentElement?.closest('[contenteditable="false"]');
+        if (nonEditable && element.contains(nonEditable)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const text = walker.nextNode();
     const range = document.createRange();
     range.setStart(text!, 0);
     range.setEnd(text!, 1);
