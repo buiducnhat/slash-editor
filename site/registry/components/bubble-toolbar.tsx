@@ -25,7 +25,7 @@ function BlockTypeDropdown({ editor }: { editor: Editor }) {
   const ActiveIcon = resolveIcon(active?.icon);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         render={
           <Button
@@ -68,7 +68,7 @@ function AskAiDropdown({ editor }: { editor: Editor }) {
   if (actions.length === 0) return null;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         render={
           <Button

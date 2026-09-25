@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.3.1] — 2026-09-25
+
+Bubble toolbar dropdown focus fix (`@slash-editor/core` 0.3.1, `@slash-editor/react` 0.3.1):
+
+- **Prevent bubble toolbar flickering on dropdown open.** Clicking into "Turn into" (`BlockTypeDropdown`)
+  or "Ask AI" (`AskAiDropdown`) no longer dismisses and re-opens the bubble toolbar. Core's
+  `computeState` and `onBlur` now retain visibility when focus transitions to toolbar popover or
+  dropdown menu controls (`[data-slot="dropdown-menu-content"]`, `[data-slot="popover-content"]`,
+  `[role="menu"]`), and dropdown menus are rendered non-modal (`modal={false}`).
+
 ## [0.3.0] — 2026-09-25
 
 Unified action registries, AI storage, and comment composer (`@slash-editor/core` 0.3.0,

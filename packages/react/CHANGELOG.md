@@ -1,5 +1,13 @@
 # @slash-editor/react
 
+## 0.3.1
+
+### Patch Changes
+
+- Fix bubble toolbar flickering when opening Turn into or Ask AI dropdowns
+- Updated dependencies
+  - @slash-editor/core@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

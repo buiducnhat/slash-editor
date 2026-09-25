@@ -127,21 +127,35 @@ const CLOSED: BubbleToolbarState = Object.freeze({
  * non-empty text selection in a focused, editable view with at least one
  * runnable item. Node selections (e.g. a whole callout) never show it.
  */
-function computeState(editor: Editor, options: BubbleToolbarOptions): BubbleToolbarState {
+function isToolbarFocus(target: EventTarget | Element | null | undefined): boolean {
+  if (typeof Element === "undefined" || !(target instanceof Element)) {
+    return false;
+  }
+  return (
+    target.closest(
+      '[data-slot="dropdown-menu-content"], [data-slot="popover-content"], [role="menu"]',
+    ) !== null
+  );
+}
+
+function computeState(
+  editor: Editor,
+  options: BubbleToolbarOptions,
+  currentlyOpen = false,
+): BubbleToolbarState {
   const { view, state } = editor;
   const { selection, doc } = state;
   const { empty, from, to } = selection;
 
   if (
     !editor.isEditable ||
-    !view.hasFocus() ||
+    (!currentlyOpen && !view.hasFocus()) ||
     empty ||
     !isTextSelection(selection) ||
     !doc.textBetween(from, to).length
   ) {
     return CLOSED;
   }
-
   const registry = typeof options.items === "function" ? options.items(editor) : options.items;
   const items = filterBubbleToolbarItems(registry, editor);
 
@@ -195,14 +209,17 @@ export const BubbleToolbar = Extension.create<BubbleToolbarOptions, BubbleToolba
   },
 
   onTransaction() {
-    this.storage.setState(computeState(this.editor, this.options));
+    this.storage.setState(computeState(this.editor, this.options, this.storage.state.open));
   },
 
   onFocus() {
-    this.storage.setState(computeState(this.editor, this.options));
+    this.storage.setState(computeState(this.editor, this.options, this.storage.state.open));
   },
 
-  onBlur() {
+  onBlur({ event }: { event?: FocusEvent } = {}) {
+    if (isToolbarFocus(event?.relatedTarget)) {
+      return;
+    }
     this.storage.setState(CLOSED);
   },
 });
