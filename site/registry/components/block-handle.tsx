@@ -21,6 +21,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { resolveIcon } from "@/lib/icons.ts";
@@ -30,7 +31,7 @@ const GUTTER_OFFSET = 72;
 export function BlockHandle({ editor }: { editor: Editor }) {
   const drag = useBlockDrag(editor);
   const ai = useAiActions(editor, "block");
-  const gripRef = useRef<HTMLButtonElement | null>(null);
+  const gripRef = useRef<HTMLButtonElement>(null);
   const gripOffsetRef = useRef<DOMRect | null>(null);
   const [, rerender] = useReducer((count: number) => count + 1, 0);
 
@@ -131,6 +132,11 @@ export function BlockHandle({ editor }: { editor: Editor }) {
           if (!open && details?.reason !== "sibling-open") drag.closeMenu();
         }}
       >
+        <DropdownMenuTrigger
+          aria-hidden="true"
+          tabIndex={-1}
+          className="pointer-events-none absolute h-0 w-0 opacity-0"
+        />
         <DropdownMenuContent
           anchor={{
             getBoundingClientRect: () => {

@@ -46,7 +46,7 @@ export async function pasteHtml(page: Page, html: string, text = ""): Promise<vo
 }
 
 /** Reveals the gutter grip for `block` by hovering it; the grip only renders on hover. */
-async function revealGrip(page: Page, block: Locator): Promise<Locator> {
+export async function revealGrip(page: Page, block: Locator): Promise<Locator> {
   const box = await block.boundingBox();
   if (!box) {
     throw new Error("Target block has no bounding box");

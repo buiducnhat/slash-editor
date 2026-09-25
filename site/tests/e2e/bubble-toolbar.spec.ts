@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { editor, focusTrailingParagraph } from "./support.ts";
+import { editor, focusTrailingParagraph, revealGrip } from "./support.ts";
 
 test.describe("bubble toolbar dropdowns", () => {
   test("clicking turn into dropdown does not flicker/close and allows converting block", async ({
@@ -22,8 +22,9 @@ test.describe("bubble toolbar dropdowns", () => {
 
     const heading1Item = dropdownMenu.getByRole("menuitem", { name: "Heading 1", exact: true });
     await expect(heading1Item).toBeVisible();
+    await heading1Item.hover();
+    await expect(dropdownMenu).toBeVisible();
     await heading1Item.click();
-
     await expect(editor(page).locator("h1", { hasText: "heading test" })).toBeVisible();
   });
 
@@ -92,5 +93,36 @@ test.describe("bubble toolbar dropdowns", () => {
     // Clicking into the editor collapses the selection and hides the bubble toolbar
     await editor(page).locator("p").first().click();
     await expect(turnIntoButton).toBeHidden();
+  });
+
+  test("hovering submenu in block handle menu does not disappear and converts block", async ({
+    page,
+  }) => {
+    await page.goto("/playground");
+    const firstBlock = editor(page).locator("p").first();
+    await firstBlock.waitFor({ state: "visible" });
+    const grip = await revealGrip(page, firstBlock);
+    await grip.click();
+
+    const turnIntoSubTrigger = page
+      .locator('[data-slot="dropdown-menu-sub-trigger"]')
+      .filter({ hasText: "Turn into" });
+    await expect(turnIntoSubTrigger).toBeVisible();
+
+    // Hover over Turn into
+    await turnIntoSubTrigger.hover();
+
+    const subContent = page.locator('[data-slot="dropdown-menu-sub-content"]');
+    await expect(subContent).toBeVisible();
+
+    // Hover over Heading 1 inside the submenu
+    const heading1Item = subContent.getByRole("menuitem", { name: "Heading 1", exact: true });
+    await expect(heading1Item).toBeVisible();
+    await heading1Item.hover();
+    await expect(subContent).toBeVisible();
+
+    // Click Heading 1
+    await heading1Item.click();
+    await expect(editor(page).locator("h1").first()).toBeVisible();
   });
 });
