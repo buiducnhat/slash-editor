@@ -1,5 +1,14 @@
 # @slash-editor/core
 
+## 0.3.3
+
+### Patch Changes
+
+- **feat(core)**: Expose `getDOMNode` on `BlockTarget` and export `toBlockTarget` helper for safe block DOM element resolution
+- **feat(site)**: Add `BlockDragPreview` component with live DOM cloning, 60fps direct transforms, tactile styling, and subtle opacity during block dragging
+
+  **Full Changelog**: https://github.com/buiducnhat/slash-editor/compare/v0.3.2...v0.3.3
+
 ## 0.3.2
 
 ### Patch Changes

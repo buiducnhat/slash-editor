@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.3.3] — 2026-09-26
+
+Block drag ghost preview card and DOM element lookup (`@slash-editor/core` 0.3.3, `@slash-editor/react` 0.3.3):
+
+- **Tactile block drag preview card.** Dragging a block now renders a floating card following the pointer with live DOM cloning, 60fps direct transforms, typography/theme fidelity through `.slash-content`, subtle opacity, and gradient fade for long blocks.
+- **Expose `BlockTarget.getDOMNode`.** Core now provides `getDOMNode()` on `BlockTarget` alongside `toBlockTarget` export for safe headless block DOM element access.
+
+## [0.3.2] — 2026-09-25
+
+Drag reorder for task items and block menu hover stability (`@slash-editor/core` 0.3.2, `@slash-editor/react` 0.3.2):
+
+- **Support `taskItem` as a drag unit.** Auto-scroll tree walker, block target resolution, and rect computation now properly recognize `taskItem` in task lists.
+- **Stabilize block handle submenus.** Prevent dropdown submenus from disappearing prematurely on hover.
+
 ## [0.3.1] — 2026-09-25
 
 Bubble toolbar dropdown focus fix (`@slash-editor/core` 0.3.1, `@slash-editor/react` 0.3.1):

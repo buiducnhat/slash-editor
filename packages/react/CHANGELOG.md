@@ -1,5 +1,12 @@
 # @slash-editor/react
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @slash-editor/core@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes
