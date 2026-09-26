@@ -34,6 +34,7 @@ export {
   type DropMode,
   type DropTarget,
   resolveDropTarget,
+  toBlockTarget,
 } from "./block-drag.ts";
 export {
   BLOCK_ID_REMOTE_META,

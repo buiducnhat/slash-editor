@@ -133,6 +133,7 @@ interface BlockTarget {
   type: string;
   id: string | null;
   getClientRect: () => DOMRect | null;
+  getDOMNode: () => HTMLElement | null;
 }
 
 interface BlockDragState {

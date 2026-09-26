@@ -7,6 +7,7 @@ import {
   canAppendChild,
   createBlockKit,
   resolveDropTarget,
+  toBlockTarget,
 } from "../src/index.ts";
 
 function rect(
@@ -457,4 +458,48 @@ test("deleteBlock removes a taskItem from taskList", () => {
   const list = next.doc.firstChild!;
   expect(list.childCount).toBe(1);
   expect(list.child(0).textContent).toBe("task 2");
+});
+
+test("toBlockTarget resolves node metadata and getDOMNode", () => {
+  const originalHTMLElement = globalThis.HTMLElement;
+  class MockHTMLElement {}
+  (globalThis as any).HTMLElement = MockHTMLElement;
+
+  try {
+    const element = new MockHTMLElement();
+    const mockView = {
+      state: {
+        doc: {
+          nodeAt: (pos: number) => {
+            if (pos === 0) {
+              return {
+                nodeSize: 10,
+                type: { name: "paragraph" },
+                attrs: { id: "test-block-id" },
+              };
+            }
+            return null;
+          },
+        },
+      },
+      nodeDOM: (pos: number) => (pos === 0 ? element : null),
+    } as any;
+
+    const target = toBlockTarget(mockView, 0);
+    expect(target).not.toBeNull();
+    expect(target?.pos).toBe(0);
+    expect(target?.size).toBe(10);
+    expect(target?.type).toBe("paragraph");
+    expect(target?.id).toBe("test-block-id");
+    expect(target?.getDOMNode()).toBe(element as any);
+
+    const nonExistent = toBlockTarget(mockView, 999);
+    expect(nonExistent).toBeNull();
+  } finally {
+    if (originalHTMLElement) {
+      globalThis.HTMLElement = originalHTMLElement;
+    } else {
+      delete (globalThis as any).HTMLElement;
+    }
+  }
 });

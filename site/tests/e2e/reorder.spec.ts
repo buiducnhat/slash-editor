@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { ElementHandle, Locator, Page } from "@playwright/test";
-import { dragBlock, editor } from "./support.ts";
+import { dragBlock, editor, revealGrip } from "./support.ts";
 
 test("dragging a block's gutter handle reorders it relative to a sibling", async ({ page }) => {
   await page.goto("/playground");
@@ -18,6 +18,29 @@ test("dragging a block's gutter handle reorders it relative to a sibling", async
   const topLevelBlocks = root.locator("> *");
   await expect(topLevelBlocks.first()).toContainText("Notion-style block editing");
   await expect(topLevelBlocks.nth(1)).toHaveText("slash-editor");
+});
+
+test("drag preview displays during drag and cleans up after drop", async ({ page }) => {
+  await page.goto("/playground");
+  const root = editor(page);
+
+  const paragraph = root.locator("p", { hasText: "Notion-style block editing" });
+  const grip = await revealGrip(page, paragraph);
+  const gripBox = (await grip.boundingBox())!;
+
+  const gx = gripBox.x + gripBox.width / 2;
+  const gy = gripBox.y + gripBox.height / 2;
+
+  await page.mouse.move(gx, gy);
+  await page.mouse.down();
+  await page.mouse.move(gx, gy + 15, { steps: 5 });
+
+  const preview = page.locator("[data-block-drag-preview]");
+  await expect(preview).toBeVisible();
+  await expect(preview).toContainText("Notion-style block editing");
+
+  await page.mouse.up();
+  await expect(preview).toBeHidden();
 });
 
 test("a tall block's gutter handle rides its first line", async ({ page }) => {

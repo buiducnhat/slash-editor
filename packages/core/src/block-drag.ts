@@ -181,6 +181,8 @@ export interface BlockTarget {
   id: string | null;
   /** Live lookup of the block's gutter row — its first line — re-evaluated on every read so scroll/resize never leaves it stale. */
   getClientRect: () => DOMRect | null;
+  /** Live lookup of the DOM element backing this block, or null if unmounted. */
+  getDOMNode: () => HTMLElement | null;
 }
 
 export interface BlockDragState {
@@ -336,7 +338,7 @@ function gutterRowRect(dom: HTMLElement, rect: DOMRect): DOMRect {
   );
 }
 
-function toBlockTarget(view: EditorView, pos: number): BlockTarget | null {
+export function toBlockTarget(view: EditorView, pos: number): BlockTarget | null {
   const node = view.state.doc.nodeAt(pos);
 
   if (!node) {
@@ -356,6 +358,13 @@ function toBlockTarget(view: EditorView, pos: number): BlockTarget | null {
       }
 
       return gutterRowRect(dom, dom.getBoundingClientRect());
+    },
+    getDOMNode: () => {
+      const dom = view.nodeDOM(pos);
+      if (dom instanceof HTMLElement) {
+        return dom;
+      }
+      return dom instanceof Node && dom.parentElement ? dom.parentElement : null;
     },
   };
 }

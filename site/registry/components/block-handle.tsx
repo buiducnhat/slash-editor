@@ -1,4 +1,4 @@
-import { defaultBlockTypes } from "@slash-editor/core";
+import { defaultBlockTypes, type BlockTarget } from "@slash-editor/core";
 import { useAiActions, useBlockDrag } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import {
@@ -11,7 +11,7 @@ import {
   Trash2Icon,
   TypeIcon,
 } from "lucide-react";
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -33,8 +33,8 @@ export function BlockHandle({ editor }: { editor: Editor }) {
   const ai = useAiActions(editor, "block");
   const gripRef = useRef<HTMLButtonElement>(null);
   const gripOffsetRef = useRef<DOMRect | null>(null);
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const [, rerender] = useReducer((count: number) => count + 1, 0);
-
   if (drag.menuTarget && drag.menuAnchor && gripRef.current && !gripOffsetRef.current) {
     const grip = gripRef.current.getBoundingClientRect();
     const row = drag.menuAnchor.getBoundingClientRect();
@@ -110,6 +110,10 @@ export function BlockHandle({ editor }: { editor: Editor }) {
                   aria-label="Drag to reorder, click to open the block menu"
                   className="cursor-grab active:cursor-grabbing"
                   {...drag.handleProps}
+                  onPointerDown={(event) => {
+                    pointerRef.current = { x: event.clientX, y: event.clientY };
+                    drag.handleProps.onPointerDown(event);
+                  }}
                 >
                   <GripVerticalIcon />
                 </Button>
@@ -124,6 +128,9 @@ export function BlockHandle({ editor }: { editor: Editor }) {
           className="bg-primary fixed h-0.5 rounded-full"
           style={{ top: dropRect.top, left: dropRect.left, width: dropRect.width }}
         />
+      ) : null}
+      {drag.dragging ? (
+        <BlockDragPreview target={drag.dragging} initialPointer={pointerRef.current} />
       ) : null}
       <DropdownMenu
         open={!!target}
@@ -251,5 +258,126 @@ export function BlockHandle({ editor }: { editor: Editor }) {
         </DropdownMenuContent>
       </DropdownMenu>
     </>
+  );
+}
+
+function BlockDragPreview({
+  target,
+  initialPointer,
+}: {
+  target: BlockTarget;
+  initialPointer?: { x: number; y: number } | null;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  const fallbackPointer =
+    initialPointer ??
+    (() => {
+      const rect = target.getClientRect();
+      return rect ? { x: rect.left, y: rect.top } : null;
+    })();
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let currentX = fallbackPointer?.x ?? 0;
+    let currentY = fallbackPointer?.y ?? 0;
+    let rafId = 0;
+
+    const updateTransform = () => {
+      rafId = 0;
+      if (container) {
+        container.style.transform = `translate3d(${currentX + 12}px, ${currentY + 12}px, 0)`;
+      }
+    };
+
+    if (fallbackPointer) {
+      updateTransform();
+    }
+
+    const onPointerMove = (e: PointerEvent) => {
+      currentX = e.clientX;
+      currentY = e.clientY;
+      if (!rafId) {
+        rafId = requestAnimationFrame(updateTransform);
+      }
+    };
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [fallbackPointer]);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    const source = target.getDOMNode();
+    if (!content || !source) return;
+
+    const clone = source.cloneNode(true) as HTMLElement;
+    clone.removeAttribute("data-dragging");
+    clone.removeAttribute("contenteditable");
+    clone.setAttribute("inert", "");
+    clone.setAttribute("aria-hidden", "true");
+
+    const editables = clone.querySelectorAll("[contenteditable]");
+    for (const el of editables) {
+      el.removeAttribute("contenteditable");
+    }
+
+    const originalCheckboxes = source.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const clonedCheckboxes = clone.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    originalCheckboxes.forEach((orig, idx) => {
+      if (clonedCheckboxes[idx]) {
+        clonedCheckboxes[idx].checked = orig.checked;
+        clonedCheckboxes[idx].defaultChecked = orig.checked;
+      }
+    });
+
+    content.innerHTML = "";
+
+    if (clone.tagName === "LI") {
+      const isTask =
+        clone.getAttribute("data-type") === "taskItem" ||
+        clone.getAttribute("data-block-type") === "taskItem";
+      if (!isTask) {
+        const listWrapper = document.createElement("ul");
+        listWrapper.className = "list-disc pl-5 my-0";
+        listWrapper.appendChild(clone);
+        content.appendChild(listWrapper);
+      } else {
+        content.appendChild(clone);
+      }
+    } else {
+      content.appendChild(clone);
+    }
+
+    if (content.scrollHeight > 192) {
+      setIsTruncated(true);
+    }
+  }, [target]);
+
+  const initialStyle = fallbackPointer
+    ? { transform: `translate3d(${fallbackPointer.x + 12}px, ${fallbackPointer.y + 12}px, 0)` }
+    : { transform: "translate3d(-9999px, -9999px, 0)" };
+
+  return (
+    <div
+      ref={containerRef}
+      data-block-drag-preview
+      className="pointer-events-none fixed top-0 left-0 z-50 transition-transform duration-75 ease-out select-none will-change-transform"
+      style={initialStyle}
+    >
+      <div className="relative max-h-48 max-w-[min(540px,80vw)] min-w-[120px] overflow-hidden rounded-lg border border-border/80 bg-background/90 p-3 shadow-2xl backdrop-blur-sm rotate-[1.5deg] scale-[1.02] opacity-85">
+        <div ref={contentRef} className="slash-content text-sm" />
+        {isTruncated ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        ) : null}
+      </div>
+    </div>
   );
 }
