@@ -124,6 +124,20 @@
       ]
     },
     {
+      "name": "mermaid-node-view",
+      "type": "registry:component",
+      "title": "Mermaid Node View",
+      "description": "ReactNodeViewRenderer target for the core `mermaid` node: rendered diagram by default, source plus live preview while the caret is inside. Themed from your shadcn tokens; `mermaid` is lazy-loaded on first render. Wire with `Mermaid.extend({ addNodeView: () => ReactNodeViewRenderer(MermaidNodeView) })` and `blockKit: { mermaid: false }`.",
+      "dependencies": ["@slash-editor/core", "@tiptap/react", "lucide-react", "mermaid"],
+      "files": [
+        {
+          "path": "registry/components/nodes/mermaid-node-view.tsx",
+          "type": "registry:component"
+        },
+        { "path": "registry/lib/mermaid.ts", "type": "registry:lib" }
+      ]
+    },
+    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover (anchor-aware)",
@@ -141,7 +155,7 @@
       "name": "slash-editor-kit",
       "type": "registry:block",
       "title": "slash-editor Kit",
-      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, link editor, comment panel, presence avatars, and media/AI node views.",
+      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, link editor, comment panel, presence avatars, media/AI node views, and the Mermaid node view.",
       "registryDependencies": [
         "@slash-editor/slash-menu",
         "@slash-editor/bubble-toolbar",
@@ -152,7 +166,8 @@
         "@slash-editor/presence-avatars",
         "@slash-editor/comment-composer",
         "@slash-editor/icons",
-        "@slash-editor/node-views"
+        "@slash-editor/node-views",
+        "@slash-editor/mermaid-node-view"
       ],
       "css": {
         ".slash-content [data-placeholder]::before": {

@@ -128,6 +128,7 @@ export {
   type MentionState,
   type MentionStorage,
 } from "./mention.ts";
+export { Mermaid, mermaid, type MermaidOptions } from "./mermaid.ts";
 export {
   defaultPlaceholderText,
   Placeholder,

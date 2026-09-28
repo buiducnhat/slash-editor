@@ -18,6 +18,7 @@ interface BlockKitOptions {
   file?: Partial<FileOptions> | false;
   video?: Partial<VideoOptions> | false;
   embed?: Partial<EmbedOptions> | false;
+  mermaid?: Partial<MermaidOptions> | false; // source-only node; rendering is a UI NodeView
   table?: Partial<TableKitOptions> | false; // default { table: { resizable: true } }
   columns?: Partial<ColumnsOptions> | false;
   linkEditor?: Partial<LinkEditorOptions> | false; // default {}
@@ -210,7 +211,7 @@ const defaultSlashItems: SlashItem[];
 
 `defaultSlashItems` ids: `paragraph`, `heading-1`, `heading-2`, `heading-3`, `bullet-list`,
 `ordered-list`, `task-list`, `blockquote`, `callout`, `toggle`, `code-block`, `horizontal-rule`
-(group `"Basic blocks"`), `toggle-heading-1`, `toggle-heading-2`, `toggle-heading-3`
+(group `"Basic blocks"`), `toggle-heading-1`, `toggle-heading-2`, `toggle-heading-3`, `mermaid`
 (group `"Advanced blocks"`), `image`, `file`, `video`, `embed` (group `"Media"`), `table`,
 `columns` (group `"Structure"`) — each gated on schema presence via `when`.
 
@@ -254,7 +255,7 @@ decorated.
 
 The module augments `@tiptap/core`'s `Storage` interface so `editor.storage.slashCommand` is typed at every call site.
 
-```ts
+````ts
 // upload.ts — shared by image.ts/file.ts/video.ts, not a Tiptap extension itself
 type UploadStatus = "uploading" | "ready" | "error";
 interface UploadContext {
@@ -331,6 +332,23 @@ function embed(options?: Partial<EmbedOptions>): Node;
 // editor.commands.setEmbed({ url?, mode?: "bookmark" | "iframe", title?, description?, thumbnail? })
 // attrs: url, mode (default "bookmark"), title, description, thumbnail
 
+// mermaid.ts — CodeBlock.extend: source is the node's text (text*, code: true, marks: ""), no attrs.
+// priority 110 puts its ```mermaid input rule, HTML parse rules, and markdown `code` handler ahead
+// of codeBlock's. Renders <pre data-type="mermaid"><code>…</code></pre>; parses that and
+// <pre><code class="language-mermaid">. Inherited keymap minus Mod-Alt-c; no paste plugin.
+const Mermaid: Node<MermaidOptions>;
+function mermaid(options?: Partial<MermaidOptions>): Node;
+type MermaidOptions = Pick<
+  CodeBlockOptions,
+  | "exitOnTripleEnter"
+  | "exitOnArrowDown"
+  | "exitOnArrowUp"
+  | "enableTabIndentation"
+  | "tabSize"
+  | "HTMLAttributes"
+>; // Tab indents by default
+// editor.commands.setMermaid() / toggleMermaid()
+
 // table.ts — thin wrapper over @tiptap/extension-table's TableKit (table/tableRow/tableHeader/tableCell).
 function table(options?: Partial<TableKitOptions>): Extension; // default { table: { resizable: true } }
 // editor.commands.insertTable/addColumnBefore/addColumnAfter/deleteColumn/addRowBefore/…
@@ -341,7 +359,7 @@ const Column: Node<ColumnOptions>; // content: "block+", not a `block`-group nod
 function columns(options?: Partial<ColumnsOptions>): Node;
 function column(options?: Partial<ColumnOptions>): Node;
 // editor.commands.setColumns(count?: number) // clamped to 2–6, default 2
-```
+````
 
 Every M2 node is `false`-opt-out-able from `createBlockKit`, the same seam M1 used for
 `slash`/`blockId`/`drag`/`bubbleToolbar`. A host that needs a `NodeView` (e.g. React) opts the
@@ -424,7 +442,8 @@ Output is GitHub-flavoured markdown. Nodes GFM cannot express use syntax GitHub 
 `<details>`/`<summary>` (level n → `<summary><hn>…</hn></summary>`), columns →
 `slash:columns`/`slash:column`/`/slash:columns` markers around the column contents, image →
 `![alt](src)` (+ `slash:image {width}`), file/video/embed → `slash:<type>` marker + `[label](src)`,
-mention → `<!-- slash:mention {id,label} -->@label<!-- /slash:mention -->`. Comment marks are
+mention → `<!-- slash:mention {id,label} -->@label<!-- /slash:mention -->`, mermaid → a
+` ```mermaid ` fence (GitHub renders it). Comment marks are
 dropped. Every one of these round-trips; each node owns its `renderMarkdown`/`parseMarkdown`/
 `markdownTokenizer` in its own file, so an `extend` node with no `renderMarkdown` renders as
 nothing. Each manager uses its own `Marked` instance — never the global `marked`.
@@ -717,6 +736,13 @@ parameterized by an `accept` filter, an icon, and the bound `retry<Type>` comman
 `updateAttributes({ url })` directly. `src/lib/upload-adapter.ts` is the playground's `UploadAdapter`:
 resolves to a data URL after a simulated delay, rejecting once for a `fail-`-prefixed file name so the
 retry affordance (and `tests/e2e/media-upload.spec.ts`) has a real error to recover from.
+
+`mermaid-node-view.tsx` (its own `mermaid-node-view` registry item, so only hosts that want
+diagrams take the `mermaid` dependency) shows the rendered diagram, or — while the selection is
+inside the node — the `NodeViewContent` source above a debounced live preview; a mouse-down on the
+preview puts the caret at the end of the source. `registry/lib/mermaid.ts` lazy-imports `mermaid`,
+serialises renders (its config is global), and themes each render from the shadcn tokens in effect,
+converting `oklch()` values to hex on a 1×1 canvas since Mermaid's colour maths cannot parse them.
 
 `site/registry/components/mention-menu.tsx` is the reference mention UI: `Popover` + `Command`,
 the same `shouldFilter={false}`/controlled-`value` shape as `slash-menu.tsx`, plus a loading row for

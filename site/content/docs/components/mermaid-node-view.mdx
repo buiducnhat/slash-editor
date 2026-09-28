@@ -1,0 +1,50 @@
+---
+title: Mermaid Node View
+description: Renders the core mermaid node as a diagram themed from your shadcn tokens — click it to edit the source with a live preview.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { MermaidDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+Click the diagram to edit its source; click outside to go back to the preview. Type `/mermaid`,
+or ` ```mermaid ` followed by a space, to add one. Any text block converts through "Turn into".
+
+<ComponentPreview name="mermaid-node-view">
+  <MermaidDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="mermaid-node-view" />
+
+## Usage
+
+`createBlockKit` registers the `mermaid` node by default, without a `NodeView` it renders as a
+plain `<pre>`. Opt the default out and append one with the view:
+
+```tsx
+import { Mermaid } from "@slash-editor/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { MermaidNodeView } from "@/components/nodes/mermaid-node-view";
+
+const editor = useSlashEditor({
+  blockKit: {
+    mermaid: false,
+    extend: [Mermaid.extend({ addNodeView: () => ReactNodeViewRenderer(MermaidNodeView) })],
+  },
+});
+```
+
+## Behaviour
+
+- **Source is document text.** The diagram's source is the node's own text, not an attribute, so
+  undo, IME, and collaborative editing merge it character by character like any code block.
+- **Lazy.** `mermaid` is imported the first time a diagram renders, in the browser only.
+- **Themed.** Colours and font come from your tokens (`--secondary`, `--ring`,
+  `--muted-foreground`, `--chart-1`…`--chart-5`, …) and re-render when the theme switches.
+- **Safe.** Rendering uses Mermaid's `securityLevel: "strict"`; a `%%{init}%%` directive in the
+  source cannot lower it.
+- **Errors.** A parse error shows Mermaid's message under the last diagram that rendered.
+- **Markdown.** With `@slash-editor/core/markdown`, the block exports as a ` ```mermaid ` fence
+  (GitHub renders it) and imports back as a diagram.

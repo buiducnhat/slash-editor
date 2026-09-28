@@ -21,6 +21,7 @@ import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
 import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
 import { mention, type MentionOptions } from "./mention.ts";
+import { mermaid, type MermaidOptions } from "./mermaid.ts";
 import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
 import { quote } from "./quote.ts";
 import {
@@ -120,6 +121,14 @@ export interface BlockKitOptions {
    */
   embed?: Partial<EmbedOptions> | false;
   /**
+   * Mermaid diagram node (source only — rendering is a UI-layer `NodeView`),
+   * or `false` to opt out and supply a `NodeView`-augmented variant via
+   * `extend` instead (see `Mermaid`, exported for `.extend()`).
+   *
+   * @default {}
+   */
+  mermaid?: Partial<MermaidOptions> | false;
+  /**
    * Table kit configuration (resizable columns on by default), or `false`
    * to opt out.
    *
@@ -182,8 +191,8 @@ const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
 
 /**
  * The baseline block schema: document, text, paragraph, headings, lists,
- * task lists, blockquote, callout, toggle (details), code block, horizontal
- * rule, hard break, and the inline marks.
+ * task lists, blockquote, callout, toggle (details), code block, Mermaid
+ * diagram, horizontal rule, hard break, and the inline marks.
  *
  * Emits no class names. UI layers style content through element selectors and
  * the `data-*` attributes rendered by slash-editor nodes.
@@ -202,6 +211,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     file: fileOptions,
     video: videoOptions,
     embed: embedOptions,
+    mermaid: mermaidOptions,
     table: tableOptions,
     columns: columnsOptions,
     linkEditor: linkEditorOptions,
@@ -252,6 +262,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(fileOptions === false ? [] : [file(fileOptions)]),
     ...(videoOptions === false ? [] : [video(videoOptions)]),
     ...(embedOptions === false ? [] : [embed(embedOptions)]),
+    ...(mermaidOptions === false ? [] : [mermaid(mermaidOptions)]),
     ...(tableOptions === false ? [] : [table(tableOptions)]),
     ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
     ...(resolvedAi ? [ai(resolvedAi)] : []),

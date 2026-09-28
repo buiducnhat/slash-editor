@@ -28,6 +28,7 @@ import {
   TableIcon,
   TypeIcon,
   VideoIcon,
+  WorkflowIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -62,6 +63,7 @@ const ICONS: Record<string, LucideIcon> = {
   table: TableIcon,
   text: TypeIcon,
   video: VideoIcon,
+  workflow: WorkflowIcon,
 };
 
 export function resolveIcon(key?: string): LucideIcon {

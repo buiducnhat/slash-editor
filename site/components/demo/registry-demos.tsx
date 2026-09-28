@@ -1,13 +1,15 @@
 "use client";
 
-import type { CommentThreadStore } from "@slash-editor/core";
+import { type CommentThreadStore, Mermaid } from "@slash-editor/core";
 import { EditorContent } from "@slash-editor/react";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
+import { MermaidNodeView } from "@/components/nodes/mermaid-node-view.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
 import { createMockCommentThreadStore } from "@/lib/comment-store.ts";
@@ -146,8 +148,31 @@ export function NodeViewsDemo() {
       file: false,
       video: false,
       embed: false,
+      mermaid: false,
       ai: { adapter: mockStreamAdapter, node: false },
       extend: nodeViewExtensions(),
+    },
+    editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
+  });
+  if (!editor) return null;
+  return (
+    <div className={CARD_CLASS}>
+      <EditorContent editor={editor} />
+      <SlashMenu editor={editor} />
+    </div>
+  );
+}
+
+export function MermaidDemo() {
+  const editor = useDemoEditor({
+    content: `<p>Type <code>/mermaid</code> or <code>\`\`\`mermaid</code> then space to add one.</p><pre data-type="mermaid"><code>sequenceDiagram
+    participant You
+    participant Editor
+    You->>Editor: Click the diagram
+    Editor-->>You: Source + live preview</code></pre>`,
+    blockKit: {
+      mermaid: false,
+      extend: [Mermaid.extend({ addNodeView: () => ReactNodeViewRenderer(MermaidNodeView) })],
     },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });

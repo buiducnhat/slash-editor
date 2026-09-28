@@ -9,6 +9,7 @@
     "comment-panel",
     "presence-avatars",
     "node-views",
+    "mermaid-node-view",
     "slash-editor-kit"
   ]
 }

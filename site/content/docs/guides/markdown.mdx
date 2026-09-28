@@ -56,6 +56,7 @@ round trip.
 | Image              | `![alt](src)`, plus a marker when it has a width                                                  |
 | File, video, embed | A marker with their metadata, then `[label](url)`                                                 |
 | Mention            | `@label`, wrapped in markers that keep the id                                                     |
+| Mermaid diagram    | A ` ```mermaid ` fence, which GitHub renders as the diagram                                       |
 
 Left out: comment anchors (their text stays; threads live in your `CommentThreadStore`), AI
 drafts not yet kept, and uploads that haven't finished.

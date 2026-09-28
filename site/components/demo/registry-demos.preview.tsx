@@ -20,3 +20,4 @@ export const LinkEditorDemo = load("LinkEditorDemo");
 export const CommentPanelDemo = load("CommentPanelDemo");
 export const PresenceAvatarsDemo = load("PresenceAvatarsDemo");
 export const NodeViewsDemo = load("NodeViewsDemo");
+export const MermaidDemo = load("MermaidDemo");

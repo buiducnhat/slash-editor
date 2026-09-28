@@ -304,6 +304,21 @@ manager gets its own `Marked`; and raw HTML parses to literal text without a DOM
 construct is read by its own tokenizer, with a catch-all swallowing unusable markers. Full
 design: [`markdown-design-brief.md`](markdown-design-brief.md).
 
+## M10 — Mermaid diagrams ✅
+
+_Done when: a user can insert a Mermaid diagram, read it rendered in place, and edit its source
+without leaving the document._
+
+- [x] Core `mermaid` node (`CodeBlock.extend`, source as text), `setMermaid`/`toggleMermaid`,
+      ` ```mermaid `/`~~~mermaid` input rules, `createBlockKit({ mermaid })` seam
+- [x] `mermaid` `BlockType`: `/mermaid` and every "Turn into" menu from one entry
+- [x] Markdown: ` ```mermaid ` fence export/import, other fences still code blocks
+- [x] `mermaid-node-view` registry item: preview, click-to-edit with live preview, parse errors,
+      shadcn-token theme with light/dark re-render, lazy `mermaid` import; in `slash-editor-kit`
+- [x] Playground sample + docs page with live demo
+
+_Landed:_ Full design: [`mermaid-design-brief.md`](mermaid-design-brief.md).
+
 ---
 
 ## Deferred decisions

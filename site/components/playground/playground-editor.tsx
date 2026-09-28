@@ -50,6 +50,10 @@ const INITIAL_CONTENT = `
 </details>
 <blockquote><p>Type <code>/</code> on an empty line to open the block menu.</p></blockquote>
 <pre><code>const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
+<pre data-type="mermaid"><code>flowchart LR
+    A[Type /mermaid] --> B{Caret inside?}
+    B -->|yes| C[Edit source]
+    B -->|no| D[Rendered diagram]</code></pre>
 <h2>Media &amp; structure</h2>
 <p>Type <code>/image</code>, <code>/file</code>, or <code>/video</code> for an upload placeholder with retry on failure.</p>
 <a data-type="embed" data-mode="bookmark" href="https://tiptap.dev" data-title="Tiptap" data-description="The headless editor framework this project builds on.">Tiptap</a>
@@ -83,6 +87,7 @@ const BLOCK_KIT_DEFAULTS = {
   file: false,
   video: false,
   embed: false,
+  mermaid: false,
   ai: { adapter: mockStreamAdapter, node: false },
   mention: {
     items: (query: string, { signal }: { signal: AbortSignal }) =>

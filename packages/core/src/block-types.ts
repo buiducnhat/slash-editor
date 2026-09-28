@@ -226,6 +226,19 @@ export const defaultBlockTypes: BlockType[] = [
     isActive: (editor) => editor.isActive("details", { level: 3 }),
     convert: ({ editor, pos }) => selectTarget(editor, pos).setToggle(3).run(),
   },
+  {
+    id: "mermaid",
+    title: "Mermaid diagram",
+    group: ADVANCED,
+    description: "Flowcharts, sequences, and more",
+    aliases: ["diagram", "flowchart", "chart", "graph"],
+    keywords: ["```mermaid", "sequence", "gantt"],
+    shortcut: "```mermaid",
+    icon: "workflow",
+    when: (editor) => hasNode(editor, "mermaid"),
+    isActive: (editor) => editor.isActive("mermaid"),
+    convert: ({ editor, pos }) => selectTarget(editor, pos).setMermaid().run(),
+  },
 ];
 
 export const BlockTypes = Extension.create<{ types: BlockType[] }, BlockTypesStorage>({

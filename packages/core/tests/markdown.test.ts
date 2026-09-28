@@ -105,6 +105,8 @@ test("every custom node survives a markdown round trip", () => {
         type: "taskList",
         content: [{ type: "taskItem", attrs: { checked: true }, content: [p("done")] }],
       },
+      { type: "mermaid", content: [text("flowchart LR\n    A --> B")] },
+      { type: "mermaid" },
     ),
   );
 });
@@ -133,6 +135,19 @@ test("custom blocks use syntax GitHub renders, with identity in hidden markers",
       "<details open>\n<summary><h1>More</h1></summary>\n\nbody\n\n</details>",
       '<!-- slash:file {"mime":"a\\u002d\\u002db"} -->\n[f](https://x.test/f)',
     ].join("\n\n"),
+  );
+});
+
+test("mermaid fences become diagrams while every other fence stays a code block", () => {
+  const markdown = "```mermaid\ngraph TD\n  A-->B\n```\n\n```js\nlet a\n```\n\n```\nplain\n```";
+
+  expect(schema.nodeFromJSON(parseMarkdown(markdown, kit)).toJSON().content).toEqual([
+    { type: "mermaid", attrs: { id: null }, content: [text("graph TD\n  A-->B")] },
+    { type: "codeBlock", attrs: { id: null, language: "js" }, content: [text("let a")] },
+    { type: "codeBlock", attrs: { id: null, language: null }, content: [text("plain")] },
+  ]);
+  expect(serializeMarkdown(doc({ type: "mermaid", content: [text("pie")] }), kit)).toBe(
+    "```mermaid\npie\n```",
   );
 });
 

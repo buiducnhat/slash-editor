@@ -1,6 +1,6 @@
 # Directory Structure
 
-```
+````
 packages/core/src/index.ts                public exports
 packages/core/src/ai-block.ts             AiBlock transient node, StreamAdapter contract, createAiSlashItems()
 packages/core/src/block-kit.ts            createBlockKit(): baseline extension set
@@ -16,6 +16,7 @@ packages/core/src/link-editor.ts          LinkEditor extension: popover visibili
 packages/core/src/markdown.ts             @slash-editor/core/markdown entry: Markdown extension, serializeMarkdown()/parseMarkdown()
 packages/core/src/markdown-syntax.ts      dependency-free marker/link/block-scan helpers nodes use for their markdown hooks
 packages/core/src/mention.ts              Mention node, async Suggestion provider, storage store
+packages/core/src/mermaid.ts              Mermaid node: CodeBlock.extend, source as text, ```mermaid rule, markdown fence
 packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
 packages/core/src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
 packages/core/src/table.ts                table(): configures @tiptap/extension-table's TableKit
@@ -70,8 +71,10 @@ site/                          the one app: playground, docs site, landing page,
     components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video; takes `adapter` as a prop
     components/nodes/embed-node-view.tsx   ReactNodeViewRenderer target for Embed: URL input, bookmark/iframe
     components/nodes/ai-block-node-view.tsx  ReactNodeViewRenderer target for AiBlock: stream/Keep/Discard/Try again
+    components/nodes/mermaid-node-view.tsx  ReactNodeViewRenderer target for Mermaid: preview, click-to-edit source
     components/ui/*.tsx        shadcn components (added via CLI, owned by the repo); `popover.tsx`/`dropdown-menu.tsx` forward `anchor` for caret/block-rect positioning
     lib/utils.ts               re-exports cn from the `cn` package
+    lib/mermaid.ts             renderMermaid(): lazy `mermaid` import, serialised renders, shadcn-token theme; useThemeSnapshot()
     lib/node-view-extensions.tsx  nodeViewExtensions(): the one place `mockUploadAdapter` is wired into image/file/video
     lib/use-demo-editor.ts     useSlashEditor + shared editor defaults: the lucide chevron for every toggle
     lib/fake-presence.ts       createFakePresenceProvider(): static awareness for the presence-avatars demo
@@ -122,7 +125,7 @@ site/                          the one app: playground, docs site, landing page,
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases
 vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, vitest excludes site/tests/e2e
-```
+````
 
 ## Entry points
 

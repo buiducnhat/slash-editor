@@ -96,8 +96,20 @@ about (and effectively breaks on) the collision. So a host that wants a `NodeVie
 (`blockKit: { image: false }`) and appends its own `Image.extend({ addNodeView: () => … })` through
 `extend`, the same single-registration path M1 established for `slash`/`blockId`/`drag`/
 `bubbleToolbar`'s `false` seam. `site/components/playground/playground-editor.tsx` does this for all four upload-capable/embed
-nodes, rendering React `NodeView`s from `site/registry/components/nodes/*` via `ReactNodeViewRenderer` —
+nodes and `mermaid`, rendering React `NodeView`s from `site/registry/components/nodes/*` via `ReactNodeViewRenderer` —
 `table`/`columns` have no such override; their default rendering is interactive enough on its own.
+
+## Mermaid diagrams
+
+`mermaid` is `CodeBlock.extend` with its source as ordinary node text rather than an attribute:
+attributes are last-write-wins under Yjs, text merges per character. It overrides every inherited
+field that would collide with the real `codeBlock` (commands, `Mod-Alt-c`, the VS Code paste
+plugin's fixed `PluginKey`, the catch-all `pre` parse rule) and runs at `priority: 110`, which
+orders its ` ```mermaid ` input rule, HTML parse rules, and markdown `code` handler ahead of
+`codeBlock`'s — `MarkdownManager` tries handlers for a token type in registration order, and a
+handler returning `[]` passes the token on. Core ships no renderer: without a `NodeView` the node
+is a plain `<pre data-type="mermaid">`. The registry's `MermaidNodeView` lazy-loads `mermaid` and
+themes it from the shadcn tokens; see [`mermaid-design-brief.md`](../project-pdr/mermaid-design-brief.md).
 
 ## Collaboration
 
