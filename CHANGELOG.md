@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.4.0] — 2026-09-28
+
+Mermaid diagram blocks (`@slash-editor/core` 0.4.0, `@slash-editor/react` 0.4.0):
+
+- **`mermaid` node.** Diagram source is document text, so collaborative edits merge per character. Insert with `/mermaid`, ` ```mermaid ` + space, or `~~~mermaid` + Enter, or convert any text block through "Turn into". `createBlockKit({ mermaid })` configures or opts it out.
+- **Markdown.** Diagrams export as ` ```mermaid ` fences (GitHub renders them) and import back as diagrams; other fences stay code blocks.
+- **`mermaid-node-view` registry item.** Rendered diagram by default, source with a live preview while the caret is inside, parse errors under the last good render, colours from your shadcn tokens with light/dark re-render, `mermaid` lazy-loaded on first render. Included in `slash-editor-kit`.
+
 ## [0.3.3] — 2026-09-26
 
 Block drag ghost preview card and DOM element lookup (`@slash-editor/core` 0.3.3, `@slash-editor/react` 0.3.3):
