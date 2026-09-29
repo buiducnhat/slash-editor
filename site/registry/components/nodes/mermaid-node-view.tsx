@@ -3,7 +3,7 @@ import { NodeViewContent, NodeViewWrapper, useEditorState } from "@tiptap/react"
 import { WorkflowIcon } from "lucide-react";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { renderMermaid, useThemeSnapshot } from "@/lib/mermaid.ts";
-import { cn } from "@/lib/utils.ts";
+import { cn } from "cn";
 
 const RENDER_DELAY_MS = 300;
 

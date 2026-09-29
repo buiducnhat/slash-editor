@@ -25,6 +25,13 @@
         "@slash-editor/dropdown-menu",
         "@slash-editor/icons"
       ],
+      "dependencies": [
+        "@slash-editor/core",
+        "@slash-editor/react",
+        "@tiptap/core",
+        "lucide-react",
+        "cn"
+      ],
       "files": [{ "path": "registry/components/bubble-toolbar.tsx", "type": "registry:component" }]
     },
     {
@@ -70,7 +77,8 @@
         "@slash-editor/core",
         "@slash-editor/react",
         "@tiptap/core",
-        "@tiptap/react"
+        "@tiptap/react",
+        "cn"
       ],
       "files": [{ "path": "registry/components/comment-panel.tsx", "type": "registry:component" }]
     },
@@ -110,7 +118,7 @@
       "title": "Table of Contents",
       "description": "Heading outline of the live document: the active row tracks the caret or scroll position, driven by useTableOfContents.",
       "registryDependencies": [],
-      "dependencies": ["@slash-editor/core", "@slash-editor/react"],
+      "dependencies": ["@slash-editor/core", "@slash-editor/react", "cn"],
       "files": [
         { "path": "registry/components/table-of-contents.tsx", "type": "registry:component" }
       ]
@@ -139,7 +147,7 @@
       "type": "registry:component",
       "title": "Mermaid Node View",
       "description": "ReactNodeViewRenderer target for the core `mermaid` node: rendered diagram by default, source plus live preview while the caret is inside. Themed from your shadcn tokens; `mermaid` is lazy-loaded on first render. Wire with `Mermaid.extend({ addNodeView: () => ReactNodeViewRenderer(MermaidNodeView) })` and `blockKit: { mermaid: false }`.",
-      "dependencies": ["@slash-editor/core", "@tiptap/react", "lucide-react", "mermaid"],
+      "dependencies": ["@slash-editor/core", "@tiptap/react", "lucide-react", "mermaid", "cn"],
       "files": [
         {
           "path": "registry/components/nodes/mermaid-node-view.tsx",
@@ -153,6 +161,7 @@
       "type": "registry:ui",
       "title": "Popover (anchor-aware)",
       "description": "shadcn Popover with an `anchor` prop forwarded to the Positioner, so a surface can anchor to the caret or a block's rect instead of a trigger element.",
+      "dependencies": ["@base-ui/react", "cn"],
       "files": [{ "path": "registry/components/ui/popover.tsx", "type": "registry:ui" }]
     },
     {
@@ -160,6 +169,7 @@
       "type": "registry:ui",
       "title": "Dropdown Menu (anchor-aware)",
       "description": "shadcn Dropdown Menu with an `anchor` prop forwarded to the Positioner, for the same reason as the anchor-aware Popover. Overrides the default shadcn `dropdown-menu`.",
+      "dependencies": ["@base-ui/react", "cn", "lucide-react"],
       "files": [{ "path": "registry/components/ui/dropdown-menu.tsx", "type": "registry:ui" }]
     },
     {

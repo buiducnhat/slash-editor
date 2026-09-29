@@ -4,7 +4,7 @@ import { useEditorState } from "@tiptap/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { cn } from "@/lib/utils.ts";
+import { cn } from "cn";
 
 export function CommentPanel({ editor, className }: { editor: Editor; className?: string }) {
   const comments = useComments(editor);

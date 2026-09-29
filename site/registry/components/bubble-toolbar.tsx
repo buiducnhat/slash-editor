@@ -18,7 +18,7 @@ import { Popover, PopoverContent } from "@/components/ui/popover.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { resolveIcon } from "@/lib/icons.ts";
-import { cn } from "@/lib/utils.ts";
+import { cn } from "cn";
 
 function BlockTypeDropdown({ editor }: { editor: Editor }) {
   const active = defaultBlockTypes.find((type) => type.isActive(editor));
