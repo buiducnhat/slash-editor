@@ -28,7 +28,7 @@ jobs:
       # npm >= 11.5.1, so put a recent Node on PATH and pin that floor rather
       # than trust whatever the runner image bundles.
       - name: Set up Node (npm publish supports OIDC; bun publish does not)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
