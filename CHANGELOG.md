@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.5.0] — 2026-09-29
+
+Document outline and read-only documents (`@slash-editor/core` 0.5.0, `@slash-editor/react` 0.5.0):
+
+- **`tableOfContents` extension.** The document outline — top-level headings with their `id`, `level`, `text`, and a `pos` that addresses each node — recomputed on change and exposed through the same subscribe/store shape the other surfaces use. `computeTableOfContents`, `findActiveItem`, and `pickActiveByScroll` are pure and DOM-free; `scrollToHeading(pos)` pins a heading to the top of its scroll container. Nothing is scanned while no outline is mounted, and `createBlockKit({ tableOfContents })` configures or opts it out.
+- **`useTableOfContents` hook and `table-of-contents` registry item.** The active row follows the caret while editing and the scroll position otherwise; clicking a row moves the caret to that heading and jumps to it. Included in `slash-editor-kit`.
+- **Read-only documents.** Two new `createBlockKit` seams keep a viewer interactive: `link: { openOnClick: true }` for link navigation and `taskItem: { onReadOnlyChecked }` for checkboxes. The gutter now stands down with the document, and a new **Read-Only Documents** guide lists what else goes inert.
+- **Playground.** The outline and a **Read-only** switch, with the comment panel moved into a shared right rail.
+
 ## [0.4.0] — 2026-09-28
 
 Mermaid diagram blocks (`@slash-editor/core` 0.4.0, `@slash-editor/react` 0.4.0):
