@@ -17,8 +17,11 @@ MIT top to bottom — no paid tier, no hosted dependency.
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)](https://www.typescriptlang.org/)
 
 <p align="center">
-  <img src=".github/assets/demo.gif" alt="slash-editor demo" width="100%">
+  <a href=".github/assets/demo.mp4">
+    <img src=".github/assets/demo.gif" alt="slash-editor demo" width="100%">
+  </a>
 </p>
+
 ## Workspace
 
 | Path                               | Package               | Role                                                      |
