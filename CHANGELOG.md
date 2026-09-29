@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Changesets populates this file. Do not edit manually. -->
 
+## [0.5.1] — 2026-09-30
+
+SSR-safe import and self-contained registry installs (`@slash-editor/core` 0.5.1, `@slash-editor/react` 0.5.1):
+
+- **SSR-safe `@slash-editor/react`.** Importing the package no longer throws `DOMRect is not defined` during SSR/prerender: the empty fallback anchor rect is created on first use instead of at module scope.
+- **Self-contained registry installs.** `popover`/`dropdown-menu` declare `@base-ui/react` and `cn`, and components import `cn` directly instead of `@/lib/utils`, so `shadcn add @slash-editor/slash-editor-kit` works in an app that never ran `shadcn init`.
+
 ## [0.5.0] — 2026-09-29
 
 Document outline and read-only documents (`@slash-editor/core` 0.5.0, `@slash-editor/react` 0.5.0):
