@@ -150,6 +150,18 @@ export {
 } from "./slash-command.ts";
 export { table, TableKit, type TableKitOptions } from "./table.ts";
 export {
+  computeTableOfContents,
+  findActiveItem,
+  pickActiveByScroll,
+  type ScrollToHeadingOptions,
+  TableOfContents,
+  tableOfContents,
+  type TableOfContentsItem,
+  type TableOfContentsOptions,
+  type TableOfContentsState,
+  type TableOfContentsStorage,
+} from "./table-of-contents.ts";
+export {
   Toggle,
   toggle,
   toggleHeadingInputRegex,

@@ -1,0 +1,125 @@
+---
+title: Read-Only Documents
+description: "useSlashEditor({ editable: false }) for a viewer — what stays interactive, what goes inert by design, and the aiBlock caveat."
+---
+
+import { ReadOnlyDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ReadOnlyDemo />
+
+A read-only document is a viewer, not a degraded editor. Two decisions shape it: how long it
+stays read-only, and which interactive seams you deliberately leave on.
+
+## Permanent viewer vs. runtime toggle
+
+Pass `editable: false` when the document is only ever read — a published page, a shared preview:
+
+```tsx
+import { useSlashEditor } from "@slash-editor/react";
+
+const editor = useSlashEditor({ content, editable: false });
+```
+
+For a runtime toggle — preview mode, a permissions flip — flip the running editor with
+`editor.setEditable(false)` instead, and `editor.setEditable(true)` turns editing back on.
+
+## Keeping a viewer interactive
+
+Left alone, a read-only editor is inert everywhere, and that is mostly what you want. Two block
+kit options keep the parts a reader actually touches alive.
+
+The kit defaults `link` to `{ openOnClick: false, enableClickSelection: true }` so that clicking
+a link while editing selects it — feeding the link editor — instead of navigating away mid-edit.
+A viewer wants the links back. And `taskItem`'s `onReadOnlyChecked` is what makes a checkbox
+clickable in a read-only document: without it Tiptap ignores the click and snaps the checkbox
+back.
+
+```tsx
+import { useSlashEditor } from "@slash-editor/react";
+
+const editor = useSlashEditor({
+  content,
+  editable: false,
+  blockKit: {
+    link: { openOnClick: true },
+    taskItem: {
+      onReadOnlyChecked: (item, checked) => {
+        saveCheckState(item, checked); // your store — nothing is persisted for you
+        return true;
+      },
+    },
+  },
+});
+```
+
+`onReadOnlyChecked` receives the task item's node and the requested checked state. Return `true`
+and the checkbox keeps its new look; return `false` and it snaps back. It is a notification, not
+a document change — the read-only task item dispatches nothing — so persisting the check is the
+host's job. The demo above is wired with exactly these two options: try the link and the
+checkboxes. The [playground](/playground) carries the same switch in its header — flip
+**Read-only** to watch the slash menu, mentions, and formatting stand down mid-session
+(`setEditable` toggles the running editor rather than rebuilding it).
+
+Node-view surfaces that are read-only by nature keep working too: a Mermaid diagram still renders
+its preview, and an embed is a live `iframe` or a bookmark link out.
+
+## Inert by design
+
+Everything else stands down when `editor.isEditable` is false, at the layer that owns it:
+
+- **Slash menu and mentions.** Tiptap's `Suggestion` plugin only matches triggers while the
+  editor is editable — `/` and `@` are just characters in a viewer.
+- **Bubble toolbar.** `computeState` in `bubble-toolbar.ts` refuses to open unless the editor is
+  editable, and there is no editable text selection to anchor to anyway.
+- **Link editor.** `canOpenLinkEditor` in `link-editor.ts` returns `false` unless the editor is
+  editable, so clicks never surface editing chrome — with `openOnClick: true` they navigate
+  instead.
+- **Empty-block placeholders.** The decoration plugin in `placeholder.ts` draws nothing unless
+  the editor is editable — a typing hint has no business in a viewer.
+- **Toggle chevron.** `open` is document state — that is why a saved toggle reopens where its
+  author left it — so flipping one is an edit. `toggle.ts`'s click handler returns early unless
+  the editor is editable and nothing reaches the document; the chevron still opens and closes the
+  body for reading, but the flip is view-local.
+- **Mermaid click-to-edit.** The click handler in `mermaid-node-view.tsx` bails unless the editor
+  is editable — clicking a diagram in a viewer never opens its source.
+- **Gutter block handle.** Every affordance in it is a mutation — insert below, drag to reorder,
+  duplicate, delete, turn into — so `BlockHandle` renders nothing at all while the editor is
+  read-only. A viewer can mount it unconditionally, and a host that flips `setEditable` at
+  runtime (the playground's own switch) gets that for free.
+
+## The `aiBlock` caveat
+
+One node opts out of the pattern above. A document saved mid-AI-stream contains a transient
+`aiBlock` node, and the registry's `AiBlockNodeView` never checks `editor.isEditable` — its
+Replace/Try again/Discard buttons run document commands in any editor that has the node. A viewer
+that may open such documents keeps `ai: { adapter, node: false }` registered and renders the node
+through a `NodeView` of its own. `node: false` is the kit's seam for skipping its built-in node,
+so the variant you register via `extend` is the only one in the schema:
+
+```tsx
+import { AiBlock } from "@slash-editor/core";
+import { useSlashEditor } from "@slash-editor/react";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { ReadOnlyAiBlockNodeView } from "@/components/nodes/read-only-ai-block-node-view";
+
+const editor = useSlashEditor({
+  editable: false,
+  blockKit: {
+    ai: { adapter: yourStreamAdapter, node: false },
+    extend: [
+      AiBlock.extend({
+        addNodeView: () => ReactNodeViewRenderer(ReadOnlyAiBlockNodeView),
+      }),
+    ],
+  },
+});
+```
+
+If `ai` is omitted entirely there is no `aiBlock` in the schema at all: loading a document that
+contains one degrades rather than rendering it — Tiptap logs `[tiptap warn]: Invalid content.`
+and drops what the schema cannot represent — acceptable for a viewer that never opens
+half-streamed saves, but none of the stream state is left to show.
+
+A [table of contents](/docs/components/table-of-contents) mounted in the same viewer follows the
+same rule as the demo above: with no caret to follow, its active row comes from the scroll
+position.

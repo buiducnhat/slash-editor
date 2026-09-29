@@ -257,7 +257,7 @@ export interface BlockDragOptions {
 
 const CLOSED_STATE: BlockDragState = Object.freeze({ hovered: null, dragging: null, drop: null });
 
-function findScrollParent(element: HTMLElement): HTMLElement | null {
+export function findScrollParent(element: HTMLElement): HTMLElement | null {
   let node = element.parentElement;
 
   while (node) {

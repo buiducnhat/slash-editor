@@ -5,7 +5,7 @@ import { PlaygroundEditor } from "~/components/playground/playground-editor.prev
 export const metadata: Metadata = {
   title: "Playground",
   description:
-    "A live, editable slash-editor instance — every block, the slash menu, and inline formatting.",
+    "A live slash-editor instance — every block, the slash menu, inline formatting, a document outline, and a read-only mode.",
 };
 
 export default function PlaygroundPage() {

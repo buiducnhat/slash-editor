@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { cn } from "@/lib/utils.ts";
 
-export function CommentPanel({ editor }: { editor: Editor }) {
+export function CommentPanel({ editor, className }: { editor: Editor; className?: string }) {
   const comments = useComments(editor);
   const [draft, setDraft] = useState("");
   const canAdd = useEditorState({
@@ -22,7 +22,14 @@ export function CommentPanel({ editor }: { editor: Editor }) {
   };
 
   return (
-    <aside className="border-border flex w-72 shrink-0 flex-col gap-3 border-l p-4">
+    <aside
+      className={cn(
+        "border-border flex w-72 shrink-0 flex-col gap-3 border-l p-4",
+        // A host that already owns the rail (the playground) drops the chrome
+        // it would otherwise draw twice.
+        className,
+      )}
+    >
       <h2 className="text-sm font-medium">Comments</h2>
       <div className="flex flex-col gap-2">
         <Textarea

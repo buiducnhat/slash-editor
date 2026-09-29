@@ -8,6 +8,7 @@
     "ai-stream-adapter",
     "collaboration",
     "comments",
-    "markdown"
+    "markdown",
+    "read-only"
   ]
 }

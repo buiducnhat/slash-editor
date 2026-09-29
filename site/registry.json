@@ -105,6 +105,17 @@
       ]
     },
     {
+      "name": "table-of-contents",
+      "type": "registry:component",
+      "title": "Table of Contents",
+      "description": "Heading outline of the live document: the active row tracks the caret or scroll position, driven by useTableOfContents.",
+      "registryDependencies": [],
+      "dependencies": ["@slash-editor/core", "@slash-editor/react"],
+      "files": [
+        { "path": "registry/components/table-of-contents.tsx", "type": "registry:component" }
+      ]
+    },
+    {
       "name": "node-views",
       "type": "registry:component",
       "title": "Media & AI Node Views",
@@ -155,7 +166,7 @@
       "name": "slash-editor-kit",
       "type": "registry:block",
       "title": "slash-editor Kit",
-      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, link editor, comment panel, presence avatars, media/AI node views, and the Mermaid node view.",
+      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, and the Mermaid node view.",
       "registryDependencies": [
         "@slash-editor/slash-menu",
         "@slash-editor/bubble-toolbar",
@@ -166,6 +177,7 @@
         "@slash-editor/presence-avatars",
         "@slash-editor/comment-composer",
         "@slash-editor/icons",
+        "@slash-editor/table-of-contents",
         "@slash-editor/node-views",
         "@slash-editor/mermaid-node-view"
       ],

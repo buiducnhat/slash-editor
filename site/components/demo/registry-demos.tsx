@@ -12,6 +12,7 @@ import { MentionMenu } from "@/components/mention-menu.tsx";
 import { MermaidNodeView } from "@/components/nodes/mermaid-node-view.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
+import { TableOfContents } from "@/components/table-of-contents.tsx";
 import { createMockCommentThreadStore } from "@/lib/comment-store.ts";
 import { createFakePresenceProvider } from "@/lib/fake-presence.ts";
 import { mockMentionProvider } from "@/lib/mention-provider.ts";
@@ -21,10 +22,11 @@ import { useDemoEditor } from "@/lib/use-demo-editor.ts";
 import { cn } from "@/lib/utils.ts";
 
 /**
- * One demo per registry item, wiring the same editor defaults the
- * playground uses (`useDemoEditor`). Every export here is client-only (see
- * `registry-demos.preview.tsx`): a live `Editor` needs a real DOM, and some
- * registry modules touch DOM globals at module scope.
+ * One demo per registry item (plus `ReadOnlyDemo` for the read-only guide),
+ * wiring the same editor defaults the playground uses (`useDemoEditor`). Every
+ * export here is client-only (see `registry-demos.preview.tsx`): a live
+ * `Editor` needs a real DOM, and some registry modules touch DOM globals at
+ * module scope.
  */
 
 const EDITOR_CLASS = "slash-content min-h-40 pl-24 pr-6 py-8";
@@ -181,6 +183,74 @@ export function MermaidDemo() {
     <div className={CARD_CLASS}>
       <EditorContent editor={editor} />
       <SlashMenu editor={editor} />
+    </div>
+  );
+}
+
+export function TableOfContentsDemo() {
+  const paneRef = useRef<HTMLDivElement | null>(null);
+  const editor = useDemoEditor({
+    content: `<h1>Trail Notes</h1>
+<p>Scroll this pane to read the document; the outline on the right follows along.</p>
+<h2>Before you go</h2>
+<p>Check the forecast and the trail report before setting out.</p>
+<p>Leave your route with someone at home.</p>
+<h2>On the trail</h2>
+<p>Mark each junction as you pass it so the walk out is easy to follow.</p>
+<h3>Creek crossing</h3>
+<p>The stones are slick after rain; the log bridge is the better bet.</p>
+<h2>Back at camp</h2>
+<p>Hang the pack, bank the fire, and note anything the next hiker should know.</p>`,
+    editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
+  });
+  if (!editor) return null;
+  return (
+    <div className="flex items-start gap-4">
+      <div ref={paneRef} className={cn(CARD_CLASS, "max-h-64 overflow-y-auto")}>
+        <EditorContent editor={editor} />
+      </div>
+      <div className="w-48 shrink-0">
+        <TableOfContents editor={editor} scrollContainer={paneRef} />
+      </div>
+    </div>
+  );
+}
+
+export function ReadOnlyDemo() {
+  const editor = useDemoEditor({
+    editable: false,
+    content: `<h1>Release checklist</h1>
+<p>Nothing here can be edited — but you can still follow <a href="#read-only-anchor">this link</a> and toggle the checkboxes below.</p>
+<h2>Before merging</h2>
+<ul data-type="taskList">
+<li data-type="taskItem" data-checked="true"><p>Tests pass</p></li>
+<li data-type="taskItem" data-checked="false"><p>Docs updated</p></li>
+</ul>
+<h2>Cut the release</h2>
+<pre><code>useSlashEditor({
+  editable: false,
+  blockKit: { link: { openOnClick: true } },
+})</code></pre>`,
+    blockKit: {
+      link: { openOnClick: true },
+      taskItem: { onReadOnlyChecked: () => true },
+    },
+    editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Read-only document" } },
+  });
+  if (!editor) return null;
+  return (
+    <div className="flex items-start gap-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className={CARD_CLASS}>
+          <EditorContent editor={editor} />
+        </div>
+        <p className="text-muted-foreground text-sm">
+          The document is read-only, but links and checkboxes still respond.
+        </p>
+      </div>
+      <div className="w-48 shrink-0">
+        <TableOfContents editor={editor} />
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import type { Extensions } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { DetailsContent, DetailsSummary } from "@tiptap/extension-details";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TaskItem, type TaskItemOptions, TaskList } from "@tiptap/extension-list";
 import {
   ai,
   aiBlock,
@@ -33,6 +33,7 @@ import {
 import { defaultSlashItems, type SlashItem } from "./slash-items.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 import { table, type TableKitOptions } from "./table.ts";
+import { tableOfContents, type TableOfContentsOptions } from "./table-of-contents.ts";
 import { toggle, type ToggleOptions } from "./toggle.ts";
 import { video, type VideoOptions } from "./video.ts";
 
@@ -142,10 +143,25 @@ export interface BlockKitOptions {
    */
   columns?: Partial<ColumnsOptions> | false;
   /**
+   * Link mark click behavior. Editing wants clicking a link to select it
+   * (feeding `linkEditor`'s auto-open), never to navigate away mid-edit; a
+   * read-only viewer passes `openOnClick: true` so links still work. `false`
+   * leaves the `link` mark out of the schema entirely.
+   *
+   * @default { openOnClick: false, enableClickSelection: true }
+   */
+  link?: { openOnClick?: boolean; enableClickSelection?: boolean } | false;
+  /**
+   * To-do list item options (`onReadOnlyChecked` is what makes a checkbox
+   * interactive in a read-only document — without it Tiptap ignores the
+   * click). Spread over `{ nested: true }`.
+   *
+   * @default {}
+   */
+  taskItem?: Partial<TaskItemOptions>;
+  /**
    * Selection-anchored link editing popover, or `false` to opt out.
-   * Requires the `link` mark, configured on by `createBlockKit` with
-   * `openOnClick: false, enableClickSelection: true` so clicking a link
-   * while editing selects it instead of navigating away.
+   * Requires the `link` mark, so it depends on `link` staying enabled.
    *
    * @default {}
    */
@@ -177,6 +193,15 @@ export interface BlockKitOptions {
    * @default {}
    */
   comment?: Partial<CommentOptions> | false;
+  /**
+   * Document outline store (top-level headings, recomputed on change), or
+   * `false` to opt out. An outline is read-only state, not an insertable
+   * block, so this registers no slash item; and with no subscriber listening
+   * it never scans the document at all.
+   *
+   * @default {}
+   */
+  tableOfContents?: Partial<TableOfContentsOptions> | false;
   /**
    * Toggle (details) node configuration. Options only — the node itself is
    * unconditional, like blockquote. This is the seam a UI layer uses to
@@ -219,6 +244,9 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ai: aiOptions,
     comment: commentOptions,
     collaboration: collaborationOptions,
+    link: linkOptions,
+    taskItem: taskItemOptions,
+    tableOfContents: tableOfContentsOptions,
     toggle: toggleOptions,
     extend = [],
   } = options;
@@ -244,15 +272,19 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
       heading: { levels: headingLevels },
       undoRedo: resolvedHistory ? {} : false,
       // Editing wants clicking a link to select it (feeding LinkEditor's
-      // auto-open), never to navigate away mid-edit.
-      link: { openOnClick: false, enableClickSelection: true },
+      // auto-open), never to navigate away mid-edit. A read-only viewer
+      // passes `link: { openOnClick: true }` to make links navigate again.
+      link:
+        linkOptions === false
+          ? false
+          : { openOnClick: false, enableClickSelection: true, ...linkOptions },
       // `>` belongs to the toggle; quote() re-registers blockquote with the
       // `"` shorthand instead.
       blockquote: false,
     }),
     quote(),
     TaskList,
-    TaskItem.configure({ nested: true }),
+    TaskItem.configure({ nested: true, ...taskItemOptions }),
     Callout,
     toggle({ persist: true, ...toggleOptions }),
     blockTypesExtension(blockTypes),
@@ -287,6 +319,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(drag === false ? [] : [blockDrag(drag)]),
     ...(bubbleToolbarOptions === false ? [] : [bubbleToolbar(bubbleToolbarOptions)]),
     ...(linkEditorOptions === false ? [] : [linkEditor(linkEditorOptions)]),
+    ...(tableOfContentsOptions === false ? [] : [tableOfContents(tableOfContentsOptions)]),
     ...(collaborationOptions === false || !collaborationOptions
       ? []
       : [...collaboration(collaborationOptions)]),

@@ -10,6 +10,11 @@ test("dragging a block rightward onto a list item nests it as an additional chil
   const paragraph = root.locator("p", { hasText: "Notion-style block editing" });
   const listItem = root.locator("li", { hasText: "Headings, lists, quotes" });
 
+  // The editor mounts on the client (`immediatelyRender: false`), so wait for
+  // the blocks to exist before measuring them.
+  await expect(paragraph).toBeVisible();
+  await expect(listItem).toBeVisible();
+
   const paragraphBox = (await paragraph.boundingBox())!;
   const listItemBox = (await listItem.boundingBox())!;
 

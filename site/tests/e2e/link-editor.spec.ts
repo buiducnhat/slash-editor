@@ -10,7 +10,7 @@ test.describe("link editor popover", () => {
       await page.keyboard.press("Shift+ArrowLeft");
     }
 
-    await page.getByRole("button", { name: "Link" }).click();
+    await page.getByRole("button", { name: "Link", exact: true }).click();
     const input = page.getByPlaceholder("Paste a link\u2026");
     await expect(input).toBeVisible();
     await input.fill("https://example.com");

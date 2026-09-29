@@ -21,12 +21,15 @@ interface BlockKitOptions {
   mermaid?: Partial<MermaidOptions> | false; // source-only node; rendering is a UI NodeView
   table?: Partial<TableKitOptions> | false; // default { table: { resizable: true } }
   columns?: Partial<ColumnsOptions> | false;
+  link?: { openOnClick?: boolean; enableClickSelection?: boolean } | false; // default { openOnClick: false, enableClickSelection: true }; `openOnClick: true` for a read-only viewer
+  taskItem?: Partial<TaskItemOptions>; // spread over `{ nested: true }`; `onReadOnlyChecked` is what makes checkboxes clickable in a read-only document
   linkEditor?: Partial<LinkEditorOptions> | false; // default {}
   // No default provider/adapter, so these are opt-in (undefined -> not registered), not `Partial<X> | false`:
   mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
   collaboration?: CollaborationOptions | false; // no default; forces history:false when set
   comment?: Partial<CommentOptions> | false; // default {}
+  tableOfContents?: Partial<TableOfContentsOptions> | false; // default {}; outline store, scans only while subscribed
   toggle?: Partial<ToggleOptions>; // options only; default { persist: true }
   extend?: Extensions;
 }
@@ -606,6 +609,62 @@ interface CommentMessage {
 }
 ```
 
+```ts
+// table-of-contents.ts — document outline store: the top-level headings of the live document.
+const TableOfContents: Extension<TableOfContentsOptions, TableOfContentsStorage>;
+function tableOfContents(options?: Partial<TableOfContentsOptions>): Extension;
+
+interface TableOfContentsItem {
+  id: string | null; // the heading's blockId attr; null when `blockId` is opted out
+  level: HeadingLevel;
+  text: string; // heading text, whitespace collapsed
+  pos: number; // doc position of the heading node — the scroll/selection target
+}
+interface TableOfContentsState {
+  items: TableOfContentsItem[]; // eligible headings, in document order
+}
+interface TableOfContentsStorage {
+  // editor.storage.tableOfContents — listeners/dirty/scan/setState are internal
+  state: TableOfContentsState;
+  subscribe(listener: () => void): () => void;
+}
+interface TableOfContentsOptions {
+  maxLevel: HeadingLevel; // default 6 — deeper headings are skipped
+}
+interface ScrollToHeadingOptions {
+  behavior: ScrollBehavior; // default "smooth"
+}
+
+// Pure and DOM-free — no Editor, no live view — so the scan is unit-testable in Node and
+// callable straight on `editor.state.doc` by a host rendering its own outline.
+function computeTableOfContents(
+  doc: PMNode,
+  options?: Partial<TableOfContentsOptions>,
+): TableOfContentsItem[];
+function findActiveItem(
+  items: readonly TableOfContentsItem[],
+  from: number,
+): TableOfContentsItem | null; // last item at or before `from`; null above the first
+function pickActiveByScroll(
+  rects: readonly { top: number }[],
+  containerTop: number,
+  offset?: number,
+): number; // index of the last rect whose top has reached `containerTop + offset`; -1 above the first
+
+// editor.commands.scrollToHeading(pos, options?) — pins the rendered heading at `pos`
+// to the top of its nearest scroll container (falls back to `scrollIntoView` at the document)
+```
+
+The scan is top-level only (`doc.forEach`, never `descendants`): a heading nested inside a toggle,
+callout, column, or table cell is part of its parent block, not page structure. `id` is the heading's
+`blockId` attribute and `null` when `blockId` is opted out — `pos` always addresses the node, so rows
+still key, select, and scroll without ids. A document change triggers no scan unless someone is subscribed
+(a subscriber attaching after edits gets one scan before its first read, so it never observes a stale
+outline), and `setState` compares items by `(id, level, text, pos)` and skips notification when the
+outline is unchanged — caret-only transactions never churn the list. It is default-on in
+`createBlockKit` (`tableOfContents: false` opts out) and registers no slash item: an outline is not
+an insertable block.
+
 ## `@slash-editor/react`
 
 ```ts
@@ -672,6 +731,19 @@ interface Comments extends Omit<CommentState, "composer"> {
   removeAnchor(threadId: string): void;
 }
 
+function useTableOfContents(
+  editor: Editor | null,
+  options?: UseTableOfContentsOptions,
+): TableOfContents;
+interface UseTableOfContentsOptions {
+  scrollContainer?: RefObject<HTMLElement | null> | null; // default: the window
+  scrollOffset?: number; // default 0
+}
+interface TableOfContents extends TableOfContentsState {
+  active: TableOfContentsItem | null;
+  select: (item: TableOfContentsItem) => void; // editable: focus + caret into the heading, then scroll; read-only: scroll only
+}
+
 function useBlockTypes(editor: Editor | null): BlockTypes;
 function useAiActions(editor: Editor | null, context: AiActionContext): AiActions;
 function useBlockMenu(editor: Editor | null): BlockMenu;
@@ -697,7 +769,7 @@ interface PresenceProvider {
 
 Re-exported from `@tiptap/react` so consumers need one import: `EditorContent`, `EditorContext`, `EditorProvider`, `useCurrentEditor`, `useEditorState`.
 
-`useSlashMenu`, `useBlockDrag`, `useBubbleToolbar`, `useMention`, `useLinkEditor`, `useComments`, and `usePresence` are all safe with a `null`/`undefined` editor or provider (closed/empty state, no-op callbacks), which matters because `useSlashEditor` returns `null` on the first render.
+`useSlashMenu`, `useBlockDrag`, `useBubbleToolbar`, `useMention`, `useLinkEditor`, `useComments`, `useTableOfContents`, and `usePresence` are all safe with a `null`/`undefined` editor or provider (closed/empty state, no-op callbacks), which matters because `useSlashEditor` returns `null` on the first render.
 
 `useBlockDrag`'s click-vs-drag disambiguation lives entirely in the hook (not core): a grip press that stays within 4px opens `menuTarget`; past that it calls `storage.setDragging`. It is pure DOM gesture handling, not editor state.
 
@@ -719,6 +791,8 @@ shape `useLinkEditor.confirm` uses for the `link` mark. `usePresence` is unrelat
 `CollaborationCaret`'s in-document carets — it reads a provider's awareness states directly, for chrome
 outside the editor (an avatar row, an "N online" badge).
 
+`useTableOfContents` follows core's store for `items`, and `active` has two sources with explicit precedence: the caret (`findActiveItem` over the selection, while the editor is editable and focused) wins, and scroll geometry (`pickActiveByScroll` over the headings' rects, rAF-throttled) covers the read-only or unfocused case. `select` pins `active` optimistically so the row highlights before any scroll event fires. The returned interface is named `TableOfContents` after the hook's read surface, not core's extension — core's is only ever configured through `createBlockKit`.
+
 ## Demo surface
 
 `site/registry/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components, with a fallback icon so an unmapped key can never render a blank slot. Each row is one line — icon, title, `shortcut` — and `description` becomes the row's `title` tooltip.
@@ -726,6 +800,8 @@ outside the editor (an avatar row, an "N online" badge).
 `site/registry/components/bubble-toolbar.tsx` is the reference toolbar: a `Popover` anchored to `useBubbleToolbar().anchor`, `open` fully controlled by `toolbar.open` (no `onOpenChange` — visibility is entirely selection-driven), rendering one `Button` per item with `onMouseDown={(e) => e.preventDefault()}` so a click never blurs the editor before `item.run` fires.
 
 `site/registry/components/block-handle.tsx` is the reference gutter: a hover group (insert-below + drag/click grip, both with `Tooltip`), the drop indicator, and a `DropdownMenu` (Duplicate/Delete) anchored at `menuAnchor` — all `position: fixed` or portal-rendered, positioned from `useBlockDrag`'s anchors, no markup in core. The dragged block's visual fade (`[data-dragging]` in `styles.css`) is a core-owned ProseMirror decoration, not a DOM mutation from the demo — PM's own view reconciliation strips foreign attributes set directly on its managed nodes.
+
+`site/registry/components/table-of-contents.tsx` is the reference outline: `useTableOfContents` rendered as a `<nav aria-label="Table of contents">` with one row per item — a `<button data-testid="toc-item">`, keyed by `item.id ?? String(item.pos)` — indentation from each row's depth below the shallowest heading through a **static** class record (Tailwind cannot see a computed class name), `truncate` labels per the one-line-row rule, and `aria-current="location"` on the active row. A row click calls `select(item)` — the jump is core's `scrollToHeading`, so the same component works in a read-only viewer — and the component returns `null` while the document has no headings.
 
 `site/registry/components/nodes/*` are the M2 `NodeView`s, wired into `app.tsx`'s
 `useSlashEditor({ blockKit: { image: false, …, extend: [Image.extend({ addNodeView: … }), …] } })`:

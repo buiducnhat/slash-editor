@@ -20,6 +20,7 @@ packages/core/src/mermaid.ts              Mermaid node: CodeBlock.extend, source
 packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
 packages/core/src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
 packages/core/src/table.ts                table(): configures @tiptap/extension-table's TableKit
+packages/core/src/table-of-contents.ts   TableOfContents extension, storage store, computeTableOfContents/findActiveItem/pickActiveByScroll, scrollToHeading command
 packages/core/src/quote.ts                Blockquote with the `"` shorthand (StarterKit's `>` rule is disabled)
 packages/core/src/toggle.ts               Toggle node: Details + `level` attr, `>` and `# >` shorthands, setToggle()
 packages/core/src/upload.ts               UploadAdapter contract, runUpload/retryUpload, PendingUploadRegistry
@@ -35,6 +36,7 @@ packages/core/tests/media-nodes.test.ts   image/file/video/embed attribute defau
 packages/core/tests/mention.test.ts       schema defaults/JSON round trip, opt-in wiring, option pass-through
 packages/core/tests/slash-items.test.ts   ranking, keyword shorthands, `when` gating
 packages/core/tests/table-columns.test.ts table/columns schema inventory, columns{2,} minimum
+packages/core/tests/table-of-contents.test.ts  outline computation, nested-heading exclusion, maxLevel, active-item/scroll selection
 packages/core/tests/upload.test.ts        findNodeById, PendingUploadRegistry
 packages/core/tests/tsconfig.json         type-checks tests without widening the build rootDir
 packages/core/tsconfig.json               build scope: src only
@@ -48,6 +50,7 @@ packages/react/               @slash-editor/react
   src/use-link-editor.ts      useLinkEditor(): store subscription + confirm/remove composed over core commands
   src/use-mention.ts          useMention(): store subscription + caret anchor, same shape as useSlashMenu plus loading
   src/use-presence.ts         usePresence(): awareness state -> peer list, cached/event-driven
+  src/use-table-of-contents.ts  useTableOfContents(): store subscription + active heading (caret or scroll)
   tsconfig.json               resolves core via ../core/dist/index.d.mts
 
 site/                          the one app: playground, docs site, landing page, and the shadcn registry host (Next.js + Fumadocs)
@@ -65,6 +68,7 @@ site/                          the one app: playground, docs site, landing page,
     components/presence-avatars.tsx  usePresence() as a row of colored initials with a Tooltip
     components/mention-menu.tsx    Command + Popover surface for @-mentions, loading row
     components/link-editor-popover.tsx  Input-driven popover: href, Open/Remove when editing
+    components/table-of-contents.tsx  heading outline nav, active row, click-to-jump
     components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video; `adapter` passed as a prop, never imported
     components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image; takes `adapter` as a prop
     components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File; takes `adapter` as a prop
@@ -102,7 +106,7 @@ site/                          the one app: playground, docs site, landing page,
   components/registry/install-command.tsx    `<InstallCommand item="…">` and `<RegistrySnippet />`
   components/demo/registry-demos.tsx          one demo per registry item, wiring the same editor defaults the playground uses
   components/demo/registry-demos.preview.tsx  `next/dynamic(…, { ssr: false })` wrapper per demo — ProseMirror needs a real DOM
-  components/playground/playground-editor.tsx  SoloEditor / CollabEditor, ported from the former standalone app's `app.tsx`
+  components/playground/playground-editor.tsx  EditorWorkspace + SoloEditor / CollabEditor: editor card, sticky outline/comment rail, read-only toggle
   components/playground/markdown-panel.tsx     solo editor's "Markdown" panel: live `getMarkdown()`, edit + apply, import/download `.md`
   components/playground/playground-editor.preview.tsx  `ssr: false` wrapper — same DOM-globals constraint as the demo previews
   components/landing/feature-grid.tsx         landing page feature cards
@@ -121,6 +125,7 @@ site/                          the one app: playground, docs site, landing page,
   tests/e2e/ai-actions.spec.ts          slash action → stream → keep/discard, and error → retry
   tests/e2e/toggle-blocks.spec.ts       `>`/`"` shorthands, toggle headings, level survives open/close
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
+  tests/e2e/table-of-contents.spec.ts   outline rows track the caret/scroll and jump to a heading
 .github/workflows/release.yml tag-triggered (`v*`) publish: build, `vp check`, registry schema gate, `bun publish` core then react
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases

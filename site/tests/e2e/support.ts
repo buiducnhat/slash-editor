@@ -47,6 +47,11 @@ export async function pasteHtml(page: Page, html: string, text = ""): Promise<vo
 
 /** Reveals the gutter grip for `block` by hovering it; the grip only renders on hover. */
 export async function revealGrip(page: Page, block: Locator): Promise<Locator> {
+  // The editor mounts on the client (`immediatelyRender: false`) and React 19's
+  // StrictMode tears down a throwaway mount right after, so a block can be in
+  // the DOM but not yet measurable. Wait for a real box rather than reading the
+  // first one — the same trap `focusTrailingParagraph` guards against.
+  await block.waitFor({ state: "visible" });
   const box = await block.boundingBox();
   if (!box) {
     throw new Error("Target block has no bounding box");

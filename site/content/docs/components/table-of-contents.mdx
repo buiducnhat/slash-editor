@@ -1,0 +1,28 @@
+---
+title: Table of Contents
+description: A heading outline of the live document with an active row that follows the caret or the scroll position.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { TableOfContentsDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ComponentPreview name="table-of-contents">
+  <TableOfContentsDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="table-of-contents" />
+
+## How the active row is chosen
+
+While the editor is editable and focused, the active row follows the caret: move into a heading
+and its row highlights, and clicking a row moves the caret there and scrolls the heading into
+view. Otherwise — a read-only viewer, or an editable view that isn't focused — there is no caret
+to follow, so the active row comes from the scroll position: the last heading at or above the top
+of the scroll container wins. Pass `scrollContainer` when the editor scrolls inside its own
+container instead of the window.
+
+That viewer case — links, checkboxes, and the scroll-driven outline — is spelled out in the
+[read-only guide](/docs/guides/read-only).

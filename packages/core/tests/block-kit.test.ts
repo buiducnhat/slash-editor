@@ -136,3 +136,39 @@ test("the bubble toolbar ships with the kit and can be opted out or reconfigured
 
   expect(toolbar?.options.items).toEqual([]);
 });
+
+test("the document outline ships with the kit and can be opted out or reconfigured", () => {
+  const names = (options?: Parameters<typeof createBlockKit>[0]) =>
+    createBlockKit(options).map((extension) => extension.name);
+
+  expect(names()).toContain("tableOfContents");
+  expect(names({ tableOfContents: false })).not.toContain("tableOfContents");
+
+  const outline = createBlockKit({ tableOfContents: { maxLevel: 2 } }).find(
+    (extension) => extension.name === "tableOfContents",
+  );
+
+  expect(outline?.options.maxLevel).toBe(2);
+});
+
+test("link clicks stay inert while editing and can be made live for a read-only document", () => {
+  const [baseline] = createBlockKit();
+
+  expect(baseline.options.link).toEqual({ openOnClick: false, enableClickSelection: true });
+
+  const [viewer] = createBlockKit({ link: { openOnClick: true } });
+  expect(viewer.options.link).toEqual({ openOnClick: true, enableClickSelection: true });
+
+  const [withoutLink] = createBlockKit({ link: false });
+  expect(withoutLink.options.link).toBe(false);
+});
+
+test("task item options pass through for read-only checkboxes", () => {
+  const onReadOnlyChecked = () => true;
+  const taskItem = createBlockKit({ taskItem: { onReadOnlyChecked } }).find(
+    (extension) => extension.name === "taskItem",
+  );
+
+  expect(taskItem?.options.onReadOnlyChecked).toBe(onReadOnlyChecked);
+  expect(taskItem?.options.nested).toBe(true);
+});

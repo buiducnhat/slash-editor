@@ -5,9 +5,9 @@ import { markdown } from "@slash-editor/core/markdown";
 import type { Editor } from "@tiptap/core";
 import type { WebrtcProvider } from "y-webrtc";
 import { EditorContent, useEditorState } from "@slash-editor/react";
-import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftIcon, FileCodeIcon, UsersIcon } from "lucide-react";
+import { ArrowLeftIcon, EyeIcon, FileCodeIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
@@ -16,6 +16,7 @@ import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
 import { PresenceAvatars } from "@/components/presence-avatars.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
+import { TableOfContents } from "@/components/table-of-contents.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { type DemoCollaboration, createDemoCollaboration } from "@/lib/collaboration.ts";
@@ -78,6 +79,73 @@ const EDITOR_CARD = cn(
   "bg-card border-border rounded-xl border shadow-sm",
   "focus-within:ring-ring/40 focus-within:ring-2",
 );
+
+/**
+ * Read-only switch for the running editor. `setEditable` is per tab rather
+ * than per document, so a room member can flip into a reader's view without
+ * affecting anyone else — see the read-only guide for what stays live.
+ */
+function useReadOnly(editor: Editor | null) {
+  const [readOnly, setReadOnly] = useState(false);
+
+  useEffect(() => {
+    editor?.setEditable(!readOnly);
+  }, [editor, readOnly]);
+
+  return [readOnly, setReadOnly] as const;
+}
+
+function ReadOnlyToggle({
+  readOnly,
+  onChange,
+}: {
+  readOnly: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <Button
+      variant={readOnly ? "secondary" : "outline"}
+      size="sm"
+      aria-pressed={readOnly}
+      onClick={() => onChange(!readOnly)}
+    >
+      <EyeIcon data-icon="inline-start" />
+      Read-only
+    </Button>
+  );
+}
+
+/**
+ * The editor card with its floating surfaces, plus the document rail: outline
+ * above the comment panel. Both playground modes share it, so a solo document
+ * and a room are laid out the same way.
+ *
+ * The rail is sticky — an outline is only worth showing while the document
+ * scrolls past it — and scrolls internally, so a long thread list can't push
+ * the comments out of reach.
+ */
+function EditorWorkspace({ editor, footer }: { editor: Editor | null; footer?: ReactNode }) {
+  return (
+    <div className="flex items-start gap-6">
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <div className={EDITOR_CARD}>
+          <EditorContent editor={editor} />
+          {editor && <SlashMenu editor={editor} />}
+          {editor && <MentionMenu editor={editor} />}
+          {editor && <BlockHandle editor={editor} />}
+          {editor && <BubbleToolbar editor={editor} />}
+          {editor && <LinkEditorPopover editor={editor} />}
+          {editor && <CommentComposer editor={editor} />}
+        </div>
+        {footer}
+      </div>
+      <div className="border-border sticky top-6 flex max-h-[calc(100vh-3rem)] w-64 shrink-0 flex-col gap-6 overflow-y-auto border-l pl-6">
+        {editor && <TableOfContents editor={editor} />}
+        {editor && <CommentPanel editor={editor} className="w-full border-l-0 p-0" />}
+      </div>
+    </div>
+  );
+}
 
 // Declared outside the `as const` object, which would make the list a readonly tuple.
 const EXTENSIONS = [...nodeViewExtensions(), markdown()];
@@ -201,47 +269,41 @@ function SoloEditor() {
       },
     },
   });
+  const [readOnly, setReadOnly] = useReadOnly(editor);
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-5xl">
       <header className="mb-6 flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h1 className="text-lg font-semibold tracking-tight">Playground</h1>
           {editor && <DocumentStats editor={editor} />}
         </div>
         <p className="text-muted-foreground text-sm">
-          A live, editable instance — every block, the slash menu, and inline formatting.
+          {readOnly
+            ? "Read-only — editing surfaces stand down. Links still navigate; to-do checkboxes go inert."
+            : "A live, editable instance — every block, the slash menu, and inline formatting."}
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Button
-            variant={showMarkdown ? "secondary" : "outline"}
-            size="sm"
-            aria-pressed={showMarkdown}
-            onClick={() => setShowMarkdown((shown) => !shown)}
-          >
-            <FileCodeIcon data-icon="inline-start" />
-            Markdown
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showMarkdown ? "secondary" : "outline"}
+              size="sm"
+              aria-pressed={showMarkdown}
+              onClick={() => setShowMarkdown((shown) => !shown)}
+            >
+              <FileCodeIcon data-icon="inline-start" />
+              Markdown
+            </Button>
+            <ReadOnlyToggle readOnly={readOnly} onChange={setReadOnly} />
+          </div>
           <RoomJoinForm className="ml-auto" />
         </div>
       </header>
 
-      <div className={EDITOR_CARD}>
-        <EditorContent editor={editor} />
-        {editor && <SlashMenu editor={editor} />}
-        {editor && <MentionMenu editor={editor} />}
-        {editor && <BlockHandle editor={editor} />}
-        {editor && <BubbleToolbar editor={editor} />}
-        {editor && <LinkEditorPopover editor={editor} />}
-        {editor && <CommentComposer editor={editor} />}
-      </div>
-      {editor && <CommentPanel editor={editor} />}
-
-      {editor && showMarkdown && (
-        <div className="mt-6">
-          <MarkdownPanel editor={editor} />
-        </div>
-      )}
+      <EditorWorkspace
+        editor={editor}
+        footer={editor && showMarkdown ? <MarkdownPanel editor={editor} /> : null}
+      />
     </div>
   );
 }
@@ -284,6 +346,8 @@ function CollabEditor({ room }: { room: string }) {
       },
     },
   });
+  // Per tab, not per document: another member's editor stays editable.
+  const [readOnly, setReadOnly] = useReadOnly(editor);
 
   function handleCopyLink() {
     navigator.clipboard
@@ -299,48 +363,38 @@ function CollabEditor({ room }: { room: string }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl gap-6">
-      <div className="min-w-0 flex-1">
-        <header className="mb-2 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <button
-              type="button"
-              onClick={() => router.push("/playground")}
-              className="text-muted-foreground hover:text-foreground mb-1 inline-flex items-center gap-1 text-xs transition-colors"
-            >
-              <ArrowLeftIcon className="size-3" aria-hidden />
-              Leave room
-            </button>
-            <h1 className="text-lg font-semibold tracking-tight">Room “{room}”</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            {editor && <DocumentStats editor={editor} />}
-            <ConnectionStatusBadge peerCount={peerCount} />
-            <PresenceAvatars provider={collab.provider} />
-          </div>
-        </header>
-
-        {peerCount === 0 ? (
-          <p className="text-muted-foreground mb-4 text-sm">
-            Peer-to-peer over WebRTC — no server involved. Open this link in another tab, or{" "}
-            <button type="button" onClick={handleCopyLink} className="text-primary underline">
-              {copied ? "copied!" : "copy it to share"}
-            </button>
-            , to see live sync.
-          </p>
-        ) : null}
-
-        <div className={EDITOR_CARD}>
-          <EditorContent editor={editor} />
-          {editor && <SlashMenu editor={editor} />}
-          {editor && <MentionMenu editor={editor} />}
-          {editor && <BlockHandle editor={editor} />}
-          {editor && <BubbleToolbar editor={editor} />}
-          {editor && <LinkEditorPopover editor={editor} />}
-          {editor && <CommentComposer editor={editor} />}
+    <div className="mx-auto w-full max-w-5xl">
+      <header className="mb-2 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <button
+            type="button"
+            onClick={() => router.push("/playground")}
+            className="text-muted-foreground hover:text-foreground mb-1 inline-flex items-center gap-1 text-xs transition-colors"
+          >
+            <ArrowLeftIcon className="size-3" aria-hidden />
+            Leave room
+          </button>
+          <h1 className="text-lg font-semibold tracking-tight">Room “{room}”</h1>
         </div>
-      </div>
-      {editor && <CommentPanel editor={editor} />}
+        <div className="flex items-center gap-3">
+          {editor && <DocumentStats editor={editor} />}
+          <ReadOnlyToggle readOnly={readOnly} onChange={setReadOnly} />
+          <ConnectionStatusBadge peerCount={peerCount} />
+          <PresenceAvatars provider={collab.provider} />
+        </div>
+      </header>
+
+      {peerCount === 0 ? (
+        <p className="text-muted-foreground mb-4 text-sm">
+          Peer-to-peer over WebRTC — no server involved. Open this link in another tab, or{" "}
+          <button type="button" onClick={handleCopyLink} className="text-primary underline">
+            {copied ? "copied!" : "copy it to share"}
+          </button>
+          , to see live sync.
+        </p>
+      ) : null}
+
+      <EditorWorkspace editor={editor} />
     </div>
   );
 }

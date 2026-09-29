@@ -21,3 +21,5 @@ export const CommentPanelDemo = load("CommentPanelDemo");
 export const PresenceAvatarsDemo = load("PresenceAvatarsDemo");
 export const NodeViewsDemo = load("NodeViewsDemo");
 export const MermaidDemo = load("MermaidDemo");
+export const TableOfContentsDemo = load("TableOfContentsDemo");
+export const ReadOnlyDemo = load("ReadOnlyDemo");

@@ -19,6 +19,11 @@ export {
 } from "./use-bubble-toolbar.ts";
 export { type CommentComposer, type Comments, useComments } from "./use-comments.ts";
 export { type LinkEditor, type LinkEditorAnchor, useLinkEditor } from "./use-link-editor.ts";
+export {
+  type TableOfContents,
+  type UseTableOfContentsOptions,
+  useTableOfContents,
+} from "./use-table-of-contents.ts";
 export { type MentionMenu, type MentionMenuAnchor, useMention } from "./use-mention.ts";
 export { type PresencePeer, type PresenceProvider, usePresence } from "./use-presence.ts";
 export { type SlashMenu, type SlashMenuAnchor, useSlashMenu } from "./use-slash-menu.ts";

@@ -17,3 +17,7 @@ import { BlockHandleDemo } from "~/components/demo/registry-demos.preview.tsx";
 
 This component renders icon-only buttons and needs a `TooltipProvider` ancestor (`delay={400}`
 is what the playground itself uses).
+
+It renders nothing while the editor is read-only: the gutter only ever inserts, reorders, or
+deletes blocks, so it stands down with the document instead of offering actions that would have
+to be rejected.

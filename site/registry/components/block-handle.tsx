@@ -1,5 +1,5 @@
 import { defaultBlockTypes, type BlockTarget } from "@slash-editor/core";
-import { useAiActions, useBlockDrag } from "@slash-editor/react";
+import { useAiActions, useBlockDrag, useEditorState } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import {
   ClipboardPasteIcon,
@@ -31,10 +31,19 @@ const GUTTER_OFFSET = 72;
 export function BlockHandle({ editor }: { editor: Editor }) {
   const drag = useBlockDrag(editor);
   const ai = useAiActions(editor, "block");
+  // Every affordance here mutates the document — insert, reorder, duplicate,
+  // delete — so the gutter stands down with it. A host that flips
+  // `setEditable` at runtime (the playground's read-only switch) gets that for
+  // free instead of having to unmount this itself.
+  const editable = useEditorState({
+    editor,
+    selector: ({ editor: instance }) => instance.isEditable,
+  });
   const gripRef = useRef<HTMLButtonElement>(null);
   const gripOffsetRef = useRef<DOMRect | null>(null);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const [, rerender] = useReducer((count: number) => count + 1, 0);
+
   if (drag.menuTarget && drag.menuAnchor && gripRef.current && !gripOffsetRef.current) {
     const grip = gripRef.current.getBoundingClientRect();
     const row = drag.menuAnchor.getBoundingClientRect();
@@ -53,6 +62,12 @@ export function BlockHandle({ editor }: { editor: Editor }) {
     document.addEventListener("scroll", rerender, { capture: true, passive: true });
     return () => document.removeEventListener("scroll", rerender, { capture: true });
   }, [drag.menuTarget]);
+
+  // After every hook, never before one: an early return between them renders a
+  // different number of hooks in read-only mode than in edit mode.
+  if (!editable) {
+    return null;
+  }
 
   const activeAnchor = drag.menuTarget ? drag.menuAnchor : drag.hoverAnchor;
   const activeRect =
