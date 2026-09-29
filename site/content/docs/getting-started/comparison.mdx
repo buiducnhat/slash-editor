@@ -1,0 +1,39 @@
+---
+title: Comparison
+description: How slash-editor relates to Tiptap, BlockNote, Novel, and Plate — licensing, UI delivery, engine, and features.
+---
+
+Every editor here is good software; the right pick depends on the engine you want, how you want
+UI delivered, and which features you need under an open-source license. Facts below were checked
+against each project's pricing page, LICENSE, and npm registry on 2026-09-29 — verify before
+relying on them, since pricing and packaging change.
+
+|                              | slash-editor                          | Tiptap                                                           | BlockNote                                                              | Novel                   | Plate                                     |
+| ---------------------------- | ------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------- | ----------------------------------------- |
+| Engine                       | Tiptap v3 / ProseMirror               | ProseMirror                                                      | Tiptap v3 / ProseMirror                                                | Tiptap v2 / ProseMirror | Slate                                     |
+| Core license                 | MIT                                   | MIT                                                              | MPL-2.0                                                                | Apache-2.0              | MIT                                       |
+| Commercially licensed pieces | None                                  | Platform plans (cloud collab, comments, Notion-like template, …) | `@blocknote/xl-*` (AI, multi-column, exporters): GPL-3.0 or commercial | None                    | Plate Plus (premium components/templates) |
+| UI delivery                  | shadcn registry (source in your repo) | Source copied by `@tiptap/cli`                                   | Styled npm packages (Mantine, shadcn, Ariakit)                         | npm package             | shadcn registry                           |
+| Document format              | Plain Tiptap JSON                     | Tiptap JSON                                                      | BlockNote block JSON                                                   | Tiptap JSON             | Slate JSON                                |
+| Real-time collab (Yjs)       | Yes, bring your own provider          | Yes (OSS extension); cloud on paid plans                         | Yes                                                                    | No                      | Yes                                       |
+| Comments                     | Yes, bring your own thread store      | Paid plans                                                       | Yes                                                                    | No                      | Yes (extra UI in Plate Plus)              |
+| AI                           | Stream adapter, bring your own model  | Paid plans / add-on                                              | `xl-ai` (GPL-3.0 or commercial)                                        | Autocomplete            | Yes (extra UI in Plate Plus)              |
+| Mermaid diagrams             | Yes                                   | No official extension                                            | `@blocknote/diagram-block`                                             | No                      | Yes (`code-drawing`)                      |
+
+## When slash-editor fits
+
+- You want Notion-style block UX on **Tiptap/ProseMirror**, with any Tiptap extension still
+  working because the document stays plain Tiptap JSON.
+- You want the rendered UI as **source in your repo**, styled by your shadcn tokens.
+- You need collaboration, comments, and AI **without a commercial license or hosted service** —
+  each backend piece is an adapter you implement.
+
+## When something else may fit better
+
+- **Vue or other frameworks today:** Tiptap supports them directly; slash-editor's UI and hooks
+  are React-only (the core has no React dependency).
+- **You prefer Slate:** Plate is MIT, mature, and also ships a shadcn registry.
+- **You want batteries-included styled components** and a larger community: BlockNote.
+- **A hosted collaboration/AI backend** you don't run yourself: Tiptap's platform.
+
+Coming from another editor? See [Migrating](/docs/guides/migrating).

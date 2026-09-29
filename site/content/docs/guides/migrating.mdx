@@ -1,0 +1,83 @@
+---
+title: Migrating
+description: Moving existing content and editor setup from Tiptap, Novel, BlockNote, or Plate.
+---
+
+slash-editor stores documents as plain Tiptap/ProseMirror JSON. How you migrate depends on the
+format your existing editor saves in.
+
+| Coming from | Content path                         | Effort |
+| ----------- | ------------------------------------ | ------ |
+| Tiptap      | Load the same JSON                   | Low    |
+| Novel       | Load the same JSON (Tiptap v2 → v3)  | Low    |
+| BlockNote   | Export Markdown or HTML, then import | Medium |
+| Plate       | Serialize to Markdown, then import   | Medium |
+
+## Install
+
+Follow [Installation](/docs/getting-started/installation), then add the UI kit:
+
+```bash
+bunx --bun shadcn@latest add @slash-editor/slash-editor-kit
+```
+
+## From Tiptap or Novel
+
+Both save Tiptap JSON. Pass stored documents in as they are:
+
+```tsx
+const editor = useSlashEditor({ content: storedJson });
+```
+
+`createBlockKit()` already includes StarterKit. Move any extension you added on top of it into
+`extend`, so it registers last and wins keymap conflicts:
+
+```tsx
+useSlashEditor({
+  blockKit: { extend: [MyExtension] },
+});
+```
+
+Node types that exist in your old schema but not in slash-editor's will not load. Run one
+document per type through `useSlashEditor` in development and look for dropped content. Then
+either add an extension for each missing type through `extend`, or rewrite those nodes in a
+one-off script. Novel runs on Tiptap v2, so also check the
+[Tiptap v3 upgrade guide](https://tiptap.dev/docs/guides/upgrade-tiptap-v2) for any extensions
+you carry over.
+
+Block ids are assigned on first load and do not change after that. Persist the document once
+after loading so every block keeps a stable id, which comments and collaboration depend on.
+
+## From BlockNote
+
+BlockNote uses its own block JSON. Convert it with BlockNote's exporters, then import the result
+with the [markdown extension](/docs/guides/markdown):
+
+```ts
+// In your BlockNote app (or a one-off script)
+const md = await blockNoteEditor.blocksToMarkdownLossy(blockNoteEditor.document);
+```
+
+```ts
+// Server-side, no editor or DOM needed
+import { createBlockKit } from "@slash-editor/core";
+import { parseMarkdown } from "@slash-editor/core/markdown";
+
+const json = parseMarkdown(md, createBlockKit());
+```
+
+For content Markdown can't express, such as colors or alignment, export HTML with
+`blocksToHTMLLossy` and load it with `editor.commands.setContent(html)`.
+
+## From Plate
+
+Serialize with `@platejs/markdown`, then import the output with `parseMarkdown` as shown for
+BlockNote. Only ` ```mermaid ` fences come back in as diagrams, so check how your Plate setup
+serializes code-drawing blocks.
+
+## UI
+
+Your old toolbar and menu components don't carry over. Replace them with the registry items
+([slash menu](/docs/components/slash-menu), [bubble toolbar](/docs/components/bubble-toolbar),
+[block handle](/docs/components/block-handle)). The source lands in your repo, so you can
+restyle it with your existing tokens.

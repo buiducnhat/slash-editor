@@ -4,10 +4,10 @@
 
 # slash-editor
 
-🏗️ **slash-editor** — Notion-style block editor for React.
+🏗️ **slash-editor** — Notion-style block editor for React. MIT end to end, UI you own.
 
-A headless core on Tiptap/ProseMirror, React bindings, and shadcn/Tailwind UI you own.
-MIT top to bottom — no paid tier, no hosted dependency.
+A headless core on Tiptap v3/ProseMirror, React hooks, and a shadcn registry that copies the
+rendered UI into your repo. No paid tier, no hosted dependency.
 
 [**slasheditor.dev**](https://slasheditor.dev) · [Documentation](https://slasheditor.dev/docs) · [Playground](https://slasheditor.dev/playground)
 [![CI](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml)
@@ -22,6 +22,33 @@ MIT top to bottom — no paid tier, no hosted dependency.
   </a>
 </p>
 
+## Features
+
+- **Block UX:** slash menu, drag handle with live preview, nested reorder, block menu (turn into, duplicate, delete)
+- **Blocks:** headings, lists, task lists, toggles, callouts, quotes, columns, tables, Mermaid diagrams
+- **Media:** image, video, file, embed, with an upload adapter for your own storage
+- **Collaboration:** Yjs (Hocuspocus, y-websocket, or WebRTC), presence avatars, block-anchored comments
+- **AI:** slash, selection, and block actions through a stream adapter (bring your own model)
+- **Documents:** table of contents, read-only mode, markdown import/export and shortcuts
+- **Ownership:** behavior updates via npm, markup lives in your repo via `shadcn add`
+
+## Try it
+
+- [Playground](https://slasheditor.dev/playground) — add `?collab=<room>` and open two tabs
+- [Next.js starter](examples/nextjs-starter) — [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuiducnhat%2Fslash-editor%2Ftree%2Fmain%2Fexamples%2Fnextjs-starter&project-name=slash-editor-starter&repository-name=slash-editor-starter)
+
+## How it compares
+
+|                             | slash-editor    | Tiptap         | BlockNote       | Novel       | Plate           |
+| --------------------------- | --------------- | -------------- | --------------- | ----------- | --------------- |
+| Engine                      | Tiptap v3       | ProseMirror    | Tiptap v3       | Tiptap v2   | Slate           |
+| Core license                | MIT             | MIT            | MPL-2.0         | Apache-2.0  | MIT             |
+| Commercially licensed parts | None            | Platform plans | `xl-*` packages | None        | Plate Plus      |
+| UI delivery                 | shadcn registry | CLI copy-in    | npm packages    | npm package | shadcn registry |
+| Collab / comments           | ✅ / ✅         | ✅ / paid      | ✅ / ✅         | ❌ / ❌     | ✅ / ✅         |
+
+Details, sources, and when another editor fits better: [slasheditor.dev/docs/getting-started/comparison](https://slasheditor.dev/docs/getting-started/comparison).
+
 ## Workspace
 
 | Path                               | Package               | Role                                                      |
@@ -29,12 +56,7 @@ MIT top to bottom — no paid tier, no hosted dependency.
 | [`packages/core`](packages/core)   | `@slash-editor/core`  | Extensions, schema, commands. No React, no CSS.           |
 | [`packages/react`](packages/react) | `@slash-editor/react` | Hooks and headless primitives over `@tiptap/react`.       |
 | [`site`](site)                     | —                     | Playground, docs, landing page, and shadcn registry host. |
-
-## Status
-
-M0–M7 complete — slash menu, block ids, drag handle, media/upload, mentions/AI, real-time
-collaboration, distribution (npm packages, shadcn registry), and a single Fumadocs/Next.js app.
-Full breakdown: [`docs/project-pdr/milestones.md`](docs/project-pdr/milestones.md).
+| [`examples`](examples)             | —                     | Standalone starters consuming the published packages.     |
 
 ## Quick start
 
@@ -45,7 +67,8 @@ bun add @slash-editor/core @slash-editor/react
 `@tiptap/core`, `@tiptap/pm`, and `@tiptap/react` are peer dependencies.
 
 ```tsx
-import { EditorContent, useSlashEditor, useSlashMenu } from "@slash-editor/react";
+import { EditorContent, useSlashEditor } from "@slash-editor/react";
+import { SlashMenu } from "@/components/slash-menu"; // from the registry, see below
 
 export function Editor() {
   const editor = useSlashEditor({
