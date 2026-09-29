@@ -92,9 +92,9 @@ site/                          the one app: playground, docs site, landing page,
   server/collab-server.ts      Hocuspocus self-host recipe: Hocuspocus class bridged to Bun.serve via crossws
   server/tsconfig.json         Bun types scope, separate from the app's own tsconfig
   app/layout.tsx                RootProvider + TooltipProvider (registry components need a Tooltip ancestor)
-  app/globals.css               Tailwind v4 entry: fumadocs preset, then `registry/theme.css` + `registry/slash-content.css`
+  app/globals.css               Tailwind v4 entry: fumadocs preset, then `registry/theme.css` + `registry/slash-content.css` + `components/magicui/magicui.css`
   app/(home)/layout.tsx         HomeLayout (shared nav: Docs/Playground/GitHub, search, theme toggle) for landing + playground
-  app/(home)/page.tsx           landing page: hero with a live `SlashMenuDemo`, feature grid, install snippet
+  app/(home)/page.tsx           landing page: hero + stats, live `PlaygroundDemo`, bento features, registry marquee, install terminal
   app/(home)/playground/page.tsx  the playground route: solo editor, or `?collab=<room>` via `RoomJoinForm`
   app/docs/layout.tsx           DocsLayout: sidebar/TOC from `lib/source.ts`'s page tree
   app/docs/[[...slug]]/page.tsx MDX page renderer
@@ -109,7 +109,10 @@ site/                          the one app: playground, docs site, landing page,
   components/playground/playground-editor.tsx  EditorWorkspace + SoloEditor / CollabEditor: editor card, sticky outline/comment rail, read-only toggle
   components/playground/markdown-panel.tsx     solo editor's "Markdown" panel: live `getMarkdown()`, edit + apply, import/download `.md`
   components/playground/playground-editor.preview.tsx  `ssr: false` wrapper — same DOM-globals constraint as the demo previews
-  components/landing/feature-grid.tsx         landing page feature cards
+  components/landing/feature-bento.tsx         landing page bento feature grid (cards, chip marquees)
+  components/landing/registry-marquee.tsx      landing page registry item catalog (two marquee rows)
+  components/magicui/*.tsx                     vendored MagicUI components (site chrome only, never registry source)
+  components/magicui/magicui.css               keyframes + `--animate-*` tokens those components need
   content/docs/**/*.mdx         getting-started/, components/ (one per registry item + the kit), guides/, api/
   playwright.config.ts          testDir tests/e2e, webServer runs `bun run dev` + `collab:server`
   tests/e2e/support.ts          dragBlock(), pasteHtml(), focusTrailingParagraph() helpers
