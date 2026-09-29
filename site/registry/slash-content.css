@@ -36,6 +36,11 @@
     @apply my-0;
   }
 
+  .slash-content li[data-type="taskItem"] p,
+  .slash-content li[data-block-type="taskItem"] p {
+    @apply !my-0;
+  }
+
   .slash-content blockquote {
     @apply border-border text-muted-foreground border-l-2 pl-4 italic;
   }

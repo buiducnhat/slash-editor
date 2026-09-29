@@ -57,6 +57,7 @@ const INITIAL_CONTENT = `
     B -->|no| D[Rendered diagram]</code></pre>
 <h2>Media &amp; structure</h2>
 <p>Type <code>/image</code>, <code>/file</code>, or <code>/video</code> for an upload placeholder with retry on failure.</p>
+<div data-type="image" data-src="/logo.png" data-status="ready"><img src="/logo.png" alt="Logo" /></div>
 <a data-type="embed" data-mode="bookmark" href="https://tiptap.dev" data-title="Tiptap" data-description="The headless editor framework this project builds on.">Tiptap</a>
 <div data-type="columns">
   <div data-type="column"><p>Columns are a container node: side-by-side content that still nests through the same drag/drop rules as lists.</p></div>
@@ -151,11 +152,11 @@ function EditorWorkspace({ editor, footer }: { editor: Editor | null; footer?: R
 const EXTENSIONS = [...nodeViewExtensions(), markdown()];
 
 const BLOCK_KIT_DEFAULTS = {
-  image: false,
-  file: false,
-  video: false,
-  embed: false,
-  mermaid: false,
+  image: {},
+  file: {},
+  video: {},
+  embed: {},
+  mermaid: {},
   ai: { adapter: mockStreamAdapter, node: false },
   mention: {
     items: (query: string, { signal }: { signal: AbortSignal }) =>

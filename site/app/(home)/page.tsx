@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRightIcon, ExternalLinkIcon } from "lucide-react";
 import { FeatureGrid } from "~/components/landing/feature-grid.tsx";
 import { InstallCommand } from "~/components/registry/install-command.tsx";
-import { SlashMenuDemo } from "~/components/demo/registry-demos.preview.tsx";
+import { PlaygroundDemo } from "~/components/demo/playground-demo.preview.tsx";
 
 export default function HomePage() {
   return (
@@ -47,7 +47,7 @@ export default function HomePage() {
           Type <code>/</code> on an empty line — this is the real registry component, not a
           screenshot.
         </p>
-        <SlashMenuDemo />
+        <PlaygroundDemo />
       </section>
 
       <section className="flex flex-col gap-6">

@@ -52,6 +52,7 @@
     "@types/ws": "^8.18.1",
     "crossws": "^0.4.12",
     "fumadocs-typescript": "^5.4.1",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
