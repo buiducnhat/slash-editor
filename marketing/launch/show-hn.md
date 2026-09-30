@@ -66,8 +66,8 @@ It's 0.5, so I'd really value feedback on the API shape before 1.0.
   frameworks are open for contributors.
 - **"Bus factor / is this maintained?"** It's a solo project for now. Changelog and release
   cadence are public, CI runs unit and Playwright suites, and I'm looking for co-maintainers.
-- **"Mobile?"** [Test on iOS/Android before launch and answer honestly.]
-- **"Performance on large docs?"** [Measure a ~5k-block doc before launch and quote the numbers.]
+- **"Mobile?"** Still in progress. Right now it works best in desktop browsers.
+- **"Performance on large docs?"** I'll benchmark it and publish the results soon.
 
 ## Don'ts
 

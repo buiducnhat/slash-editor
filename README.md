@@ -1,20 +1,34 @@
 <p align="center">
-  <img src=".github/assets/logo.png" alt="slash-editor" width="88" height="88">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/logo-white.png">
+    <img src=".github/assets/logo.png" alt="slash-editor" width="88" height="88">
+  </picture>
 </p>
 
-# slash-editor
+<h1 align="center">slash-editor</h1>
 
-🏗️ **slash-editor** — Notion-style block editor for React. MIT end to end, UI you own.
+<p align="center">
+  <strong>Notion-style block editor for React.</strong> MIT end to end, UI you own.
+</p>
 
-A headless core on Tiptap v3/ProseMirror, React hooks, and a shadcn registry that copies the
-rendered UI into your repo. No paid tier, no hosted dependency.
+<p align="center">
+  A headless core on Tiptap v3/ProseMirror, React hooks, and a shadcn registry that copies the
+  rendered UI into your repo. No paid tier, no hosted dependency.
+</p>
 
-[**slasheditor.dev**](https://slasheditor.dev) · [Documentation](https://slasheditor.dev/docs) · [Playground](https://slasheditor.dev/playground)
-[![CI](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@slash-editor/core?label=%40slash-editor%2Fcore)](https://www.npmjs.com/package/@slash-editor/core)
-[![npm version](https://img.shields.io/npm/v/@slash-editor/react?label=%40slash-editor%2Freact)](https://www.npmjs.com/package/@slash-editor/react)
-[![License: MIT](https://img.shields.io/npm/l/@slash-editor/core)](#license)
-[![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)](https://www.typescriptlang.org/)
+<p align="center">
+  <a href="https://slasheditor.dev"><strong>slasheditor.dev</strong></a> ·
+  <a href="https://slasheditor.dev/docs">Documentation</a> ·
+  <a href="https://slasheditor.dev/playground">Playground</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml"><img src="https://github.com/buiducnhat/slash-editor/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/@slash-editor/core"><img src="https://img.shields.io/npm/v/@slash-editor/core?label=%40slash-editor%2Fcore" alt="@slash-editor/core version"></a>
+  <a href="https://www.npmjs.com/package/@slash-editor/react"><img src="https://img.shields.io/npm/v/@slash-editor/react?label=%40slash-editor%2Freact" alt="@slash-editor/react version"></a>
+  <a href="#license"><img src="https://img.shields.io/npm/l/@slash-editor/core" alt="License: MIT"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-7-blue" alt="TypeScript 7"></a>
+</p>
 
 <p align="center">
   <a href=".github/assets/demo.mp4">
@@ -34,8 +48,10 @@ rendered UI into your repo. No paid tier, no hosted dependency.
 
 ## Try it
 
-- [Playground](https://slasheditor.dev/playground) — add `?collab=<room>` and open two tabs
-- [Next.js starter](examples/nextjs-starter) — [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuiducnhat%2Fslash-editor%2Ftree%2Fmain%2Fexamples%2Fnextjs-starter&project-name=slash-editor-starter&repository-name=slash-editor-starter)
+- [Playground](https://slasheditor.dev/playground): add `?collab=<room>` and open it in two tabs.
+- [Next.js starter](examples/nextjs-starter): clone it, or deploy your own copy in one click.
+
+  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuiducnhat%2Fslash-editor%2Ftree%2Fmain%2Fexamples%2Fnextjs-starter&project-name=slash-editor-starter&repository-name=slash-editor-starter"><img src="https://vercel.com/button" alt="Deploy with Vercel" height="32"></a>
 
 ## How it compares
 

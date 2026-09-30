@@ -6,7 +6,9 @@ export const alt = "slash-editor — Notion-style block editor for React";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const logoData = await readFile(join(process.cwd(), "public/logo.png"));
+// White variant of public/logo.png: the original mark is near-black (#262223) on transparent,
+// which disappears against the #09090b card.
+const logoData = await readFile(join(process.cwd(), "public/logo-white.png"));
 const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
 
 export default function Image() {
@@ -51,16 +53,21 @@ export default function Image() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <img
-            src={logoSrc}
-            width={64}
-            height={64}
+          <div
             style={{
-              borderRadius: 16,
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              background: "#18181b",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 72,
+              height: 72,
+              borderRadius: 18,
+              background: "linear-gradient(145deg, #27272a 0%, #18181b 100%)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              boxShadow: "0 0 40px rgba(120, 119, 198, 0.35)",
             }}
-          />
+          >
+            <img src={logoSrc} width={52} height={52} />
+          </div>
           <span
             style={{
               fontSize: 32,
