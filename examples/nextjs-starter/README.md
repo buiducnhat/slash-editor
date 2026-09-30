@@ -32,7 +32,6 @@ Open http://localhost:3000 and type `/` on an empty line.
 | Path                             | Purpose                                                                                             |
 | -------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `components/editor.tsx`          | The editor: `useSlashEditor` options, sample content, and every kit surface                         |
-| `components/editor-client.tsx`   | Client-only boundary (`next/dynamic` with `ssr: false`), since the editor needs browser DOM globals |
 | `components/*`, `components/ui/*` | UI installed from the `@slash-editor` shadcn registry                                               |
 | `lib/*-adapter.ts`, `lib/mention-provider.ts`, `lib/comment-store.ts` | In-memory mocks for uploads, AI streaming, mentions, and comments                                   |
 | `app/globals.css`, `app/slash-content.css` | Design tokens and `.slash-content` editor styles                                           |
