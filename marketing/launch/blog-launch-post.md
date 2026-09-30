@@ -1,9 +1,9 @@
 ---
 title: "Why I built a fully MIT, Notion-style block editor for React"
 description: "slash-editor: headless core on Tiptap v3, React hooks, and a shadcn registry for the UI. No paid tier."
-canonical_url: https://slasheditor.dev/blog/launch
 tags: react, opensource, tiptap, shadcn
-cover_image: marketing/media/og-twitter.png
+cover_image: https://raw.githubusercontent.com/buiducnhat/slash-editor/main/marketing/media/og-twitter.png
+published: false
 ---
 
 # Why I built a fully MIT, Notion-style block editor for React
