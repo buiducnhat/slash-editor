@@ -31,6 +31,15 @@
 </p>
 
 <p align="center">
+  <a href="https://www.producthunt.com/products/slash-editor?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-slash-editor">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1265755&theme=dark">
+      <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1265755&theme=light" alt="slash-editor - Notion-style block editor for React. MIT, UI you own | Product Hunt" width="250" height="54">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
   <a href=".github/assets/demo.mp4">
     <img src=".github/assets/demo.gif" alt="slash-editor demo" width="100%">
   </a>
