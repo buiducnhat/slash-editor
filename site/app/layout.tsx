@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 const SITE_URL = "https://slasheditor.dev";
 const DESCRIPTION =
@@ -91,6 +92,7 @@ export default function Layout({ children }: LayoutProps<"/">) {
         <RootProvider>
           <TooltipProvider delay={400}>{children}</TooltipProvider>
         </RootProvider>
+        <Analytics />
       </body>
     </html>
   );
