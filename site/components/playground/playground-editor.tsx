@@ -7,7 +7,7 @@ import type { WebrtcProvider } from "y-webrtc";
 import { EditorContent, useEditorState } from "@slash-editor/react";
 import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftIcon, EyeIcon, FileCodeIcon, UsersIcon } from "lucide-react";
+import { ArrowLeftIcon, CheckIcon, CopyIcon, EyeIcon, FileCodeIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
@@ -257,6 +257,8 @@ function RoomJoinForm({ className }: { className?: string } = {}) {
 
 function SoloEditor() {
   const [showMarkdown, setShowMarkdown] = useState(false);
+  const [copiedMarkdown, setCopiedMarkdown] = useState(false);
+  const [copiedJson, setCopiedJson] = useState(false);
   const storeRef = useRef<CommentThreadStore | null>(null);
   storeRef.current ??= createMockCommentThreadStore();
   const store = storeRef.current;
@@ -272,6 +274,28 @@ function SoloEditor() {
   });
   const [readOnly, setReadOnly] = useReadOnly(editor);
 
+  function handleCopyMarkdown() {
+    if (!editor) return;
+    navigator.clipboard
+      .writeText(editor.getMarkdown())
+      .then(() => {
+        setCopiedMarkdown(true);
+        setTimeout(() => setCopiedMarkdown(false), 2000);
+      })
+      .catch(() => {});
+  }
+
+  function handleCopyJson() {
+    if (!editor) return;
+    navigator.clipboard
+      .writeText(JSON.stringify(editor.getJSON(), null, 2))
+      .then(() => {
+        setCopiedJson(true);
+        setTimeout(() => setCopiedJson(false), 2000);
+      })
+      .catch(() => {});
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl">
       <header className="mb-6 flex flex-col gap-3">
@@ -285,7 +309,7 @@ function SoloEditor() {
             : "A live, editable instance — every block, the slash menu, and inline formatting."}
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant={showMarkdown ? "secondary" : "outline"}
               size="sm"
@@ -294,6 +318,32 @@ function SoloEditor() {
             >
               <FileCodeIcon data-icon="inline-start" />
               Markdown
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!editor}
+              onClick={handleCopyMarkdown}
+            >
+              {copiedMarkdown ? (
+                <CheckIcon data-icon="inline-start" />
+              ) : (
+                <CopyIcon data-icon="inline-start" />
+              )}
+              {copiedMarkdown ? "Copied markdown" : "Copy as markdown"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!editor}
+              onClick={handleCopyJson}
+            >
+              {copiedJson ? (
+                <CheckIcon data-icon="inline-start" />
+              ) : (
+                <CopyIcon data-icon="inline-start" />
+              )}
+              {copiedJson ? "Copied JSON" : "Copy JSON"}
             </Button>
             <ReadOnlyToggle readOnly={readOnly} onChange={setReadOnly} />
           </div>
