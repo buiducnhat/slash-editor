@@ -62,6 +62,8 @@
 
   <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuiducnhat%2Fslash-editor%2Ftree%2Fmain%2Fexamples%2Fnextjs-starter&project-name=slash-editor-starter&repository-name=slash-editor-starter"><img src="https://vercel.com/button" alt="Deploy with Vercel" height="32"></a>
 
+- [Vite + React starter](examples/vite-react): a lightweight Vite setup using React, Tailwind CSS v4, and the full editor kit.
+
 ## How it compares
 
 |                             | slash-editor    | Tiptap         | BlockNote       | Novel       | Plate           |
