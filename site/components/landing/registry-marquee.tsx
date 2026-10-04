@@ -36,7 +36,7 @@ export function RegistryMarquee() {
     <section className="flex flex-col gap-6">
       <div className="text-center">
         <h2 className="text-2xl font-semibold tracking-tight">
-          Fifteen registry items. Take the kit — or take one.
+          Sixteen registry items. Take the kit — or take one.
         </h2>
         <p className="text-fd-muted-foreground mx-auto mt-2 max-w-2xl">
           Every item is a standalone registry entry.{" "}
