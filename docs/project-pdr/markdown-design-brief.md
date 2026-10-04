@@ -82,6 +82,9 @@ markers carry no payload.
   and every marker are recognized by custom `marked` tokenizers, never by the HTML fallback.
 - A marker whose JSON is malformed, or that no node claims, is swallowed by a catch-all tokenizer;
   the block after it parses as plain markdown. Import never throws on user input.
+- A line opening with an inline marker (a mention or page link starting a paragraph) is paragraph
+  content, not a CommonMark HTML block: the manager disables `marked`'s HTML rule for marker-led
+  lines, and the block catch-all only takes a line holding a single marker.
 - An unclosed `<details>` or columns marker makes its tokenizer decline; the text falls back to
   literal content. Lines inside fenced code never count towards nesting.
 - An image inside running text (a README badge) keeps its alt text only: the schema's `image` is a

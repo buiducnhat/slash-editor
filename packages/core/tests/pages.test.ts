@@ -153,6 +153,20 @@ test("markdown writes a titled link around the page id and reads only the id bac
   expect(collectPageRefs(parseMarkdown(markdown, kit))).toEqual({ subPages: ["a"], links: ["b"] });
 });
 
+test("a page link opening or filling a paragraph survives a markdown round trip", () => {
+  const link: JSONContent = { type: "pageLink", attrs: { pageId: "b" } };
+  const input = doc(
+    para(link, { type: "text", text: " starts" }),
+    para({ type: "text", text: "ends " }, link),
+    para(link),
+  );
+  const markdown = serializeMarkdown(input, kit);
+  const parsed = schema.nodeFromJSON(parseMarkdown(markdown, kit));
+
+  expect(parsed.toJSON()).toEqual(schema.nodeFromJSON(input).toJSON());
+  expect(serializeMarkdown(parsed.toJSON(), kit)).toBe(markdown);
+});
+
 test("a hand-written link without markers stays a plain link", () => {
   const parsed = parseMarkdown("[Roadmap](/p/a)", kit);
 

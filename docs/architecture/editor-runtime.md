@@ -186,7 +186,10 @@ Three constraints shape it:
 - **No DOM on import.** Without `window.DOMParser`, `MarkdownManager` turns raw HTML into literal
   text, so `<details>` and every `<!-- slash:… -->` marker are read by a tokenizer, never by the
   HTML fallback. A catch-all tokenizer (registered first, so `marked` tries it last) swallows any
-  marker no node claimed, leaving the block after it as plain markdown.
+  marker no node claimed, leaving the block after it as plain markdown. It takes only a line
+  holding a single marker — the shape of every block marker; a line with more after its marker (a
+  paragraph opening with a mention or page link) is inline content, so the manager also turns off
+  `marked`'s HTML-block rule for marker-led lines and lets them lex as (or continue) a paragraph.
 - **Separators outlive empty renders.** A container joins children with `\n\n` even when one
   renders `""`, and the extra blank lines re-import as an empty paragraph. Nodes with nothing
   durable to write (`aiBlock`, an upload without a URL) declare `excludeFromMarkdown` and are
