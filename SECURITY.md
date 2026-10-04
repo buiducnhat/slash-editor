@@ -7,7 +7,7 @@ We appreciate your help in keeping users safe.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Send details to: **nhat@buiducnhat.com**
+Send details to: **nhaths4701@gmail.com**
 
 Include a description of the vulnerability, steps to reproduce, and any potential impact.
 We will acknowledge receipt within 48 hours and provide updates as we investigate.
