@@ -87,7 +87,10 @@ const vi: SlashEditorMessages = {
   },
 };
 
-const editor = useSlashEditor({ blockKit: { messages: vi } });
+export function MyEditor() {
+  const editor = useSlashEditor({ blockKit: { messages: vi } });
+  // ...render <EditorContent editor={editor} />
+}
 ```
 
 An id that does not exist is ignored, so one translation object can be shared across editors

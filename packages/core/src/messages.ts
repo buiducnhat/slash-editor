@@ -53,7 +53,7 @@ interface LocalizableItem {
  */
 export function localizeItems<T extends LocalizableItem>(
   items: T[],
-  messages: SlashEditorMessages | undefined,
+  messages?: SlashEditorMessages,
 ): T[] {
   if (!messages?.items && !messages?.groups) {
     return items;
@@ -81,7 +81,7 @@ export function localizeItems<T extends LocalizableItem>(
 /** Applies `blockMenu` title overrides. */
 export function localizeBlockMenuItems(
   items: BlockMenuItem[],
-  messages: SlashEditorMessages | undefined,
+  messages?: SlashEditorMessages,
 ): BlockMenuItem[] {
   const titles = messages?.blockMenu;
 
@@ -98,7 +98,7 @@ export function localizeBlockMenuItems(
 /** Applies `bubbleToolbar` label overrides. */
 export function localizeBubbleToolbarItems(
   items: BubbleToolbarItem[],
-  messages: SlashEditorMessages | undefined,
+  messages?: SlashEditorMessages,
 ): BubbleToolbarItem[] {
   const labels = messages?.bubbleToolbar;
 
