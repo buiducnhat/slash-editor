@@ -633,8 +633,9 @@ interface CommentOptions {
   HTMLAttributes: Record<string, unknown>;
 }
 // editor.commands.setComment(threadId) / unsetComment(threadId) / toggleComment(threadId)
-// unsetComment removes only that threadId's mark instances from the selection — ProseMirror's
-// built-in unsetMark would strip every distinct thread anchored there.
+// unsetComment removes every mark instance of that threadId across the whole document (any
+// selection; one undo step) — ProseMirror's built-in unsetMark would strip every distinct thread.
+// toggleComment therefore removes the whole thread when the selection touches it.
 // attrs: threadId (only) — mark type has excludes: "" so distinct threads can overlap.
 
 interface CommentState {
@@ -647,6 +648,8 @@ interface CommentStorage {
 }
 // Pure, DOM-free — testable against a bare EditorState:
 function activeThreadIds(state: EditorState): string[];
+// what unsetComment runs, with state.schema.marks[extension name] (survives .extend({ name })):
+function removeCommentThread(tr: Transaction, markType: MarkType, threadId: string): Transaction;
 
 // Thread bodies/authors/resolution never live in the document. Core never calls this interface
 // itself — @slash-editor/react's useComments composes it with setComment/unsetComment, the same

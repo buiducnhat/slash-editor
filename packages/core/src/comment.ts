@@ -1,5 +1,6 @@
 import { Mark, mergeAttributes, posToDOMRect } from "@tiptap/core";
-import type { EditorState } from "@tiptap/pm/state";
+import type { MarkType } from "@tiptap/pm/model";
+import type { EditorState, Transaction } from "@tiptap/pm/state";
 
 export interface CommentMessage {
   id: string;
@@ -89,6 +90,19 @@ export function activeThreadIds(state: EditorState): string[] {
   return [...ids];
 }
 
+/**
+ * Removes every anchor of `threadId` across the whole document, wherever the selection is — split
+ * and overlapping ranges included. Other threads' marks on the same text are left untouched:
+ * `removeMark` with a concrete `Mark` matches by `mark.eq()` (type + `threadId`).
+ */
+export function removeCommentThread(
+  tr: Transaction,
+  markType: MarkType,
+  threadId: string,
+): Transaction {
+  return tr.removeMark(0, tr.doc.content.size, markType.create({ threadId }));
+}
+
 export const Comment = Mark.create<CommentOptions, CommentStorage>({
   name: "comment",
   excludes: "",
@@ -155,10 +169,7 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
         ({ tr, state, dispatch }) => {
           const markType = state.schema.marks[this.name];
           if (!markType) return false;
-          if (dispatch) {
-            const { from, to } = state.selection;
-            tr.removeMark(from, to, markType.create({ threadId }));
-          }
+          if (dispatch) removeCommentThread(tr, markType, threadId);
           return true;
         },
       toggleComment:

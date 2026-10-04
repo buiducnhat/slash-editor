@@ -159,10 +159,13 @@ never enter the document: a host-provided `CommentThreadStore` (`createThread`/`
 `resolveThread`/`reopenThread`/`getThread`/`listThreads`) owns all of that, the same "anchor in core,
 body outside" split `UploadAdapter`/`StreamAdapter` use for binary/model work.
 
-`unsetComment(threadId)` cannot use ProseMirror's built-in `unsetMark(from, to, markType)`, which
-strips every mark of that type regardless of attrs — removing one thread's anchor would also remove
-every other thread anchored on the same range. It instead calls `tr.removeMark(from, to, mark)` with a
-concrete `Mark` instance (type + `threadId`), which ProseMirror matches by `mark.eq()`.
+`unsetComment(threadId)` removes that thread's anchors across the whole document, not just the
+selection, so a sidebar "Remove anchor" works wherever the caret is (and `useComments.removeAnchor`
+does not focus the editor). It cannot use ProseMirror's built-in `unsetMark(from, to, markType)`,
+which strips every mark of that type regardless of attrs — removing one thread's anchor would also
+remove every other thread anchored on the same range. The pure `removeCommentThread(tr, markType, threadId)`
+instead calls `tr.removeMark(0, doc.content.size, mark)` with a concrete `Mark` instance (type +
+`threadId`), which ProseMirror matches by `mark.eq()` — one transaction, so one undo step.
 
 `activeThreadIds(state)` — the distinct thread ids anchored under the current selection — is a pure
 function over a bare `EditorState`, testable without a DOM the same way `resolveDropTarget` and
