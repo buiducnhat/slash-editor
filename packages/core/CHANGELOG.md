@@ -1,5 +1,34 @@
 # @slash-editor/core
 
+## 0.6.0
+
+### Minor Changes
+
+- 65f7886: Syntax-highlighted code blocks (`@slash-editor/core`):
+
+  - **`codeBlock` option.** `createBlockKit({ codeBlock: {} })` swaps StarterKit's plain code block for `@tiptap/extension-code-block-lowlight` under the same `codeBlock` name, so block types, slash items, and markdown are unchanged. Opt-in; pass `lowlight` to choose grammars (default: lowlight's `common` set). `codeBlock: false` leaves it to a `CodeBlock.extend(...)` via `extend`.
+  - **`CodeBlock` / `codeBlock()` exports**, plus the `code-block-node-view` registry item: a language selector and `hljs-*` token CSS themed from shadcn tokens.
+
+- 41e49ac: Emoji picker (`@slash-editor/core`, `@slash-editor/react`):
+
+  - **`emoji` extension.** Wraps `@tiptap/extension-emoji` (MIT) with a `:`-triggered picker that exposes the same subscribe/state shape as `mention`. `:shortcode:` input and paste rules, unicode-to-node conversion, and markdown (`:shortcode:`, unknown shortcodes stay text) are included. Opt-in: `createBlockKit({ emoji: {} })`.
+  - **`/emoji` slash item.** Shown only while the node is registered; types the `:` that opens the picker.
+  - **`useEmoji` hook and `emoji-menu` registry item.** Command-in-Popover surface that follows the `mention-menu` pattern. Included in `slash-editor-kit`.
+
+- 66f2eea: Localization (`@slash-editor/core`, `@slash-editor/react`):
+
+  - **`messages` option on `createBlockKit`.** Overrides slash item, block type, and AI action text by id (`title`, `description`, `aliases`, `keywords`), slash menu group headings, the slash hint, empty-block placeholders, block menu titles, and bubble toolbar labels. Partial translations keep English for everything left out; the existing `slash.hint` and `placeholder.text` options still win.
+  - **`localizeItems`, `localizeBlockMenuItems`, `localizeBubbleToolbarItems`** helpers, the `messages` extension, and `editor.storage.messages`.
+  - **`useBlockMenu`** returns translated titles. The registry `block-handle` and `bubble-toolbar` now read block types from `useBlockTypes` so translated titles reach their menus.
+  - **Pages and uploads.** `untitledPage` and `uploadFailed` messages; `pageTitle`, `pages` and `withPageMentions` take an optional `untitled` argument. `/page` and `/link to page` are translated through `items`/`groups`.
+
+- bde70c4: Pages (`@slash-editor/core`, `@slash-editor/react`):
+
+  - **`subPage` block and `pageLink` inline node.** Each carries only a `pageId`; titles, icons and the tree live in a host-owned `PageStore`. Opt-in: `createBlockKit({ pages: { store, currentPageId, onNavigate } })`. Adds `/page` and `/link to page`, and merges page results into the `@` menu (`MentionItem.kind: "page"`).
+  - **Detach/attach reporting.** `onSubPagesDetached`/`onSubPagesAttached` report local deletes, undo and paste; moves and remote edits stay silent. Duplicating or pasting a sub-page owned elsewhere becomes a `pageLink`.
+  - **Helpers.** `collectPageRefs`, `getPagesOptions`, `pageTitle`, a `nodeViews` option for UI layers, and markdown export/import of both nodes.
+  - **React hooks.** `usePage`, `usePageTree`, `useBreadcrumb` and `useBacklinks` read a `PageStore` with no editor.
+
 ## 0.5.1
 
 ### Patch Changes
