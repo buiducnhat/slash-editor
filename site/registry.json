@@ -169,7 +169,7 @@
       "name": "code-block-node-view",
       "type": "registry:component",
       "title": "Code Block Node View",
-      "description": "ReactNodeViewRenderer target for the highlighted `codeBlock` (`codeBlock: {}` in the block kit): a language selector pinned to the block, plus `hljs-*` token colours mixed from your shadcn chart tokens. Wire with `CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) })` and `blockKit: { codeBlock: false }`.",
+      "description": "ReactNodeViewRenderer target for the highlighted `codeBlock` from `@slash-editor/core/code-block`: a language selector pinned to the block, plus `hljs-*` token colours mixed from your shadcn chart tokens. Wire with `blockKit: { codeBlock: CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) }) }`.",
       "dependencies": ["@slash-editor/core", "@tiptap/react", "cn"],
       "files": [
         {

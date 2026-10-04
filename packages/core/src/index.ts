@@ -110,15 +110,6 @@ export {
   type CommentThread,
   type CommentThreadStore,
 } from "./comment.ts";
-export {
-  Emoji,
-  emoji,
-  type EmojiItem,
-  type EmojiMenuState,
-  type EmojiMenuStorage,
-  type EmojiOptions,
-  searchEmojis,
-} from "./emoji.ts";
 export { Embed, embed, type EmbedMode, type EmbedOptions, type SetEmbedOptions } from "./embed.ts";
 export {
   File,
@@ -155,7 +146,6 @@ export {
   type MentionState,
   type MentionStorage,
 } from "./mention.ts";
-export { CodeBlock, codeBlock, type CodeBlockOptions, type Lowlight } from "./code-block.ts";
 export { Mermaid, mermaid, type MermaidOptions } from "./mermaid.ts";
 export {
   collectPageRefs,

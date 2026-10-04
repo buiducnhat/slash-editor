@@ -80,21 +80,25 @@ See the [mentions guide](/docs/guides/mentions).
 ## Code block
 
 ```ts
+// @slash-editor/core/code-block
 CodeBlock: Node<CodeBlockOptions> // for .extend({ addNodeView })
 codeBlock(options?: Partial<CodeBlockOptions>): Node // options.lowlight picks the grammars
 ```
 
-Opt in with `createBlockKit({ codeBlock: {} })`. See the
+A separate entry, so lowlight stays out of bundles that keep the plain code block. Opt in with
+`createBlockKit({ codeBlock: codeBlock() })`. See the
 [Code Block Node View](/docs/components/code-block-node-view).
 
 ## Emoji
 
 ```ts
+// @slash-editor/core/emoji
 emoji(options?: Partial<EmojiOptions>): Node
 searchEmojis(emojis: EmojiItem[], query: string, limit: number): EmojiItem[]
 ```
 
-See the [emoji guide](/docs/guides/emoji).
+A separate entry, so the emoji dataset stays out of bundles that never enable the picker. Opt in
+with `createBlockKit({ emoji: emoji() })`. See the [emoji guide](/docs/guides/emoji).
 
 ## Pages
 

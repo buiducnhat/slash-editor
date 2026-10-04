@@ -1,3 +1,9 @@
+/*
+ * `@slash-editor/core/code-block` — a separate entry so lowlight and its
+ * `common` grammars (~55 KB gzipped) stay out of apps that keep StarterKit's
+ * plain code block. `createBlockKit` only takes the configured node
+ * (`codeBlock: codeBlock()`); it never imports this module.
+ */
 import {
   CodeBlockLowlight,
   type CodeBlockLowlightOptions,

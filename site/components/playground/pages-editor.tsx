@@ -1,6 +1,7 @@
 "use client";
 
 import type { PagesOptions } from "@slash-editor/core";
+import { emoji } from "@slash-editor/core/emoji";
 import { EditorContent } from "@slash-editor/react";
 import type { JSONContent } from "@tiptap/core";
 import { useRouter } from "next/navigation";
@@ -97,7 +98,7 @@ function PageEditor({
       embed: false,
       mermaid: false,
       codeBlock: false,
-      emoji: {},
+      emoji: emoji(),
       pages: pagesRef.current,
       extend: EXTENSIONS,
     },

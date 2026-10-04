@@ -15,8 +15,8 @@ packages/core/src/image.ts                Image node: upload/retry shape, empty-
 packages/core/src/link-editor.ts          LinkEditor extension: popover visibility + draft href only
 packages/core/src/markdown.ts             @slash-editor/core/markdown entry: Markdown extension, serializeMarkdown()/parseMarkdown()
 packages/core/src/markdown-syntax.ts      dependency-free marker/link/block-scan helpers nodes use for their markdown hooks
-packages/core/src/code-block.ts           CodeBlock/codeBlock(): lowlight-highlighted codeBlock, opt-in via `codeBlock` option
-packages/core/src/emoji.ts                Emoji node: wraps @tiptap/extension-emoji, `:` picker storage store, markdown shortcode
+packages/core/src/code-block.ts           @slash-editor/core/code-block entry: CodeBlock/codeBlock(), lowlight-highlighted codeBlock passed to the kit's `codeBlock` option
+packages/core/src/emoji.ts                @slash-editor/core/emoji entry: Emoji node wrapping @tiptap/extension-emoji, `:` picker storage store, markdown shortcode
 packages/core/src/mention.ts              Mention node, async Suggestion provider, storage store
 packages/core/src/pages.ts                PageStore contract, subPage/pageLink nodes, pages() factory, collectPageRefs, detach/attach watcher, page slash items and `@` merge
 packages/core/src/mermaid.ts              Mermaid node: CodeBlock.extend, source as text, ```mermaid rule, markdown fence
@@ -156,15 +156,17 @@ vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, v
 
 ## Entry points
 
-| Purpose                   | Path                                                            |
-| ------------------------- | --------------------------------------------------------------- |
-| Core public API           | `packages/core/src/index.ts`                                    |
-| Core markdown subpath     | `packages/core/src/markdown.ts` → `@slash-editor/core/markdown` |
-| React public API          | `packages/react/src/index.ts`                                   |
-| Playground                | `site/app/layout.tsx` → `app/(home)/playground/page.tsx`        |
-| Docs site + landing       | `site/app/layout.tsx` → `app/(home)/page.tsx` / `app/docs/**`   |
-| Registry component source | `site/registry/components/*`                                    |
-| Toolchain config          | `vite.config.ts` (root), `site/next.config.mjs`                 |
+| Purpose                   | Path                                                                |
+| ------------------------- | ------------------------------------------------------------------- |
+| Core public API           | `packages/core/src/index.ts`                                        |
+| Core markdown subpath     | `packages/core/src/markdown.ts` → `@slash-editor/core/markdown`     |
+| Core emoji subpath        | `packages/core/src/emoji.ts` → `@slash-editor/core/emoji`           |
+| Core code-block subpath   | `packages/core/src/code-block.ts` → `@slash-editor/core/code-block` |
+| React public API          | `packages/react/src/index.ts`                                       |
+| Playground                | `site/app/layout.tsx` → `app/(home)/playground/page.tsx`            |
+| Docs site + landing       | `site/app/layout.tsx` → `app/(home)/page.tsx` / `app/docs/**`       |
+| Registry component source | `site/registry/components/*`                                        |
+| Toolchain config          | `vite.config.ts` (root), `site/next.config.mjs`                     |
 
 ## Generated and ignored
 

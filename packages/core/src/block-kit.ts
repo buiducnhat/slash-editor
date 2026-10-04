@@ -1,4 +1,4 @@
-import type { Editor, Extensions } from "@tiptap/core";
+import type { Editor, Extensions, Node } from "@tiptap/core";
 import { StarterKit, type StarterKitOptions } from "@tiptap/starter-kit";
 import { DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { TaskItem, type TaskItemOptions, TaskList } from "@tiptap/extension-list";
@@ -16,12 +16,12 @@ import {
   defaultBubbleToolbarItems,
   type BubbleToolbarOptions,
 } from "./bubble-toolbar.ts";
-import { codeBlock, type CodeBlockOptions } from "./code-block.ts";
+import type { CodeBlockOptions } from "./code-block.ts";
 import { Callout } from "./callout.ts";
 import { collaboration, type CollaborationOptions } from "./collaboration.ts";
 import { column, columns, type ColumnsOptions } from "./columns.ts";
 import { comment, type CommentOptions } from "./comment.ts";
-import { emoji, type EmojiOptions } from "./emoji.ts";
+import type { EmojiMenuStorage, EmojiOptions } from "./emoji.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
@@ -178,15 +178,16 @@ export interface BlockKitOptions {
    */
   mermaid?: Partial<MermaidOptions> | false;
   /**
-   * Syntax-highlighted code blocks (lowlight). Omitted, StarterKit's plain
-   * `codeBlock` is used. Any object (`codeBlock: {}`) swaps it for a
-   * highlighting block of the same name, so everything addressing `codeBlock`
-   * keeps working; it is opt-in because highlighting costs runtime work on
-   * every edit. Pass `lowlight` to choose the grammars. `false` leaves the kit
-   * with no code block, to supply a `NodeView`-augmented variant via `extend`
-   * instead (see `CodeBlock`, exported for `.extend()`).
+   * Syntax-highlighted code block, built by `codeBlock()` (or
+   * `CodeBlock.extend(...)` for a `NodeView`) from
+   * `@slash-editor/core/code-block`. Omitted, StarterKit's plain `codeBlock`
+   * is used; a node here replaces it under the same name, so everything
+   * addressing `codeBlock` keeps working. Opt-in, and passed in rather than
+   * built here, because lowlight's grammars are sizeable and highlighting
+   * costs runtime work on every edit. `false` leaves the kit with no code
+   * block at all.
    */
-  codeBlock?: Partial<CodeBlockOptions> | false;
+  codeBlock?: Node<CodeBlockOptions> | false;
   /**
    * Table kit configuration (resizable columns on by default), or `false`
    * to opt out.
@@ -231,11 +232,13 @@ export interface BlockKitOptions {
    */
   mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
   /**
-   * Emoji node with a `:shortcode:` picker and a `/emoji` slash item. Opt-in
-   * (`emoji: {}` enables it): the bundled emoji dataset is sizeable, and
-   * enabling it turns typed `:shortcode:` text into emoji nodes.
+   * Emoji node with a `:shortcode:` picker, built by `emoji()` from
+   * `@slash-editor/core/emoji`; registering it also shows the `/emoji` slash
+   * item. Opt-in, and passed in rather than built here, because the emoji
+   * dataset is sizeable and enabling it turns typed `:shortcode:` text into
+   * emoji nodes.
    */
-  emoji?: Partial<EmojiOptions> | false;
+  emoji?: Node<EmojiOptions, EmojiMenuStorage> | false;
   /**
    * AI slash actions (`Continue writing`, `Summarize`, …) streamed through
    * a bring-your-own `StreamAdapter`. Omit to leave those slash items out —
@@ -316,14 +319,14 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     file: fileOptions,
     video: videoOptions,
     embed: embedOptions,
-    codeBlock: codeBlockOptions,
+    codeBlock: codeBlockOption,
     mermaid: mermaidOptions,
     table: tableOptions,
     columns: columnsOptions,
     linkEditor: linkEditorOptions,
     mention: mentionOptions,
     pages: pagesOptions,
-    emoji: emojiOptions,
+    emoji: emojiOption,
     ai: aiOptions,
     comment: commentOptions,
     collaboration: collaborationOptions,
@@ -381,16 +384,14 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
         linkOptions === false
           ? false
           : { openOnClick: false, enableClickSelection: true, ...linkOptions },
-      // Any `codeBlock` option replaces StarterKit's plain block (see below).
-      codeBlock: codeBlockOptions === undefined ? undefined : false,
+      // A highlighted `codeBlock` (or `false`) replaces StarterKit's plain one.
+      codeBlock: codeBlockOption === undefined ? undefined : false,
       // `>` belongs to the toggle; quote() re-registers blockquote with the
       // `"` shorthand instead.
       blockquote: false,
     }),
     quote(),
-    ...(codeBlockOptions === undefined || codeBlockOptions === false
-      ? []
-      : [codeBlock(codeBlockOptions)]),
+    ...(codeBlockOption ? [codeBlockOption] : []),
     TaskList,
     TaskItem.configure({ nested: true, ...taskItemOptions }),
     Callout,
@@ -410,7 +411,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(localizedAi && localizedAi.node !== false ? [aiBlock()] : []),
     ...(pagesOptions ? pages(pagesOptions, messages?.untitledPage) : []),
     ...(resolvedMention ? [mention(resolvedMention)] : []),
-    ...(emojiOptions === false || !emojiOptions ? [] : [emoji(emojiOptions)]),
+    ...(emojiOption ? [emojiOption] : []),
     ...(slash === false
       ? []
       : [

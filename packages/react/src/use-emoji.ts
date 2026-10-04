@@ -1,4 +1,4 @@
-import type { EmojiItem, EmojiMenuState, EmojiMenuStorage } from "@slash-editor/core";
+import type { EmojiItem, EmojiMenuState, EmojiMenuStorage } from "@slash-editor/core/emoji";
 import type { Editor } from "@tiptap/core";
 import { useCallback, useMemo } from "react";
 import { useExtensionState } from "./use-extension-state.ts";

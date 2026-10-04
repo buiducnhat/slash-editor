@@ -8,6 +8,8 @@
     "incremental": true,
     "paths": {
       "@slash-editor/core": ["../packages/core/src/index.ts"],
+      "@slash-editor/core/code-block": ["../packages/core/src/code-block.ts"],
+      "@slash-editor/core/emoji": ["../packages/core/src/emoji.ts"],
       "@slash-editor/core/markdown": ["../packages/core/src/markdown.ts"],
       "@slash-editor/react": ["../packages/react/src/index.ts"],
       "@/*": ["./registry/*"],

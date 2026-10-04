@@ -1,6 +1,7 @@
 "use client";
 
 import type { CommentThreadStore } from "@slash-editor/core";
+import { emoji } from "@slash-editor/core/emoji";
 import { EditorContent } from "@slash-editor/react";
 import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
@@ -36,7 +37,7 @@ export function PlaygroundDemo() {
 </ul>
 <blockquote><p>Built on Tiptap + shadcn/ui</p></blockquote>`,
     blockKit: {
-      emoji: {},
+      emoji: emoji(),
       mention: {
         items: (query: string, { signal }: { signal: AbortSignal }) =>
           mockMentionProvider(query, signal),

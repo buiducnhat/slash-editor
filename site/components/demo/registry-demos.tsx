@@ -1,6 +1,8 @@
 "use client";
 
-import { CodeBlock, type CommentThreadStore, Mermaid } from "@slash-editor/core";
+import { type CommentThreadStore, Mermaid } from "@slash-editor/core";
+import { CodeBlock } from "@slash-editor/core/code-block";
+import { emoji } from "@slash-editor/core/emoji";
 import { EditorContent } from "@slash-editor/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useRef } from "react";
@@ -98,7 +100,7 @@ export function MentionMenuDemo() {
 export function EmojiMenuDemo() {
   const editor = useDemoEditor({
     content: "<p>Type <code>:smile</code> or <code>/emoji</code> to pick an emoji.</p>",
-    blockKit: { emoji: {} },
+    blockKit: { emoji: emoji() },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
   if (!editor) return null;
@@ -213,8 +215,7 @@ export function CodeBlockDemo() {
   return \`Hello, \${name}!\`;
 }</code></pre>`,
     blockKit: {
-      codeBlock: false,
-      extend: [CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) })],
+      codeBlock: CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) }),
     },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });

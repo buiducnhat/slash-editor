@@ -1,6 +1,9 @@
 # Package APIs
 
-Everything exported today. Both packages ship ESM only (`dist/index.mjs` + `dist/index.d.mts`).
+Everything exported today. Both packages ship ESM only (`dist/index.mjs` + `dist/index.d.mts`),
+with `"sideEffects": false`. Core has three more entries for code a host opts into, kept out of the
+main entry's module graph: `@slash-editor/core/markdown`, `@slash-editor/core/emoji`, and
+`@slash-editor/core/code-block`.
 
 ## `@slash-editor/core`
 
@@ -21,7 +24,7 @@ interface BlockKitOptions {
   video?: Partial<VideoOptions> | false;
   embed?: Partial<EmbedOptions> | false;
   mermaid?: Partial<MermaidOptions> | false; // source-only node; rendering is a UI NodeView
-  codeBlock?: Partial<CodeBlockOptions> | false; // omitted = StarterKit's plain codeBlock; any object = lowlight-highlighted codeBlock (opt-in, runtime cost); false = none, supply CodeBlock.extend via `extend`
+  codeBlock?: Node<CodeBlockOptions> | false; // omitted = StarterKit's plain codeBlock; a node (codeBlock() / CodeBlock.extend(...) from @slash-editor/core/code-block) replaces it under the same name; false = none
   table?: Partial<TableKitOptions> | false; // default { table: { resizable: true } }
   columns?: Partial<ColumnsOptions> | false;
   link?: { openOnClick?: boolean; enableClickSelection?: boolean } | false; // default { openOnClick: false, enableClickSelection: true }; `openOnClick: true` for a read-only viewer
@@ -29,7 +32,7 @@ interface BlockKitOptions {
   linkEditor?: Partial<LinkEditorOptions> | false; // default {}
   // No default provider/adapter, so these are opt-in (undefined -> not registered), not `Partial<X> | false`:
   mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
-  emoji?: Partial<EmojiOptions> | false; // opt-in (`emoji: {}`): bundled dataset is sizeable and typed `:shortcode:` becomes a node
+  emoji?: Node<EmojiOptions, EmojiMenuStorage> | false; // opt-in: emoji() from @slash-editor/core/emoji; the kit never imports the dataset itself
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
   collaboration?: CollaborationOptions | false; // no default; forces history:false when set
   comment?: Partial<CommentOptions> | false; // default {}
@@ -387,9 +390,12 @@ function embed(options?: Partial<EmbedOptions>): Node;
 // editor.commands.setEmbed({ url?, mode?: "bookmark" | "iframe", title?, description?, thumbnail? })
 // attrs: url, mode (default "bookmark"), title, description, thumbnail
 
-// code-block.ts — @tiptap/extension-code-block-lowlight, same node name `codeBlock` (attrs, commands,
-// markdown unchanged); highlighting is decoration-only (`hljs-*` classes). Defaults to lowlight's
-// `common` grammars, baked into addOptions so `CodeBlock.extend({ addNodeView })` keeps them.
+// @slash-editor/core/code-block — a separate entry (dist/code-block.mjs), so lowlight and its
+// grammars (~55 KB gzipped) stay out of bundles that keep StarterKit's plain code block.
+// @tiptap/extension-code-block-lowlight, same node name `codeBlock` (attrs, commands, markdown
+// unchanged); highlighting is decoration-only (`hljs-*` classes). Defaults to lowlight's `common`
+// grammars, baked into addOptions so `CodeBlock.extend({ addNodeView })` keeps them.
+// Wire with createBlockKit({ codeBlock: codeBlock() }).
 const CodeBlock: Node<CodeBlockOptions>; // for .extend()
 function codeBlock(options?: Partial<CodeBlockOptions>): Node; // pass `lowlight` to choose grammars
 type CodeBlockOptions = CodeBlockLowlightOptions;
@@ -480,9 +486,11 @@ interface MentionStorage {
 empty result set rather than leaving the menu stuck loading.
 
 ```ts
-// emoji.ts — wraps @tiptap/extension-emoji (dataset, :shortcode: input/paste rules, unicode -> node).
+// @slash-editor/core/emoji — a separate entry (dist/emoji.mjs), so the emoji dataset (~70 KB
+// gzipped) stays out of bundles that never enable the picker. Wraps @tiptap/extension-emoji
+// (dataset, :shortcode: input/paste rules, unicode -> node).
 const Emoji: Node<EmojiOptions, EmojiMenuStorage>;
-function emoji(options?: Partial<EmojiOptions>): Node; // opt-in: createBlockKit({ emoji: {} })
+function emoji(options?: Partial<EmojiOptions>): Node; // opt-in: createBlockKit({ emoji: emoji() })
 function searchEmojis(emojis: EmojiItem[], query: string, limit: number): EmojiItem[]; // name > shortcode > substring > tag
 
 interface EmojiOptions extends TiptapEmojiOptions {

@@ -13,8 +13,11 @@
     "dist"
   ],
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
+    "./code-block": "./dist/code-block.mjs",
+    "./emoji": "./dist/emoji.mjs",
     "./markdown": "./dist/markdown.mjs",
     "./package.json": "./package.json"
   },
@@ -22,8 +25,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/markdown.ts",
-    "dev": "vp pack src/index.ts src/markdown.ts --watch"
+    "build": "vp pack src/index.ts src/markdown.ts src/emoji.ts src/code-block.ts",
+    "dev": "vp pack src/index.ts src/markdown.ts src/emoji.ts src/code-block.ts --watch"
   },
   "dependencies": {
     "@tiptap/extension-blockquote": "^3.31.3",
