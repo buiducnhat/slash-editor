@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] — 2026-10-04
 
-Keep the block handle inside the hover zone. `BlockDrag` now measures `gutterWidth` from the hovered block's left edge (or the editor box, whichever is further left) and defaults it to the new `BLOCK_GUTTER_WIDTH` (80px), which the registry `BlockHandle` lays itself out in — so the handle no longer vanishes on the way to it in an editor with little or no left padding. The geometry is exported as the pure `resolveHoverRect`.
-
-`unsetComment(threadId)` now removes the thread's anchors across the whole document instead of only the selection (new pure `removeCommentThread` helper), so `useComments().removeAnchor` works from a sidebar; it no longer focuses the editor.
-
 Emoji and highlighted code blocks move to their own entries (`@slash-editor/core`, `@slash-editor/react`):
 
 - **Breaking: `@slash-editor/core/emoji` and `@slash-editor/core/code-block` subpaths.** `Emoji`, `emoji`, `searchEmojis` and the `EmojiItem`/`EmojiMenuState`/`EmojiMenuStorage`/`EmojiOptions` types now import from `@slash-editor/core/emoji`; `CodeBlock`, `codeBlock` and the `CodeBlockOptions`/`Lowlight` types from `@slash-editor/core/code-block`. The root entry no longer exports them.
@@ -37,10 +33,6 @@ createBlockKit({ emoji: emoji({ limit: 24 }), codeBlock: codeBlock({ lowlight })
 createBlockKit({ codeBlock: CodeBlock.extend({ addNodeView }) });
 ```
 
-Markdown import reads a mention or page link that starts a line as inline content. Such a paragraph (including one holding only the mention, or a list item, blockquote or callout line starting with one) used to import as literal comment text or be dropped entirely, so `serializeMarkdown` output with a leading mention did not round-trip.
-
-Bind `Mod-k` to `openLinkEditor`, matching the bubble toolbar's advertised `⌘K`. The key falls through when there is nothing to link; change or remove it with `linkEditor: { shortcut: "…" | false }`.
-
 Media upload result mapping and display URLs (`@slash-editor/core`, `@slash-editor/react`):
 
 - **`toAttrs` option on `image`, `file`, and `video`.** Maps the adapter's full upload result onto node attrs (default `{ src: result.url }`) on the first success and on every retry, merged over the existing attrs — persist a server's canonical name/size/mime or id without reimplementing `retryImage`/`retryFile`/`retryVideo`. Also reachable through `createBlockKit({ image | file | video: { toAttrs } })`.
@@ -48,6 +40,14 @@ Media upload result mapping and display URLs (`@slash-editor/core`, `@slash-edit
 - **`useResolvedSrc(src, node, resolveSrc)`** hook: sync results on the same render, async results once settled (stale results for a changed `src` are discarded), errors fall back to the stored URL. The registry `node-views` image/file/video/embed views apply it.
 
 **`starterKit` option on `createBlockKit`.** Options are forwarded to Tiptap's `StarterKit`, so `createBlockKit({ starterKit: { underline: false } })` drops the underline mark (and `Mod-u` / `++text++` markdown) without reconfiguring the returned extension by hand. Keys the kit owns (`heading`, `undoRedo`, `link`, `codeBlock`, `blockquote`, `gapcursor`) are excluded from the `BlockKitStarterKitOptions` type; use `headingLevels`, `history`, `link`, and `codeBlock` for those.
+
+Keep the block handle inside the hover zone. `BlockDrag` now measures `gutterWidth` from the hovered block's left edge (or the editor box, whichever is further left) and defaults it to the new `BLOCK_GUTTER_WIDTH` (80px), which the registry `BlockHandle` lays itself out in — so the handle no longer vanishes on the way to it in an editor with little or no left padding. The geometry is exported as the pure `resolveHoverRect`.
+
+`unsetComment(threadId)` now removes the thread's anchors across the whole document instead of only the selection (new pure `removeCommentThread` helper), so `useComments().removeAnchor` works from a sidebar; it no longer focuses the editor.
+
+Markdown import reads a mention or page link that starts a line as inline content. Such a paragraph (including one holding only the mention, or a list item, blockquote or callout line starting with one) used to import as literal comment text or be dropped entirely, so `serializeMarkdown` output with a leading mention did not round-trip.
+
+Bind `Mod-k` to `openLinkEditor`, matching the bubble toolbar's advertised `⌘K`. The key falls through when there is nothing to link; change or remove it with `linkEditor: { shortcut: "…" | false }`.
 
 ## [0.6.0] — 2026-10-04
 
