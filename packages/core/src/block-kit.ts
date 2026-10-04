@@ -1,4 +1,4 @@
-import type { Extensions } from "@tiptap/core";
+import type { Editor, Extensions } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { TaskItem, type TaskItemOptions, TaskList } from "@tiptap/extension-list";
@@ -11,7 +11,11 @@ import {
 } from "./ai-block.ts";
 import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
-import { bubbleToolbar, type BubbleToolbarOptions } from "./bubble-toolbar.ts";
+import {
+  bubbleToolbar,
+  defaultBubbleToolbarItems,
+  type BubbleToolbarOptions,
+} from "./bubble-toolbar.ts";
 import { codeBlock, type CodeBlockOptions } from "./code-block.ts";
 import { Callout } from "./callout.ts";
 import { collaboration, type CollaborationOptions } from "./collaboration.ts";
@@ -23,6 +27,12 @@ import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
 import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
 import { mention, type MentionOptions } from "./mention.ts";
+import {
+  localizeBubbleToolbarItems,
+  localizeItems,
+  messages as messagesExtension,
+  type SlashEditorMessages,
+} from "./messages.ts";
 import { mermaid, type MermaidOptions } from "./mermaid.ts";
 import { createPagesSlashItems, pages, type PagesOptions, withPageMentions } from "./pages.ts";
 import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
@@ -33,7 +43,7 @@ import {
   defaultBlockTypes,
   type BlockType,
 } from "./block-types.ts";
-import { defaultSlashItems, type SlashItem } from "./slash-items.ts";
+import { defaultSlashItems } from "./slash-items.ts";
 import { slashCommand, type SlashCommandOptions } from "./slash-command.ts";
 import { table, type TableKitOptions } from "./table.ts";
 import { tableOfContents, type TableOfContentsOptions } from "./table-of-contents.ts";
@@ -236,6 +246,14 @@ export interface BlockKitOptions {
    * @default { persist: true }
    */
   toggle?: Partial<ToggleOptions>;
+  /**
+   * Translations for slash items, block types, AI actions, placeholders, the
+   * slash hint, block menu actions, and bubble toolbar labels. Anything left
+   * out keeps its English default. Also readable at `editor.storage.messages`.
+   *
+   * @default {}
+   */
+  messages?: SlashEditorMessages;
 }
 
 const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
@@ -250,6 +268,7 @@ const DEFAULT_HEADING_LEVELS: HeadingLevel[] = [1, 2, 3];
  */
 export function createBlockKit(options: BlockKitOptions = {}): Extensions {
   const {
+    messages,
     blockTypes = defaultBlockTypes,
     headingLevels = DEFAULT_HEADING_LEVELS,
     history = true,
@@ -286,8 +305,20 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     mentionOptions === false
       ? undefined
       : pagesOptions
-        ? withPageMentions(mentionOptions, pagesOptions)
+        ? withPageMentions(mentionOptions, pagesOptions, messages?.untitledPage)
         : mentionOptions;
+  const localizedBlockTypes = localizeItems(blockTypes, messages);
+  const localizedAi = resolvedAi && {
+    ...resolvedAi,
+    actions: localizeItems(resolvedAi.actions, messages),
+  };
+  const bubbleSource =
+    (bubbleToolbarOptions === false ? undefined : bubbleToolbarOptions?.items) ??
+    defaultBubbleToolbarItems;
+  const bubbleItems =
+    typeof bubbleSource === "function"
+      ? (editor: Editor) => localizeBubbleToolbarItems(bubbleSource(editor), messages)
+      : localizeBubbleToolbarItems(bubbleSource, messages);
 
   // Yjs owns the undo stack once a document is shared; running StarterKit's
   // undoRedo alongside it corrupts it, so collaboration always wins.
@@ -327,7 +358,8 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     TaskItem.configure({ nested: true, ...taskItemOptions }),
     Callout,
     toggle({ persist: true, ...toggleOptions }),
-    blockTypesExtension(blockTypes),
+    blockTypesExtension(localizedBlockTypes),
+    messagesExtension(messages),
     DetailsSummary,
     DetailsContent,
     ...(imageOptions === false ? [] : [image(imageOptions)]),
@@ -337,9 +369,9 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(mermaidOptions === false ? [] : [mermaid(mermaidOptions)]),
     ...(tableOptions === false ? [] : [table(tableOptions)]),
     ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
-    ...(resolvedAi ? [ai(resolvedAi)] : []),
-    ...(resolvedAi && resolvedAi.node !== false ? [aiBlock()] : []),
-    ...(pagesOptions ? pages(pagesOptions) : []),
+    ...(localizedAi ? [ai(localizedAi)] : []),
+    ...(localizedAi && localizedAi.node !== false ? [aiBlock()] : []),
+    ...(pagesOptions ? pages(pagesOptions, messages?.untitledPage) : []),
     ...(resolvedMention ? [mention(resolvedMention)] : []),
     ...(emojiOptions === false || !emojiOptions ? [] : [emoji(emojiOptions)]),
     ...(slash === false
@@ -347,20 +379,36 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
       : [
           slashCommand({
             ...slash,
-            items: ((): SlashItem[] => [
-              ...blockTypeSlashItems(blockTypes),
-              ...defaultSlashItems.filter(
-                (item) => !blockTypes.some((type) => type.id === item.id),
-              ),
-              ...(resolvedAi ? createAiSlashItems(resolvedAi.actions) : []),
-              ...(pagesOptions ? createPagesSlashItems() : []),
-            ])(),
+            ...(slash?.hint === undefined &&
+              messages?.hint !== undefined && { hint: messages.hint }),
+            items: localizeItems(
+              [
+                ...blockTypeSlashItems(blockTypes),
+                ...defaultSlashItems.filter(
+                  (item) => !blockTypes.some((type) => type.id === item.id),
+                ),
+                ...(resolvedAi ? createAiSlashItems(resolvedAi.actions) : []),
+                ...(pagesOptions ? createPagesSlashItems() : []),
+              ],
+              messages,
+            ),
           }),
         ]),
-    ...(placeholderOptions === false ? [] : [placeholder(placeholderOptions)]),
+    ...(placeholderOptions === false
+      ? []
+      : [
+          placeholder({
+            ...placeholderOptions,
+            ...(messages?.placeholder && {
+              text: { ...messages.placeholder, ...placeholderOptions?.text },
+            }),
+          }),
+        ]),
     ...(blockIdOptions === false ? [] : [blockId(blockIdOptions)]),
     ...(drag === false ? [] : [blockDrag(drag)]),
-    ...(bubbleToolbarOptions === false ? [] : [bubbleToolbar(bubbleToolbarOptions)]),
+    ...(bubbleToolbarOptions === false
+      ? []
+      : [bubbleToolbar({ ...bubbleToolbarOptions, items: bubbleItems })]),
     ...(linkEditorOptions === false ? [] : [linkEditor(linkEditorOptions)]),
     ...(tableOfContentsOptions === false ? [] : [tableOfContents(tableOfContentsOptions)]),
     ...(collaborationOptions === false || !collaborationOptions

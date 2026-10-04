@@ -14,6 +14,7 @@ interface BlockKitOptions {
   blockId?: Partial<BlockIdOptions> | false; // default { types: "auto" }
   drag?: Partial<BlockDragOptions> | false; // default {}
   bubbleToolbar?: Partial<BubbleToolbarOptions> | false; // default { items: defaultBubbleToolbarItems }
+  messages?: SlashEditorMessages; // translations by id (messages.ts); also at editor.storage.messages.messages
   image?: Partial<ImageOptions> | false;
   file?: Partial<FileOptions> | false;
   video?: Partial<VideoOptions> | false;
@@ -74,6 +75,34 @@ const Quote: Node<QuoteOptions>; // extends @tiptap/extension-blockquote
 function quote(options?: Partial<QuoteOptions>): Node;
 type QuoteOptions = BlockquoteOptions;
 const quoteInputRegex: RegExp; // /^\s*"\s$/
+
+// messages.ts — every field optional; unset strings keep their English default
+interface SlashEditorMessages {
+  items?: Record<string, ItemMessage>; // slash items, block types, AI actions by id
+  groups?: Record<string, string>; // slash group headings, keyed by English group name
+  hint?: string; // slash hint; `slash.hint` wins
+  placeholder?: Partial<Record<PlaceholderKey, string>>; // `placeholder.text` wins
+  blockMenu?: Record<string, string>; // BlockMenuItem title by id; applied by useBlockMenu
+  bubbleToolbar?: Record<string, string>; // BubbleToolbarItem label by id
+  untitledPage?: string; // pageTitle() fallback, default "Untitled"; also the `@` page entries
+  uploadFailed?: string; // upload error when the adapter throws a non-Error, default "Upload failed"
+}
+interface ItemMessage {
+  title?: string;
+  description?: string;
+  aliases?: string[]; // replaces, not merges
+  keywords?: string[]; // replaces, not merges
+}
+function localizeItems<T>(items: T[], messages?: SlashEditorMessages): T[];
+function localizeBlockMenuItems(
+  items: BlockMenuItem[],
+  messages?: SlashEditorMessages,
+): BlockMenuItem[];
+function localizeBubbleToolbarItems(
+  items: BubbleToolbarItem[],
+  messages?: SlashEditorMessages,
+): BubbleToolbarItem[];
+const Messages: Extension<{ messages: SlashEditorMessages }, MessagesStorage>; // always registered by createBlockKit
 
 // bubble-toolbar.ts
 const BubbleToolbar: Extension<BubbleToolbarOptions, BubbleToolbarStorage>;
@@ -741,15 +770,15 @@ interface PageRefs {
   links: string[];
 }
 
-function pages(options: PagesOptions): Extensions; // subPage + pageLink + the watcher extension
+function pages(options: PagesOptions, untitled?: string): Extensions; // subPage + pageLink + the watcher extension; `untitled` = messages.untitledPage
 const SubPage: Node; // store-less: titles/hrefs fall back to the page id
 const PageLink: Node;
 function collectPageRefs(doc: JSONContent): PageRefs; // any depth, de-duplicated
 function getPagesOptions(editor: Editor): PagesOptions | undefined;
-function pageTitle(page: Pick<PageMeta, "title"> | undefined): string; // "Untitled" when empty
+function pageTitle(page: Pick<PageMeta, "title"> | undefined, untitled?: string): string; // `untitled` ("Untitled") when empty
 const UNTITLED_PAGE: "Untitled";
 function createPagesSlashItems(): SlashItem[]; // `/page`, `/link to page`
-function withPageMentions(mention, options: PagesOptions): MentionOptions; // merges store.search into `@`
+function withPageMentions(mention, options: PagesOptions, untitled?: string): MentionOptions; // merges store.search into `@`
 function isRemoteTransaction(tr: Transaction): boolean;
 function subPageDelta(trs: readonly Transaction[]): { attached: string[]; detached: string[] };
 function findSubPageConversions(doc, ranges, isOwned): { pos: number; node: PMNode }[];

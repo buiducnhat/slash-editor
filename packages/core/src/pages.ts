@@ -112,8 +112,11 @@ declare module "@tiptap/core" {
 export const UNTITLED_PAGE = "Untitled";
 
 /** Title to display for a page that may be missing or empty. */
-export function pageTitle(page: Pick<PageMeta, "title"> | undefined): string {
-  return page?.title.trim() || UNTITLED_PAGE;
+export function pageTitle(
+  page: Pick<PageMeta, "title"> | undefined,
+  untitled: string = UNTITLED_PAGE,
+): string {
+  return page?.title.trim() || untitled;
 }
 
 /** `editor`'s pages configuration, or `undefined` when the kit has no `pages`. */
@@ -128,11 +131,11 @@ interface PageResolver {
 
 const BARE_RESOLVER: PageResolver = { title: (pageId) => pageId, href: (pageId) => `#${pageId}` };
 
-function storeResolver(options: PagesOptions): PageResolver {
+function storeResolver(options: PagesOptions, untitled?: string): PageResolver {
   const { store, resolveHref } = options;
 
   return {
-    title: (pageId) => pageTitle(store.peek(pageId)),
+    title: (pageId) => pageTitle(store.peek(pageId), untitled),
     href: (pageId) => resolveHref?.(pageId) ?? `#${pageId}`,
   };
 }
@@ -541,8 +544,8 @@ function buildPages(options: PagesOptions) {
  * one-parent rule, and `createSubPage`. `createBlockKit({ pages })` adds the
  * `/page` slash items and `@` menu entries on top.
  */
-export function pages(options: PagesOptions): Extensions {
-  const resolver = storeResolver(options);
+export function pages(options: PagesOptions, untitled?: string): Extensions {
+  const resolver = storeResolver(options, untitled);
   const { subPage, pageLink } = options.nodeViews ?? {};
   const subPageNode = buildSubPage(resolver);
   const pageLinkNode = buildPageLink(resolver);
@@ -611,6 +614,7 @@ export function createPagesSlashItems(): SlashItem[] {
 export function withPageMentions(
   mention: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | undefined,
   options: PagesOptions,
+  untitled?: string,
 ): Partial<MentionOptions> & Pick<MentionOptions, "items"> {
   const hostItems = mention?.items;
 
@@ -625,7 +629,7 @@ export function withPageMentions(
         .filter((page) => !page.trashed)
         .map((page) => ({
           id: page.id,
-          label: pageTitle(page),
+          label: pageTitle(page, untitled),
           icon: "file-text",
           kind: "page",
         }));

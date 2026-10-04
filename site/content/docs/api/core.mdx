@@ -104,7 +104,7 @@ createPagesSlashItems(): SlashItem[]
 withPageMentions(mention, options: PagesOptions): MentionOptions
 collectPageRefs(doc: JSONContent): { subPages: string[]; links: string[] }
 getPagesOptions(editor: Editor): PagesOptions | undefined
-pageTitle(page: Pick<PageMeta, "title"> | undefined): string
+pageTitle(page: Pick<PageMeta, "title"> | undefined, untitled?: string): string
 ```
 
 Types `PageMeta`, `PageStore`, `PagesOptions` and nodes `SubPage`/`PageLink` (bare, store-less) are

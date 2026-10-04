@@ -1,5 +1,5 @@
-import { defaultBlockTypes, type BlockTarget } from "@slash-editor/core";
-import { useAiActions, useBlockDrag, useEditorState } from "@slash-editor/react";
+import type { BlockTarget } from "@slash-editor/core";
+import { useAiActions, useBlockDrag, useBlockTypes, useEditorState } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import {
   ClipboardPasteIcon,
@@ -31,6 +31,7 @@ const GUTTER_OFFSET = 72;
 export function BlockHandle({ editor }: { editor: Editor }) {
   const drag = useBlockDrag(editor);
   const ai = useAiActions(editor, "block");
+  const blockTypes = useBlockTypes(editor);
   // Every affordance here mutates the document — insert, reorder, duplicate,
   // delete — so the gutter stands down with it. A host that flips
   // `setEditable` at runtime (the playground's read-only switch) gets that for
@@ -207,7 +208,7 @@ export function BlockHandle({ editor }: { editor: Editor }) {
               <span>Turn into</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-56 p-1">
-              {defaultBlockTypes
+              {blockTypes.items
                 .filter((type) => type.when?.(editor) ?? true)
                 .map((type) => {
                   const Icon = resolveIcon(type.icon);
