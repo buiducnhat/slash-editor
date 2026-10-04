@@ -6,8 +6,11 @@ import {
   filterSlashItems,
   localizeBlockMenuItems,
   localizeItems,
+  pageTitle,
   type BlockType,
   type BubbleToolbarItem,
+  type MentionOptions,
+  type PageStore,
   type SlashEditorMessages,
   type SlashItem,
   type StreamAdapter,
@@ -127,4 +130,38 @@ test("without messages nothing is copied or changed", () => {
   expect(localizeItems(items, undefined)).toBe(items);
   expect(localizeItems(items, {})).toBe(items);
   expect(localizeBlockMenuItems(defaultBlockMenuItems, {})).toBe(defaultBlockMenuItems);
+});
+
+test("page slash items are translated and an untitled page uses the translated title", async () => {
+  const store: PageStore = {
+    create: ({ parentId }) => ({ id: "new", parentId, title: "" }),
+    update: () => {},
+    peek: () => undefined,
+    load: async () => undefined,
+    listChildren: () => [],
+    search: () => [{ id: "p1", parentId: null, title: "  " }],
+    subscribe: () => () => {},
+  };
+  const pages = { store, currentPageId: "root", onNavigate: () => {} };
+  const kit = {
+    pages,
+    messages: {
+      groups: { Pages: "Trang" },
+      items: { page: { title: "Trang con" } },
+      untitledPage: "Không tiêu đề",
+    },
+  };
+  const { items } = extension<{ items: SlashItem[] }>(kit, "slashCommand");
+  const page = items.find((item) => item.id === "page")!;
+  const mentions = extension<{ items: MentionOptions["items"] }>(kit, "mention");
+  const found = await mentions.items("", {
+    editor: undefined as never,
+    signal: new AbortController().signal,
+  });
+
+  expect(page).toMatchObject({ title: "Trang con", group: "Trang" });
+  expect(items.find((item) => item.id === "link-to-page")!.group).toBe("Trang");
+  expect(found.map((item) => item.label)).toEqual(["Không tiêu đề"]);
+  expect(pageTitle({ title: "" }, "Không tiêu đề")).toBe("Không tiêu đề");
+  expect(pageTitle({ title: "" })).toBe("Untitled");
 });

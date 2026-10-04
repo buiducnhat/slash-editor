@@ -319,6 +319,27 @@ without leaving the document._
 
 _Landed:_ Full design: [`mermaid-design-brief.md`](mermaid-design-brief.md).
 
+## M11 — Pages
+
+_Done when: a user can create a sub-page, navigate into it, link to it from another page, and see
+its title, place in the tree, and backlinks stay current after a rename — against a host-owned
+`PageStore`._
+
+- [x] Risk spike: `renderMarkdown` access to extension options; Yjs undo vs. remote transaction meta
+- [x] Core `PageStore` contract, `subPage`/`pageLink` nodes, `createBlockKit({ pages })`, `/page` and `/link to page`
+- [x] Detach/attach watcher; paste/duplicate uniqueness conversion
+- [x] Page items in the shared `@` menu (`MentionItem.kind`)
+- [x] `usePage`/`usePageTree`/`useBreadcrumb`/`useBacklinks`
+- [x] Registry node views, `PageHeader`, `PageTree`, `Breadcrumb`, `Backlinks`; playground `?page=<id>`
+- [x] Docs, guide, changeset
+
+Design: [`pages-design-brief.md`](pages-design-brief.md).
+
+_Landed:_ `PagesOptions.nodeViews` lets a UI layer attach renderers without re-registering the
+nodes. Options are stored by reference in `editor.storage.pages` because `configure` deep-clones.
+The watcher nets sub-page counts across a whole dispatch, so moves and converted pastes report
+nothing.
+
 ---
 
 ## Deferred decisions

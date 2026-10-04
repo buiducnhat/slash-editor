@@ -48,15 +48,16 @@ GitHub-flavoured markdown. Blocks GFM has no syntax for use what GitHub renders,
 rest in `<!-- slash:… -->` comments, which GitHub and Obsidian hide. Every node below survives the
 round trip.
 
-| Block              | Markdown                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------- |
-| Callout            | `> [!TIP]` alert: 💡 TIP, ℹ️ NOTE, ❗ IMPORTANT, ⚠️ WARNING, ⛔ CAUTION. Other icons add a marker |
-| Toggle             | `<details>` / `<summary>`; a toggle heading wraps its title in `<h1>`–`<h3>`                      |
-| Columns            | Column contents one after another, between `slash:columns` / `slash:column` markers               |
-| Image              | `![alt](src)`, plus a marker when it has a width                                                  |
-| File, video, embed | A marker with their metadata, then `[label](url)`                                                 |
-| Mention            | `@label`, wrapped in markers that keep the id                                                     |
-| Mermaid diagram    | A ` ```mermaid ` fence, which GitHub renders as the diagram                                       |
+| Block               | Markdown                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| Callout             | `> [!TIP]` alert: 💡 TIP, ℹ️ NOTE, ❗ IMPORTANT, ⚠️ WARNING, ⛔ CAUTION. Other icons add a marker |
+| Toggle              | `<details>` / `<summary>`; a toggle heading wraps its title in `<h1>`–`<h3>`                      |
+| Columns             | Column contents one after another, between `slash:columns` / `slash:column` markers               |
+| Image               | `![alt](src)`, plus a marker when it has a width                                                  |
+| File, video, embed  | A marker with their metadata, then `[label](url)`                                                 |
+| Mention             | `@label`, wrapped in markers that keep the id                                                     |
+| Sub-page, page link | `slash:subPage` marker + `[Title](href)`; import keeps only the `pageId`                          |
+| Mermaid diagram     | A ` ```mermaid ` fence, which GitHub renders as the diagram                                       |
 
 Left out: comment anchors (their text stays; threads live in your `CommentThreadStore`), AI
 drafts not yet kept, and uploads that haven't finished.

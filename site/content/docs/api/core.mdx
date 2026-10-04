@@ -77,6 +77,16 @@ mention(options: Partial<MentionOptions> & Pick<MentionOptions, "items">): Node
 
 See the [mentions guide](/docs/guides/mentions).
 
+## Code block
+
+```ts
+CodeBlock: Node<CodeBlockOptions> // for .extend({ addNodeView })
+codeBlock(options?: Partial<CodeBlockOptions>): Node // options.lowlight picks the grammars
+```
+
+Opt in with `createBlockKit({ codeBlock: {} })`. See the
+[Code Block Node View](/docs/components/code-block-node-view).
+
 ## Emoji
 
 ```ts
@@ -85,6 +95,21 @@ searchEmojis(emojis: EmojiItem[], query: string, limit: number): EmojiItem[]
 ```
 
 See the [emoji guide](/docs/guides/emoji).
+
+## Pages
+
+```ts
+pages(options: PagesOptions): Extensions
+createPagesSlashItems(): SlashItem[]
+withPageMentions(mention, options: PagesOptions): MentionOptions
+collectPageRefs(doc: JSONContent): { subPages: string[]; links: string[] }
+getPagesOptions(editor: Editor): PagesOptions | undefined
+pageTitle(page: Pick<PageMeta, "title"> | undefined, untitled?: string): string
+```
+
+Types `PageMeta`, `PageStore`, `PagesOptions` and nodes `SubPage`/`PageLink` (bare, store-less) are
+exported too. The kit builds all of it from `createBlockKit({ pages })`. See the
+[pages guide](/docs/guides/pages).
 
 ## Markdown
 

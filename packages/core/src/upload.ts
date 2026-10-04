@@ -130,7 +130,10 @@ export function runUpload<TResult extends UploadResult>(options: RunUploadOption
       }
       applyAttrs(editor, typeName, id, {
         status: "error",
-        error: error instanceof Error ? error.message : "Upload failed",
+        error:
+          error instanceof Error
+            ? error.message
+            : (editor.storage.messages?.messages.uploadFailed ?? "Upload failed"),
       });
     });
 }

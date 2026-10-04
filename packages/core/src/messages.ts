@@ -36,6 +36,10 @@ export interface SlashEditorMessages {
   blockMenu?: Record<string, string>;
   /** Bubble toolbar item labels keyed by item `id` (`bold`, `link`, ...). */
   bubbleToolbar?: Record<string, string>;
+  /** Title shown for a page with no title (default `"Untitled"`). */
+  untitledPage?: string;
+  /** Error shown on an upload node whose adapter threw a non-`Error` (default `"Upload failed"`). */
+  uploadFailed?: string;
 }
 
 interface LocalizableItem {

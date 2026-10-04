@@ -20,6 +20,7 @@ interface BlockKitOptions {
   video?: Partial<VideoOptions> | false;
   embed?: Partial<EmbedOptions> | false;
   mermaid?: Partial<MermaidOptions> | false; // source-only node; rendering is a UI NodeView
+  codeBlock?: Partial<CodeBlockOptions> | false; // omitted = StarterKit's plain codeBlock; any object = lowlight-highlighted codeBlock (opt-in, runtime cost); false = none, supply CodeBlock.extend via `extend`
   table?: Partial<TableKitOptions> | false; // default { table: { resizable: true } }
   columns?: Partial<ColumnsOptions> | false;
   link?: { openOnClick?: boolean; enableClickSelection?: boolean } | false; // default { openOnClick: false, enableClickSelection: true }; `openOnClick: true` for a read-only viewer
@@ -83,6 +84,8 @@ interface SlashEditorMessages {
   placeholder?: Partial<Record<PlaceholderKey, string>>; // `placeholder.text` wins
   blockMenu?: Record<string, string>; // BlockMenuItem title by id; applied by useBlockMenu
   bubbleToolbar?: Record<string, string>; // BubbleToolbarItem label by id
+  untitledPage?: string; // pageTitle() fallback, default "Untitled"; also the `@` page entries
+  uploadFailed?: string; // upload error when the adapter throws a non-Error, default "Upload failed"
 }
 interface ItemMessage {
   title?: string;
@@ -363,6 +366,14 @@ function embed(options?: Partial<EmbedOptions>): Node;
 // editor.commands.setEmbed({ url?, mode?: "bookmark" | "iframe", title?, description?, thumbnail? })
 // attrs: url, mode (default "bookmark"), title, description, thumbnail
 
+// code-block.ts — @tiptap/extension-code-block-lowlight, same node name `codeBlock` (attrs, commands,
+// markdown unchanged); highlighting is decoration-only (`hljs-*` classes). Defaults to lowlight's
+// `common` grammars, baked into addOptions so `CodeBlock.extend({ addNodeView })` keeps them.
+const CodeBlock: Node<CodeBlockOptions>; // for .extend()
+function codeBlock(options?: Partial<CodeBlockOptions>): Node; // pass `lowlight` to choose grammars
+type CodeBlockOptions = CodeBlockLowlightOptions;
+type Lowlight = ReturnType<typeof createLowlight>;
+
 // mermaid.ts — CodeBlock.extend: source is the node's text (text*, code: true, marks: ""), no attrs.
 // priority 110 puts its ```mermaid input rule, HTML parse rules, and markdown `code` handler ahead
 // of codeBlock's. Renders <pre data-type="mermaid"><code>…</code></pre>; parses that and
@@ -409,6 +420,7 @@ interface MentionItem {
   label: string;
   description?: string;
   icon?: string;
+  kind?: "page"; // set by the pages kit: selecting it inserts a `pageLink`, not a `mention`
 }
 interface MentionOptions {
   char: string; // default "@"
@@ -716,6 +728,68 @@ outline is unchanged — caret-only transactions never churn the list. It is def
 `createBlockKit` (`tableOfContents: false` opts out) and registers no slash item: an outline is not
 an insertable block.
 
+### Pages (`pages.ts`)
+
+```ts
+interface PageMeta {
+  id: string;
+  parentId: string | null;
+  title: string;
+  icon?: string;
+  cover?: string;
+  trashed?: boolean;
+}
+interface PageStore {
+  create(input: { parentId: string | null; title?: string }): PageMeta | Promise<PageMeta>;
+  update(
+    id: string,
+    patch: Partial<Pick<PageMeta, "title" | "icon" | "cover">>,
+  ): void | Promise<void>;
+  peek(id: string): PageMeta | undefined; // sync cache; stable object until the page changes
+  load(id: string): Promise<PageMeta | undefined>;
+  listChildren(parentId: string | null): PageMeta[] | Promise<PageMeta[]>;
+  search(query: string, context: { signal: AbortSignal }): PageMeta[] | Promise<PageMeta[]>;
+  backlinks?(id: string): string[] | Promise<string[]>;
+  subscribe(listener: () => void): () => void;
+}
+interface PagesOptions {
+  store: PageStore;
+  currentPageId: string | null;
+  onNavigate: (pageId: string) => void;
+  onSubPagesDetached?: (pageIds: string[]) => void;
+  onSubPagesAttached?: (pageIds: string[]) => void;
+  resolveHref?: (pageId: string) => string; // default `#<pageId>`
+  onError?: (error: unknown, context: { editor: Editor }) => void; // `store.create` rejected
+  nodeViews?: { subPage?: NodeViewRenderer; pageLink?: NodeViewRenderer };
+}
+interface PagesStorage {
+  options: PagesOptions;
+} // editor.storage.pages
+interface PageRefs {
+  subPages: string[];
+  links: string[];
+}
+
+function pages(options: PagesOptions, untitled?: string): Extensions; // subPage + pageLink + the watcher extension; `untitled` = messages.untitledPage
+const SubPage: Node; // store-less: titles/hrefs fall back to the page id
+const PageLink: Node;
+function collectPageRefs(doc: JSONContent): PageRefs; // any depth, de-duplicated
+function getPagesOptions(editor: Editor): PagesOptions | undefined;
+function pageTitle(page: Pick<PageMeta, "title"> | undefined, untitled?: string): string; // `untitled` ("Untitled") when empty
+const UNTITLED_PAGE: "Untitled";
+function createPagesSlashItems(): SlashItem[]; // `/page`, `/link to page`
+function withPageMentions(mention, options: PagesOptions, untitled?: string): MentionOptions; // merges store.search into `@`
+function isRemoteTransaction(tr: Transaction): boolean;
+function subPageDelta(trs: readonly Transaction[]): { attached: string[]; detached: string[] };
+function findSubPageConversions(doc, ranges, isOwned): { pos: number; node: PMNode }[];
+const pagesPluginKey: PluginKey;
+// editor.commands.createSubPage() · setSubPage(pageId) · setPageLink(pageId)
+```
+
+Opt-in through `createBlockKit({ pages })`; the kit also wraps the `mention` provider with
+`withPageMentions` (enabling a pages-only `@` menu when `mention` is absent) and adds the page
+slash items. See [`architecture/editor-runtime.md`](../architecture/editor-runtime.md#pages).
+
 ## `@slash-editor/react`
 
 ```ts
@@ -853,6 +927,28 @@ outside the editor (an avatar row, an "N online" badge).
 
 `useTableOfContents` follows core's store for `items`, and `active` has two sources with explicit precedence: the caret (`findActiveItem` over the selection, while the editor is editable and focused) wins, and scroll geometry (`pickActiveByScroll` over the headings' rects, rAF-throttled) covers the read-only or unfocused case. `select` pins `active` optimistically so the row highlights before any scroll event fires. The returned interface is named `TableOfContents` after the hook's read surface, not core's extension — core's is only ever configured through `createBlockKit`.
 
+### Pages hooks (`use-pages.ts`)
+
+```ts
+type PageStatus = "loading" | "ready" | "missing";
+function usePage(
+  store: PageStore,
+  pageId: string | null | undefined,
+): { page: PageMeta | undefined; status: PageStatus };
+function usePageTree(
+  store: PageStore,
+  rootId?: string | null,
+  options?: { defaultExpanded?: readonly string[] },
+): { rows: PageTreeRow[]; toggle; expand; collapse };
+function useBreadcrumb(store: PageStore, pageId: string | null | undefined): PageMeta[];
+function useBacklinks(
+  store: PageStore,
+  pageId: string | null | undefined,
+): { pages: PageMeta[]; loading: boolean };
+```
+
+These read a `PageStore` directly and never touch an editor (like `usePresence`). `PageTreeRow` is `{ page, depth, expanded, loading }`.
+
 ## Demo surface
 
 `site/registry/components/slash-menu.tsx` is the reference UI: `Popover` + `Command`, `shouldFilter={false}`, controlled `value`, items grouped by `SlashItem.group`, and a local `ICONS` record mapping icon keys to `lucide-react` components, with a fallback icon so an unmapped key can never render a blank slot. Each row is one line — icon, title, `shortcut` — and `description` becomes the row's `title` tooltip.
@@ -879,6 +975,12 @@ inside the node — the `NodeViewContent` source above a debounced live preview;
 preview puts the caret at the end of the source. `registry/lib/mermaid.ts` lazy-imports `mermaid`,
 serialises renders (its config is global), and themes each render from the shadcn tokens in effect,
 converting `oklch()` values to hex on a 1×1 canvas since Mermaid's colour maths cannot parse them.
+
+`code-block-node-view.tsx` (its own `code-block-node-view` registry item, which also carries the
+`hljs-*` token CSS) wraps the lowlight `codeBlock` source in `NodeViewContent` and pins a native
+language `<select>` to the corner, filled from the extension's own `lowlight.listLanguages()` plus
+the current language when it is only an alias (`js`). `Auto` clears the attribute. Token colours mix
+`--chart-1`…`--chart-5` toward `--foreground` so contrast holds in any shadcn theme.
 
 `site/registry/components/mention-menu.tsx` is the reference mention UI: `Popover` + `Command`,
 the same `shouldFilter={false}`/controlled-`value` shape as `slash-menu.tsx`, plus a loading row for

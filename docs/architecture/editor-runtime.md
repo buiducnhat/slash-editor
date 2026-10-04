@@ -196,6 +196,37 @@ Three constraints shape it:
   callout. `SlashMarkdownManager` defaults to a fresh `Marked` instance per manager (per editor, and
   per cached `extensions` array for the pure helpers).
 
+## Pages
+
+Pages are an opt-in split between what the library owns and what the host owns. Core owns two nodes
+— `subPage` (block, atom) and `pageLink` (inline atom) — each carrying only a `pageId`. The host owns
+a `PageStore` (titles, icons, tree, search, optional backlinks index); the document never stores
+metadata, so a rename shows everywhere at once. Node views read `store.peek` and subscribe; the
+hooks (`usePage`, `usePageTree`, …) read the store directly, with no editor.
+
+- **Options storage by reference.** Tiptap's `configure` deep-clones options, which would copy the
+  store. `pages(options)` therefore keeps `PagesOptions` in `editor.storage.pages.options`
+  and everything else reads it through `getPagesOptions(editor)`.
+- **`nodeViews` option.** A UI layer cannot re-register `subPage`/`pageLink` (name collision), so
+  `PagesOptions.nodeViews` carries the `NodeViewRenderer`s into the factory.
+- **Watcher.** An `onTransaction` hook reports `onSubPagesDetached/Attached`. `subPageDelta`
+  scans only the changed ranges of each transaction and nets counts per id across the whole
+  dispatch, so `moveBlock` (delete + insert) and a paste the uniqueness pass converts report
+  nothing.
+- **Remote/undo rule.** A transaction is processed when it has no `y-sync$` meta, or when the meta
+  has `isUndoRedoOperation: true`; `isChangeOrigin: true` with `isUndoRedoOperation: false` is a
+  collaborator's edit and is skipped. A local Yjs undo replaces the whole document, so its
+  changed range is the full document.
+- **Uniqueness.** An `appendTransaction` converts a `subPage` into a paragraph holding a `pageLink`
+  when its `pageId` already exists in the document or `store.peek(id).parentId !== currentPageId`.
+- **Markdown.** `MarkdownManager` calls `renderMarkdown` with no context, so `this.options` is
+  unreachable. The `pages(options)` factory extends the nodes with a `renderMarkdown` closing over
+  `store`/`resolveHref`; the bare `SubPage`/`PageLink` fall back to the page id.
+- **Latched.** Extensions are resolved once per editor, so hosts remount per page (`key={pageId}`)
+  and pass stable callbacks. Collaboration uses one `Y.Doc` per page.
+
+Design: [`project-pdr/pages-design-brief.md`](../project-pdr/pages-design-brief.md).
+
 ## Lifecycle decisions in `useSlashEditor`
 
 - `immediatelyRender: false` — the same component renders under SSR (Next.js App Router) without hydration mismatch.

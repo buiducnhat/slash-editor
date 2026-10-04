@@ -147,7 +147,28 @@ export {
   type MentionState,
   type MentionStorage,
 } from "./mention.ts";
+export { CodeBlock, codeBlock, type CodeBlockOptions, type Lowlight } from "./code-block.ts";
 export { Mermaid, mermaid, type MermaidOptions } from "./mermaid.ts";
+export {
+  collectPageRefs,
+  createPagesSlashItems,
+  findSubPageConversions,
+  getPagesOptions,
+  isRemoteTransaction,
+  PageLink,
+  type PageMeta,
+  type PageRefs,
+  pages,
+  type PagesOptions,
+  pagesPluginKey,
+  type PagesStorage,
+  type PageStore,
+  pageTitle,
+  SubPage,
+  subPageDelta,
+  UNTITLED_PAGE,
+  withPageMentions,
+} from "./pages.ts";
 export {
   defaultPlaceholderText,
   Placeholder,

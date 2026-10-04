@@ -9,14 +9,16 @@ optional — a partial translation keeps English for whatever you leave out.
 
 <AutoTypeTable path="../packages/core/src/messages.ts" name="SlashEditorMessages" />
 
-| Field           | Keyed by                                                    | Overrides                                          |
-| --------------- | ----------------------------------------------------------- | -------------------------------------------------- |
-| `items`         | item `id`                                                   | `title`, `description`, `aliases`, `keywords`      |
-| `groups`        | English group name (`"Basic blocks"`, `"Media"`, `"AI"`, …) | Slash menu section headings                        |
-| `hint`          | —                                                           | Text shown after `/` (`slash.hint` wins)           |
-| `placeholder`   | [`PlaceholderKey`](/docs/guides/block-kit)                  | Empty-block placeholders (`placeholder.text` wins) |
-| `blockMenu`     | block menu item `id` (`duplicate`, `delete`)                | Titles returned by `useBlockMenu`                  |
-| `bubbleToolbar` | bubble item `id` (`bold`, `italic`, `link`, …)              | Toolbar labels                                     |
+| Field           | Keyed by                                                    | Overrides                                            |
+| --------------- | ----------------------------------------------------------- | ---------------------------------------------------- |
+| `items`         | item `id`                                                   | `title`, `description`, `aliases`, `keywords`        |
+| `groups`        | English group name (`"Basic blocks"`, `"Media"`, `"AI"`, …) | Slash menu section headings                          |
+| `hint`          | —                                                           | Text shown after `/` (`slash.hint` wins)             |
+| `placeholder`   | [`PlaceholderKey`](/docs/guides/block-kit)                  | Empty-block placeholders (`placeholder.text` wins)   |
+| `blockMenu`     | block menu item `id` (`duplicate`, `delete`)                | Titles returned by `useBlockMenu`                    |
+| `bubbleToolbar` | bubble item `id` (`bold`, `italic`, `link`, …)              | Toolbar labels                                       |
+| `untitledPage`  | —                                                           | Title of a page with no title (default `"Untitled"`) |
+| `uploadFailed`  | —                                                           | Upload error when the adapter throws a non-`Error`   |
 
 `items` covers slash items, the block types shared by the slash, bubble, and block menus
 (`useBlockTypes`), and AI actions. Ids are the ones in `defaultSlashItems`,
@@ -40,6 +42,7 @@ const vi: SlashEditorMessages = {
     Structure: "Cấu trúc",
     Inline: "Nội tuyến",
     AI: "Trợ lý AI",
+    Pages: "Trang",
   },
   items: {
     paragraph: {
@@ -67,6 +70,8 @@ const vi: SlashEditorMessages = {
     },
     table: { title: "Bảng", aliases: ["table", "bang"] },
     summarize: { title: "Tóm tắt" },
+    page: { title: "Trang con", description: "Tạo trang con trong trang này" },
+    "link-to-page": { title: "Liên kết trang", description: "Liên kết tới một trang có sẵn" },
   },
   placeholder: {
     paragraph: "Nhấn '/' để chọn lệnh…",
@@ -85,6 +90,7 @@ const vi: SlashEditorMessages = {
     code: "Mã",
     link: "Liên kết",
   },
+  untitledPage: "Không tiêu đề",
 };
 
 export function MyEditor() {

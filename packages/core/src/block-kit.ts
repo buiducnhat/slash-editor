@@ -16,6 +16,7 @@ import {
   defaultBubbleToolbarItems,
   type BubbleToolbarOptions,
 } from "./bubble-toolbar.ts";
+import { codeBlock, type CodeBlockOptions } from "./code-block.ts";
 import { Callout } from "./callout.ts";
 import { collaboration, type CollaborationOptions } from "./collaboration.ts";
 import { column, columns, type ColumnsOptions } from "./columns.ts";
@@ -33,6 +34,7 @@ import {
   type SlashEditorMessages,
 } from "./messages.ts";
 import { mermaid, type MermaidOptions } from "./mermaid.ts";
+import { createPagesSlashItems, pages, type PagesOptions, withPageMentions } from "./pages.ts";
 import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
 import { quote } from "./quote.ts";
 import {
@@ -141,6 +143,16 @@ export interface BlockKitOptions {
    */
   mermaid?: Partial<MermaidOptions> | false;
   /**
+   * Syntax-highlighted code blocks (lowlight). Omitted, StarterKit's plain
+   * `codeBlock` is used. Any object (`codeBlock: {}`) swaps it for a
+   * highlighting block of the same name, so everything addressing `codeBlock`
+   * keeps working; it is opt-in because highlighting costs runtime work on
+   * every edit. Pass `lowlight` to choose the grammars. `false` leaves the kit
+   * with no code block, to supply a `NodeView`-augmented variant via `extend`
+   * instead (see `CodeBlock`, exported for `.extend()`).
+   */
+  codeBlock?: Partial<CodeBlockOptions> | false;
+  /**
    * Table kit configuration (resizable columns on by default), or `false`
    * to opt out.
    *
@@ -211,6 +223,13 @@ export interface BlockKitOptions {
    */
   comment?: Partial<CommentOptions> | false;
   /**
+   * Notion-style pages: `subPage` blocks, inline `pageLink`s, `/page` and
+   * `/link to page`, page entries in the `@` menu, and detach/attach reports,
+   * all backed by a host-provided `PageStore`. Omit to leave them out — there
+   * is no default store. The editor shows one page; remount it per page.
+   */
+  pages?: PagesOptions | false;
+  /**
    * Document outline store (top-level headings, recomputed on change), or
    * `false` to opt out. An outline is read-only state, not an insertable
    * block, so this registers no slash item; and with no subscriber listening
@@ -262,11 +281,13 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     file: fileOptions,
     video: videoOptions,
     embed: embedOptions,
+    codeBlock: codeBlockOptions,
     mermaid: mermaidOptions,
     table: tableOptions,
     columns: columnsOptions,
     linkEditor: linkEditorOptions,
     mention: mentionOptions,
+    pages: pagesOptions,
     emoji: emojiOptions,
     ai: aiOptions,
     comment: commentOptions,
@@ -280,6 +301,12 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
   const resolvedAi: AiKitOptions | undefined = aiOptions
     ? { actions: defaultAiActions, node: true, ...aiOptions }
     : undefined;
+  const resolvedMention =
+    mentionOptions === false
+      ? undefined
+      : pagesOptions
+        ? withPageMentions(mentionOptions, pagesOptions, messages?.untitledPage)
+        : mentionOptions;
   const localizedBlockTypes = localizeItems(blockTypes, messages);
   const localizedAi = resolvedAi && {
     ...resolvedAi,
@@ -317,11 +344,16 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
         linkOptions === false
           ? false
           : { openOnClick: false, enableClickSelection: true, ...linkOptions },
+      // Any `codeBlock` option replaces StarterKit's plain block (see below).
+      codeBlock: codeBlockOptions === undefined ? undefined : false,
       // `>` belongs to the toggle; quote() re-registers blockquote with the
       // `"` shorthand instead.
       blockquote: false,
     }),
     quote(),
+    ...(codeBlockOptions === undefined || codeBlockOptions === false
+      ? []
+      : [codeBlock(codeBlockOptions)]),
     TaskList,
     TaskItem.configure({ nested: true, ...taskItemOptions }),
     Callout,
@@ -339,7 +371,8 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
     ...(localizedAi ? [ai(localizedAi)] : []),
     ...(localizedAi && localizedAi.node !== false ? [aiBlock()] : []),
-    ...(mentionOptions === false || !mentionOptions ? [] : [mention(mentionOptions)]),
+    ...(pagesOptions ? pages(pagesOptions, messages?.untitledPage) : []),
+    ...(resolvedMention ? [mention(resolvedMention)] : []),
     ...(emojiOptions === false || !emojiOptions ? [] : [emoji(emojiOptions)]),
     ...(slash === false
       ? []
@@ -355,6 +388,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
                   (item) => !blockTypes.some((type) => type.id === item.id),
                 ),
                 ...(resolvedAi ? createAiSlashItems(resolvedAi.actions) : []),
+                ...(pagesOptions ? createPagesSlashItems() : []),
               ],
               messages,
             ),

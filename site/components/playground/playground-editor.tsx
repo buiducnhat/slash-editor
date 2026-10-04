@@ -7,7 +7,7 @@ import type { WebrtcProvider } from "y-webrtc";
 import { EditorContent, useEditorState } from "@slash-editor/react";
 import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftIcon, EyeIcon, FileCodeIcon, UsersIcon } from "lucide-react";
+import { ArrowLeftIcon, EyeIcon, FileCodeIcon, FileTextIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
@@ -28,6 +28,7 @@ import { mockStreamAdapter } from "@/lib/stream-adapter.ts";
 import { useDemoEditor } from "@/lib/use-demo-editor.ts";
 import { cn } from "@/lib/utils.ts";
 import { MarkdownPanel } from "./markdown-panel.tsx";
+import { PagesPlayground } from "./pages-editor.tsx";
 
 const INITIAL_CONTENT = `
 <h1>slash-editor</h1>
@@ -51,7 +52,7 @@ const INITIAL_CONTENT = `
   <div data-type="detailsContent"><p>Type <code># </code> then <code>&gt; </code>, or <code>## </code> inside a toggle's title.</p></div>
 </details>
 <blockquote><p>Type <code>/</code> on an empty line to open the block menu.</p></blockquote>
-<pre><code>const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
+<pre><code class="language-ts">const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
 <pre data-type="mermaid"><code>flowchart LR
     A[Type /mermaid] --> B{Caret inside?}
     B -->|yes| C[Edit source]
@@ -155,11 +156,14 @@ function EditorWorkspace({ editor, footer }: { editor: Editor | null; footer?: R
 const EXTENSIONS = [...nodeViewExtensions(), markdown()];
 
 const BLOCK_KIT_DEFAULTS = {
-  image: {},
-  file: {},
-  video: {},
-  embed: {},
-  mermaid: {},
+  // The node-view variants in `nodeViewExtensions()` replace these defaults;
+  // leaving them on would register each node twice.
+  image: false,
+  file: false,
+  video: false,
+  embed: false,
+  mermaid: false,
+  codeBlock: false,
   ai: { adapter: mockStreamAdapter, node: false },
   emoji: {},
   mention: {
@@ -261,6 +265,7 @@ function RoomJoinForm({ className }: { className?: string } = {}) {
 
 function SoloEditor() {
   const [showMarkdown, setShowMarkdown] = useState(false);
+  const router = useRouter();
   const storeRef = useRef<CommentThreadStore | null>(null);
   storeRef.current ??= createMockCommentThreadStore();
   const store = storeRef.current;
@@ -301,7 +306,17 @@ function SoloEditor() {
             </Button>
             <ReadOnlyToggle readOnly={readOnly} onChange={setReadOnly} />
           </div>
-          <RoomJoinForm className="ml-auto" />
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/playground?page=home")}
+            >
+              <FileTextIcon data-icon="inline-start" />
+              Pages
+            </Button>
+            <RoomJoinForm />
+          </div>
         </div>
       </header>
 
@@ -407,5 +422,7 @@ function CollabEditor({ room }: { room: string }) {
 export function PlaygroundEditor() {
   const searchParams = useSearchParams();
   const room = searchParams.get("collab");
+  const pageId = searchParams.get("page");
+  if (pageId) return <PagesPlayground pageId={pageId} />;
   return room ? <CollabEditor key={room} room={room} /> : <SoloEditor />;
 }
