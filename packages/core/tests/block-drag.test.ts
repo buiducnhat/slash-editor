@@ -2,11 +2,13 @@ import { getSchema } from "@tiptap/core";
 import { EditorState, TextSelection, type Transaction } from "@tiptap/pm/state";
 import { expect, test } from "vite-plus/test";
 import {
+  BLOCK_GUTTER_WIDTH,
   type BlockRect,
   BlockDrag,
   canAppendChild,
   createBlockKit,
   resolveDropTarget,
+  resolveHoverRect,
   toBlockTarget,
 } from "../src/index.ts";
 
@@ -135,6 +137,34 @@ test("a source that can't sit beside a list item lands after the whole list inst
 
   expect(result).toMatchObject({ pos: 20, mode: "after" });
 });
+
+// The registry handle spans [left - 72, left - 14] of the row it anchors to.
+for (const padding of [0, 96]) {
+  test(`the gutter handle keeps its row hovered with ${padding}px of editor padding`, () => {
+    const editorBox = { left: 100, right: 700, top: 0, bottom: 200 };
+    const contentLeft = editorBox.left + padding;
+    const paragraph = { ...rect(0, 5, "paragraph", 0, 40), left: contentLeft };
+    const list = { ...rect(5, 20, "bulletList", 40, 100), left: contentLeft };
+    const item = {
+      ...rect(6, 8, "listItem", 40, 70, { type: "bulletList", pos: 5, size: 20 }),
+      left: contentLeft + 24,
+    };
+    const rects = [paragraph, list, item];
+
+    for (const target of [paragraph, item]) {
+      for (const x of [target.left - 72, target.left - 14]) {
+        expect(
+          resolveHoverRect(rects, { x, y: target.top + 10 }, editorBox, BLOCK_GUTTER_WIDTH),
+        ).toBe(target);
+      }
+    }
+
+    const farLeft = Math.min(editorBox.left, contentLeft) - BLOCK_GUTTER_WIDTH - 1;
+    expect(
+      resolveHoverRect(rects, { x: farLeft, y: 10 }, editorBox, BLOCK_GUTTER_WIDTH),
+    ).toBeNull();
+  });
+}
 
 interface CommandContext {
   tr: Transaction;

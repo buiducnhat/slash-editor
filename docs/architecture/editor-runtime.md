@@ -56,6 +56,8 @@ Assignment is two-staged, because `addGlobalAttributes` runs during schema const
 
 The gutter itself is anchored by `BlockTarget.getClientRect`, which reports the block's _first line_ rather than its box: a `Range` over the block's first text node, so top padding (callout, code block, table cell) is accounted for, falling back to the block's own line box for a block with no text (a rule, a ready image). A tall block — an expanded toggle, a table, a multi-line column — therefore keeps its hover controls at the top instead of centring them on its height.
 
+Horizontally, hover reaches `gutterWidth` (default `BLOCK_GUTTER_WIDTH`, 80px) left of the matched block's own left edge — the edge the gutter anchors to — or of the editor box, whichever is further left (`resolveHoverRect`, pure geometry). Measuring from the block rather than the editor's padding keeps the gutter reachable in an unpadded editor and beside an indented list item alike; the registry handle lays itself out inside that band, so the two cannot drift apart. The band sits outside the editor DOM when the editor has little left padding, so an ancestor with `overflow: hidden` clips the controls with it.
+
 `resolveDropTarget` is pure geometry (before/after by nearest-midpoint, `inside` when rightward travel passes `indentThreshold`) parameterized by two schema predicates the plugin supplies:
 
 - `canNest(source, target)` — checks `target.contentMatchAt(target.childCount)`, the state _after_ the target's existing children, not `target.contentMatch` (the state before any). `listItem`'s content is `"paragraph block*"`: the naive start-state check rejects everything, since only `paragraph` can open it, while a later block appends validly.
