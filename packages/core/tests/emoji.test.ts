@@ -33,7 +33,8 @@ test("searchEmojis ranks name prefix over shortcode, substring, and tag matches"
     { name: "big_smile", emoji: "b", shortcodes: ["x2"], tags: [] },
     { name: "x3", emoji: "c", shortcodes: ["smiley"], tags: [] },
     { name: "smile", emoji: "d", shortcodes: ["x4"], tags: [] },
-    { name: "regional_indicator_s", shortcodes: ["regional_indicator_s"], tags: [] },
+    { name: "regional_indicator_s", emoji: "🇸", shortcodes: ["regional_indicator_s"], tags: [] },
+    { name: "no_glyph", shortcodes: ["no_glyph"], tags: [] },
   ];
 
   expect(searchEmojis(emojis, "smile", 10).map((e) => e.name)).toEqual([
@@ -44,7 +45,7 @@ test("searchEmojis ranks name prefix over shortcode, substring, and tag matches"
   ]);
   expect(searchEmojis(emojis, "SMILE", 1).map((e) => e.name)).toEqual(["smile"]);
   expect(searchEmojis(emojis, "nothing", 10)).toEqual([]);
-  // Glyph-less letters are never offered, with or without a query.
+  // Regional-indicator letters are never offered, with or without a query.
   expect(searchEmojis(emojis, "", 10).map((e) => e.name)).toEqual([
     "tag_hit",
     "big_smile",

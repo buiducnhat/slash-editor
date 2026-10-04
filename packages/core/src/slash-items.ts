@@ -159,7 +159,7 @@ const MEDIA_ITEMS: SlashItem[] = [
     aliases: ["emoji", "emoticon", "smiley"],
     keywords: [":", "face", "reaction"],
     shortcut: ":",
-    icon: "smile",
+    icon: "face-slightly-smiling-plus",
     when: (editor) => hasNode(editor, "emoji"),
     // The typed ":" is what opens the picker; the emoji extension owns the rest.
     run: ({ editor, range }) => editor.chain().focus().deleteRange(range).insertContent(":").run(),

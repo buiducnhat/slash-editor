@@ -78,15 +78,17 @@ function score(item: EmojiItem, query: string): number {
 /**
  * Ranks emojis against a `:shortcode:` query: name prefix, then shortcode
  * prefix, then substring, then tag. Ties keep dataset order. An empty query
- * lists the first `limit` emojis of the dataset, regional-indicator letters
- * excluded.
+ * lists the first `limit` emojis of the dataset. Regional-indicator letters
+ * and entries with neither glyph nor fallback image are never offered.
  */
 export function searchEmojis(emojis: EmojiItem[], query: string, limit: number): EmojiItem[] {
   const normalized = query.trim().toLowerCase();
 
-  // Letters without a glyph of their own (`regional_indicator_a`) are for
-  // building flags, not picking.
-  const pickable = emojis.filter((item) => item.emoji || item.fallbackImage);
+  // The 26 regional-indicator letters carry a glyph but only mean something
+  // paired into a flag (and flags are listed whole), so picking one is noise.
+  const pickable = emojis.filter(
+    (item) => !item.name.startsWith("regional_indicator_") && (item.emoji || item.fallbackImage),
+  );
 
   if (!normalized) {
     return pickable.slice(0, limit);

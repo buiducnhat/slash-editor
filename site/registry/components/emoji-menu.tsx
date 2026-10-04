@@ -51,10 +51,7 @@ export function EmojiMenu({ editor }: { editor: Editor }) {
                   <span className="flex size-5 items-center justify-center text-base">
                     {item.emoji ?? <img src={item.fallbackImage} alt="" className="size-4" />}
                   </span>
-                  <span className="flex-1 truncate">{item.name.replaceAll("_", " ")}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    :{item.shortcodes[0]}:
-                  </span>
+                  <span className="min-w-0 flex-1 truncate">{item.name.replaceAll("_", " ")}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
