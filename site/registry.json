@@ -166,6 +166,52 @@
       ]
     },
     {
+      "name": "code-block-node-view",
+      "type": "registry:component",
+      "title": "Code Block Node View",
+      "description": "ReactNodeViewRenderer target for the highlighted `codeBlock` (`codeBlock: {}` in the block kit): a language selector pinned to the block, plus `hljs-*` token colours mixed from your shadcn chart tokens. Wire with `CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) })` and `blockKit: { codeBlock: false }`.",
+      "dependencies": ["@slash-editor/core", "@tiptap/react", "cn"],
+      "files": [
+        {
+          "path": "registry/components/nodes/code-block-node-view.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "css": {
+        ".slash-content pre code": {
+          "color": "var(--foreground)"
+        },
+        ".slash-content .hljs-comment, .slash-content .hljs-quote": {
+          "color": "var(--muted-foreground)",
+          "font-style": "italic"
+        },
+        ".slash-content .hljs-keyword, .slash-content .hljs-doctag, .slash-content .hljs-selector-tag": {
+          "color": "color-mix(in oklab, var(--chart-1) 65%, var(--foreground))"
+        },
+        ".slash-content .hljs-string, .slash-content .hljs-regexp, .slash-content .hljs-addition, .slash-content .hljs-meta-string": {
+          "color": "color-mix(in oklab, var(--chart-2) 65%, var(--foreground))"
+        },
+        ".slash-content .hljs-number, .slash-content .hljs-literal, .slash-content .hljs-symbol, .slash-content .hljs-bullet": {
+          "color": "color-mix(in oklab, var(--chart-3) 65%, var(--foreground))"
+        },
+        ".slash-content .hljs-title, .slash-content .hljs-section, .slash-content .hljs-name": {
+          "color": "color-mix(in oklab, var(--chart-4) 65%, var(--foreground))"
+        },
+        ".slash-content .hljs-attr, .slash-content .hljs-attribute, .slash-content .hljs-variable, .slash-content .hljs-template-variable, .slash-content .hljs-type, .slash-content .hljs-built_in, .slash-content .hljs-selector-class, .slash-content .hljs-selector-id": {
+          "color": "color-mix(in oklab, var(--chart-5) 65%, var(--foreground))"
+        },
+        ".slash-content .hljs-deletion": {
+          "color": "var(--destructive)"
+        },
+        ".slash-content .hljs-emphasis": {
+          "font-style": "italic"
+        },
+        ".slash-content .hljs-strong": {
+          "font-weight": "600"
+        }
+      }
+    },
+    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover (anchor-aware)",
@@ -241,7 +287,7 @@
       "name": "slash-editor-kit",
       "type": "registry:block",
       "title": "slash-editor Kit",
-      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, emoji menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, the Mermaid node view, and the Pages UI (page node views, header, tree, breadcrumb, backlinks).",
+      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, emoji menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, the Mermaid node view, the code block node view, and the Pages UI (page node views, header, tree, breadcrumb, backlinks).",
       "registryDependencies": [
         "@slash-editor/slash-menu",
         "@slash-editor/bubble-toolbar",
@@ -256,6 +302,7 @@
         "@slash-editor/table-of-contents",
         "@slash-editor/node-views",
         "@slash-editor/mermaid-node-view",
+        "@slash-editor/code-block-node-view",
         "@slash-editor/page-node-views",
         "@slash-editor/page-header",
         "@slash-editor/page-tree",

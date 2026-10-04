@@ -39,3 +39,8 @@ until you pass one — see the [mentions](/docs/guides/mentions),
 `emoji` is opt-in for a different reason: its dataset is sizeable, and enabling it converts typed
 `:shortcode:` text into emoji nodes. Pass `emoji: {}` to enable it — see the
 [emoji guide](/docs/guides/emoji).
+
+`codeBlock` is opt-in too. Left out, StarterKit's plain code block is used; `codeBlock: {}` swaps it
+for a syntax-highlighted one (lowlight) of the same name. Pass your own `lowlight` instance to choose
+the grammars, or see [Code Block Node View](/docs/components/code-block-node-view) for the language
+selector and token theme.

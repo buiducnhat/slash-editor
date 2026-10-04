@@ -137,6 +137,7 @@ export {
   type MentionState,
   type MentionStorage,
 } from "./mention.ts";
+export { CodeBlock, codeBlock, type CodeBlockOptions, type Lowlight } from "./code-block.ts";
 export { Mermaid, mermaid, type MermaidOptions } from "./mermaid.ts";
 export {
   collectPageRefs,

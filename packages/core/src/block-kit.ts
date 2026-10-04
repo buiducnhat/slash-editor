@@ -12,6 +12,7 @@ import {
 import { blockDrag, type BlockDragOptions } from "./block-drag.ts";
 import { blockId, type BlockIdOptions } from "./block-id.ts";
 import { bubbleToolbar, type BubbleToolbarOptions } from "./bubble-toolbar.ts";
+import { codeBlock, type CodeBlockOptions } from "./code-block.ts";
 import { Callout } from "./callout.ts";
 import { collaboration, type CollaborationOptions } from "./collaboration.ts";
 import { column, columns, type ColumnsOptions } from "./columns.ts";
@@ -132,6 +133,16 @@ export interface BlockKitOptions {
    */
   mermaid?: Partial<MermaidOptions> | false;
   /**
+   * Syntax-highlighted code blocks (lowlight). Omitted, StarterKit's plain
+   * `codeBlock` is used. Any object (`codeBlock: {}`) swaps it for a
+   * highlighting block of the same name, so everything addressing `codeBlock`
+   * keeps working; it is opt-in because highlighting costs runtime work on
+   * every edit. Pass `lowlight` to choose the grammars. `false` leaves the kit
+   * with no code block, to supply a `NodeView`-augmented variant via `extend`
+   * instead (see `CodeBlock`, exported for `.extend()`).
+   */
+  codeBlock?: Partial<CodeBlockOptions> | false;
+  /**
    * Table kit configuration (resizable columns on by default), or `false`
    * to opt out.
    *
@@ -251,6 +262,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     file: fileOptions,
     video: videoOptions,
     embed: embedOptions,
+    codeBlock: codeBlockOptions,
     mermaid: mermaidOptions,
     table: tableOptions,
     columns: columnsOptions,
@@ -301,11 +313,16 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
         linkOptions === false
           ? false
           : { openOnClick: false, enableClickSelection: true, ...linkOptions },
+      // Any `codeBlock` option replaces StarterKit's plain block (see below).
+      codeBlock: codeBlockOptions === undefined ? undefined : false,
       // `>` belongs to the toggle; quote() re-registers blockquote with the
       // `"` shorthand instead.
       blockquote: false,
     }),
     quote(),
+    ...(codeBlockOptions === undefined || codeBlockOptions === false
+      ? []
+      : [codeBlock(codeBlockOptions)]),
     TaskList,
     TaskItem.configure({ nested: true, ...taskItemOptions }),
     Callout,

@@ -96,6 +96,7 @@ function PageEditor({
       video: false,
       embed: false,
       mermaid: false,
+      codeBlock: false,
       emoji: {},
       pages: pagesRef.current,
       extend: EXTENSIONS,

@@ -19,6 +19,7 @@ interface BlockKitOptions {
   video?: Partial<VideoOptions> | false;
   embed?: Partial<EmbedOptions> | false;
   mermaid?: Partial<MermaidOptions> | false; // source-only node; rendering is a UI NodeView
+  codeBlock?: Partial<CodeBlockOptions> | false; // omitted = StarterKit's plain codeBlock; any object = lowlight-highlighted codeBlock (opt-in, runtime cost); false = none, supply CodeBlock.extend via `extend`
   table?: Partial<TableKitOptions> | false; // default { table: { resizable: true } }
   columns?: Partial<ColumnsOptions> | false;
   link?: { openOnClick?: boolean; enableClickSelection?: boolean } | false; // default { openOnClick: false, enableClickSelection: true }; `openOnClick: true` for a read-only viewer
@@ -335,6 +336,14 @@ const Embed: Node<EmbedOptions>;
 function embed(options?: Partial<EmbedOptions>): Node;
 // editor.commands.setEmbed({ url?, mode?: "bookmark" | "iframe", title?, description?, thumbnail? })
 // attrs: url, mode (default "bookmark"), title, description, thumbnail
+
+// code-block.ts — @tiptap/extension-code-block-lowlight, same node name `codeBlock` (attrs, commands,
+// markdown unchanged); highlighting is decoration-only (`hljs-*` classes). Defaults to lowlight's
+// `common` grammars, baked into addOptions so `CodeBlock.extend({ addNodeView })` keeps them.
+const CodeBlock: Node<CodeBlockOptions>; // for .extend()
+function codeBlock(options?: Partial<CodeBlockOptions>): Node; // pass `lowlight` to choose grammars
+type CodeBlockOptions = CodeBlockLowlightOptions;
+type Lowlight = ReturnType<typeof createLowlight>;
 
 // mermaid.ts — CodeBlock.extend: source is the node's text (text*, code: true, marks: ""), no attrs.
 // priority 110 puts its ```mermaid input rule, HTML parse rules, and markdown `code` handler ahead
@@ -937,6 +946,12 @@ inside the node — the `NodeViewContent` source above a debounced live preview;
 preview puts the caret at the end of the source. `registry/lib/mermaid.ts` lazy-imports `mermaid`,
 serialises renders (its config is global), and themes each render from the shadcn tokens in effect,
 converting `oklch()` values to hex on a 1×1 canvas since Mermaid's colour maths cannot parse them.
+
+`code-block-node-view.tsx` (its own `code-block-node-view` registry item, which also carries the
+`hljs-*` token CSS) wraps the lowlight `codeBlock` source in `NodeViewContent` and pins a native
+language `<select>` to the corner, filled from the extension's own `lowlight.listLanguages()` plus
+the current language when it is only an alias (`js`). `Auto` clears the attribute. Token colours mix
+`--chart-1`…`--chart-5` toward `--foreground` so contrast holds in any shadcn theme.
 
 `site/registry/components/mention-menu.tsx` is the reference mention UI: `Popover` + `Command`,
 the same `shouldFilter={false}`/controlled-`value` shape as `slash-menu.tsx`, plus a loading row for

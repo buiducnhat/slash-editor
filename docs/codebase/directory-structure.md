@@ -15,6 +15,7 @@ packages/core/src/image.ts                Image node: upload/retry shape, empty-
 packages/core/src/link-editor.ts          LinkEditor extension: popover visibility + draft href only
 packages/core/src/markdown.ts             @slash-editor/core/markdown entry: Markdown extension, serializeMarkdown()/parseMarkdown()
 packages/core/src/markdown-syntax.ts      dependency-free marker/link/block-scan helpers nodes use for their markdown hooks
+packages/core/src/code-block.ts           CodeBlock/codeBlock(): lowlight-highlighted codeBlock, opt-in via `codeBlock` option
 packages/core/src/emoji.ts                Emoji node: wraps @tiptap/extension-emoji, `:` picker storage store, markdown shortcode
 packages/core/src/mention.ts              Mention node, async Suggestion provider, storage store
 packages/core/src/pages.ts                PageStore contract, subPage/pageLink nodes, pages() factory, collectPageRefs, detach/attach watcher, page slash items and `@` merge
@@ -86,6 +87,7 @@ site/                          the one app: playground, docs site, landing page,
     components/nodes/video-node-view.tsx   ReactNodeViewRenderer target for Video; takes `adapter` as a prop
     components/nodes/embed-node-view.tsx   ReactNodeViewRenderer target for Embed: URL input, bookmark/iframe
     components/nodes/ai-block-node-view.tsx  ReactNodeViewRenderer target for AiBlock: stream/Keep/Discard/Try again
+    components/nodes/code-block-node-view.tsx  ReactNodeViewRenderer target for the lowlight codeBlock: language selector
     components/nodes/mermaid-node-view.tsx  ReactNodeViewRenderer target for Mermaid: preview, click-to-edit source
     components/nodes/page-node-views.tsx   SubPageNodeView / PageLinkNodeView: live title, loading and trashed states
     components/ui/*.tsx        shadcn components (added via CLI, owned by the repo); `popover.tsx`/`dropdown-menu.tsx` forward `anchor` for caret/block-rect positioning

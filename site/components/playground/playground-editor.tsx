@@ -52,7 +52,7 @@ const INITIAL_CONTENT = `
   <div data-type="detailsContent"><p>Type <code># </code> then <code>&gt; </code>, or <code>## </code> inside a toggle's title.</p></div>
 </details>
 <blockquote><p>Type <code>/</code> on an empty line to open the block menu.</p></blockquote>
-<pre><code>const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
+<pre><code class="language-ts">const editor = useSlashEditor({ blockKit: { headingLevels: [1, 2, 3] } })</code></pre>
 <pre data-type="mermaid"><code>flowchart LR
     A[Type /mermaid] --> B{Caret inside?}
     B -->|yes| C[Edit source]
@@ -156,11 +156,14 @@ function EditorWorkspace({ editor, footer }: { editor: Editor | null; footer?: R
 const EXTENSIONS = [...nodeViewExtensions(), markdown()];
 
 const BLOCK_KIT_DEFAULTS = {
-  image: {},
-  file: {},
-  video: {},
-  embed: {},
-  mermaid: {},
+  // The node-view variants in `nodeViewExtensions()` replace these defaults;
+  // leaving them on would register each node twice.
+  image: false,
+  file: false,
+  video: false,
+  embed: false,
+  mermaid: false,
+  codeBlock: false,
   ai: { adapter: mockStreamAdapter, node: false },
   emoji: {},
   mention: {
