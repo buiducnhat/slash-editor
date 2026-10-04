@@ -1,8 +1,15 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { mediaMarkdown } from "./markdown-syntax.ts";
+import type { ResolveSrc } from "./upload.ts";
 
 export interface EmbedOptions {
   HTMLAttributes: Record<string, unknown>;
+  /**
+   * Display-only rewrite of the stored `url` attr, applied by node views
+   * (signed URLs, auth). Receives `url` as its `src` argument. Never affects
+   * `renderHTML`/`getHTML`/markdown: the stored `url` stays canonical.
+   */
+  resolveSrc?: ResolveSrc;
 }
 
 export type EmbedMode = "bookmark" | "iframe";

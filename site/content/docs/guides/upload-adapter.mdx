@@ -30,3 +30,45 @@ position) so retry resends the original `File` without the user picking again.
 explicit `override` — the same path covers "attach a file to an empty placeholder" when nothing
 has been attempted yet. A completed upload dispatches with `addToHistory: false`, so it never
 becomes a separate undo step.
+
+## Mapping the result onto the node
+
+By default a successful upload stores `result.url` as the node's `src`. Pass `toAttrs` to the
+`image`/`file`/`video` options to persist more of what your server returns — it runs on the first
+success and on every retry, and its attrs are merged over the node's existing ones (so `file`'s
+`name`/`size`/`mime`, read from the picked `File` at insert, survive unless you override them):
+
+```ts
+interface StoredUpload extends UploadResult {
+  name: string;
+  size: number;
+  mime: string;
+}
+
+createBlockKit({
+  file: {
+    toAttrs: (result) => {
+      const { url, name, size, mime } = result as StoredUpload;
+      return { src: url, name, size, mime };
+    },
+  },
+});
+```
+
+## Signed URLs and files behind auth
+
+`resolveSrc` (on `image`, `file`, `video`, and `embed`) rewrites a stored URL for display only:
+
+```ts
+Image.configure({
+  resolveSrc: (src, node) => signUrl(src), // string or Promise<string>
+});
+```
+
+The document — `getHTML()`, markdown, JSON, Yjs — keeps the canonical stored `src` (`url` for
+`embed`); persisting a short-lived signed URL would break every later reader. Only node views
+apply it: the registry [node views](/docs/components/node-views) do, through
+`useResolvedSrc` from `@slash-editor/react`, which you can call from your own node view too. An
+async result renders nothing until it settles (the raw URL is never requested meanwhile), a
+result for a since-changed `src` is discarded, and a thrown error or rejection falls back to the
+stored URL.

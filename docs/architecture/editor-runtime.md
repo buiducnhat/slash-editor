@@ -87,6 +87,17 @@ lives in `PendingUploadRegistry`, a per-node-type map keyed by the node's `Block
 that same `File` — or, via `retryImage(id, { file, adapter })`, a fresh one, the same path a
 `NodeView` uses to attach a file to a placeholder that has never had an upload attempt.
 
+A successful upload — first attempt or retry — maps the adapter's result onto attrs through the
+node's `toAttrs` option (default `{ src: result.url }`), merged over the node's existing attrs, so
+a richer server result (canonical name/size/mime, a server id) reaches the document without
+reimplementing the retry commands.
+
+`resolveSrc` (on `image`/`file`/`video`/`embed`) is the display-side counterpart: a node view
+passes the stored `src` (`url` for `embed`) through it — via `@slash-editor/react`'s
+`useResolvedSrc` — to get a signed or authorized URL for the rendered element only.
+`renderHTML`/`getHTML`/markdown never call it, so the document keeps the canonical URL;
+persisting a short-lived signed URL would break every later reader.
+
 `embed` has no upload step: nothing async, so its `NodeView` sets `url` directly through
 `updateAttributes` (built into every Tiptap `NodeView`), no adapter or retry contract involved.
 

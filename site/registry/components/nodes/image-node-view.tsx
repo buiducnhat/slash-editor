@@ -11,9 +11,9 @@ export function ImageNodeView(props: NodeViewProps & { adapter: UploadAdapter })
       icon={ImageIcon}
       emptyLabel="Add an image"
       retry={(id, override) => props.editor.commands.retryImage(id, override)}
-      renderReady={(attrs) => (
+      renderReady={(src) => (
         <img
-          src={attrs.src ?? undefined}
+          src={src}
           alt={(props.node.attrs.alt as string | null) ?? ""}
           className="max-w-full rounded-md"
         />

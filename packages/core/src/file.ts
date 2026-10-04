@@ -2,14 +2,31 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { mediaMarkdown } from "./markdown-syntax.ts";
 import {
   PendingUploadRegistry,
+  type ResolveSrc,
   retryUpload,
   runUpload,
+  srcFromUploadUrl,
   type UploadAdapter,
   type UploadStatus,
+  type UploadToAttrs,
 } from "./upload.ts";
 
 export interface FileOptions {
   HTMLAttributes: Record<string, unknown>;
+  /**
+   * Maps a successful upload (from `setFile` or `retryFile`) onto the attrs
+   * to persist, merged over the node's existing attrs — the `name`/`size`/
+   * `mime` read from the `File` at insert survive unless overridden here.
+   *
+   * @default (result) => ({ src: result.url })
+   */
+  toAttrs: UploadToAttrs;
+  /**
+   * Display-only `src` rewrite applied by node views (signed URLs, auth).
+   * Never affects `renderHTML`/`getHTML`/markdown: the stored `src` stays
+   * canonical.
+   */
+  resolveSrc?: ResolveSrc;
 }
 
 export interface FileStorage {
@@ -81,7 +98,7 @@ export const File = Node.create<FileOptions, FileStorage>({
   group: "block",
   atom: true,
   addOptions() {
-    return { HTMLAttributes: {} };
+    return { HTMLAttributes: {}, toAttrs: srcFromUploadUrl };
   },
   addStorage() {
     return { pending: new PendingUploadRegistry() };
@@ -161,7 +178,7 @@ export const File = Node.create<FileOptions, FileStorage>({
                 file,
                 adapter,
                 pending: this.storage.pending,
-                toAttrs: (result) => ({ src: result.url }),
+                toAttrs: this.options.toAttrs,
               });
             });
           }
@@ -183,7 +200,7 @@ export const File = Node.create<FileOptions, FileStorage>({
               typeName: this.name,
               id,
               pending: this.storage.pending,
-              toAttrs: (result) => ({ src: result.url }),
+              toAttrs: this.options.toAttrs,
               override,
             });
           });

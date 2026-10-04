@@ -14,6 +14,28 @@ export interface UploadResult {
 }
 
 /**
+ * Maps a settled upload's result onto the attrs to persist on the node.
+ * Receives the adapter's full result object, so a richer server response
+ * (canonical name/size/mime, a server id) can reach the document — narrow it
+ * to your adapter's result type. The returned attrs are merged over the
+ * node's existing attrs, so anything set at insert time survives unless
+ * overridden.
+ */
+export type UploadToAttrs = (result: UploadResult) => Record<string, unknown>;
+
+/** Default `toAttrs` for `image`/`file`/`video`: the result's `url` becomes `src`. */
+export const srcFromUploadUrl: UploadToAttrs = (result) => ({ src: result.url });
+
+/**
+ * Rewrites a media node's stored URL for display only — signed URLs, files
+ * behind auth. Called by node views with the stored `src` (`url` for
+ * `embed`) and the node itself; never by `renderHTML`/`getHTML`/markdown,
+ * which keep the canonical stored value. A rejected promise or a thrown
+ * error falls back to the stored value.
+ */
+export type ResolveSrc = (src: string, node: ProseMirrorNode) => string | Promise<string>;
+
+/**
  * Bring-your-own upload backend. Nodes never talk to a network directly —
  * every image/file/video command takes an adapter instance explicitly, so
  * core stays backend-agnostic and the demo can swap in a mock for tests.
