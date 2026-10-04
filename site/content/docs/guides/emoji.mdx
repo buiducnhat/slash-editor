@@ -1,0 +1,37 @@
+---
+title: Emoji
+description: "The `:shortcode:` picker and the /emoji slash item."
+---
+
+`emoji` is opt-in — it stays unregistered until you enable it, since the bundled dataset
+(`@tiptap/extension-emoji`) is sizeable:
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    emoji: { limit: 24 },
+  },
+});
+```
+
+Enabling it adds three things:
+
+- **A `:` picker.** Typing `:` after whitespace opens a menu filtered by name, shortcode, and tag.
+  `useEmoji` exposes its state; the [Emoji Menu](/docs/components/emoji-menu) component renders it.
+- **A `/emoji` slash item**, shown only while the node is registered. It types the `:` for you, so
+  the picker opens straight away.
+- **`:shortcode:` input and paste rules**, plus conversion of pasted unicode emoji into nodes.
+  These come from Tiptap's emoji extension.
+
+| Option                | Default | Description                                                         |
+| --------------------- | ------- | ------------------------------------------------------------------- |
+| `limit`               | `24`    | Maximum results the picker lists for a query.                       |
+| `emojis`              | bundled | Dataset to search — append custom emojis with a `fallbackImage`.    |
+| `enableEmoticons`     | `false` | Turn `:)` followed by a space into an emoji.                        |
+| `forceFallbackImages` | `false` | Always render `fallbackImage` instead of the unicode glyph.         |
+| `suggestion`          | —       | Override the picker's `items`, `char`, `minQueryLength`, and so on. |
+
+## Markdown
+
+An emoji exports as `:shortcode:` (GitHub renders it as the glyph) and imports back into an emoji
+node. A shortcode the dataset does not know — `12:30:45` — stays plain text.

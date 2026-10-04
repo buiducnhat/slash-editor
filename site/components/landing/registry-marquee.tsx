@@ -1,11 +1,12 @@
 import { Marquee } from "~/components/magicui/marquee.tsx";
 
-/** The 15 items published in the registry, as a scrolling catalog. */
+/** The 16 items published in the registry, as a scrolling catalog. */
 const ROW_ONE = [
   "slash-menu",
   "block-handle",
   "bubble-toolbar",
   "mention-menu",
+  "emoji-menu",
   "link-editor-popover",
   "comment-panel",
   "comment-composer",
@@ -35,7 +36,7 @@ export function RegistryMarquee() {
     <section className="flex flex-col gap-6">
       <div className="text-center">
         <h2 className="text-2xl font-semibold tracking-tight">
-          Fifteen registry items. Take the kit — or take one.
+          Sixteen registry items. Take the kit — or take one.
         </h2>
         <p className="text-fd-muted-foreground mx-auto mt-2 max-w-2xl">
           Every item is a standalone registry entry.{" "}

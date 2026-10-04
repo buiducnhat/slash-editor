@@ -26,6 +26,7 @@ interface BlockKitOptions {
   linkEditor?: Partial<LinkEditorOptions> | false; // default {}
   // No default provider/adapter, so these are opt-in (undefined -> not registered), not `Partial<X> | false`:
   mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
+  emoji?: Partial<EmojiOptions> | false; // opt-in (`emoji: {}`): bundled dataset is sizeable and typed `:shortcode:` becomes a node
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
   collaboration?: CollaborationOptions | false; // no default; forces history:false when set
   comment?: Partial<CommentOptions> | false; // default {}
@@ -419,6 +420,29 @@ interface MentionStorage {
 empty result set rather than leaving the menu stuck loading.
 
 ```ts
+// emoji.ts — wraps @tiptap/extension-emoji (dataset, :shortcode: input/paste rules, unicode -> node).
+const Emoji: Node<EmojiOptions, EmojiMenuStorage>;
+function emoji(options?: Partial<EmojiOptions>): Node; // opt-in: createBlockKit({ emoji: {} })
+function searchEmojis(emojis: EmojiItem[], query: string, limit: number): EmojiItem[]; // name > shortcode > substring > tag
+
+interface EmojiOptions extends TiptapEmojiOptions {
+  limit: number; // default 24
+  // inherited: emojis, enableEmoticons, forceFallbackImages, HTMLAttributes, suggestion (char ":")
+}
+interface EmojiMenuState {
+  open: boolean;
+  query: string;
+  items: EmojiItem[];
+  activeIndex: number;
+  getClientRect: (() => DOMRect | null) | null;
+}
+// editor.storage.emoji extends Tiptap's { emojis, isSupported } with state/subscribe/setActiveIndex/select/close.
+```
+
+The `/emoji` slash item (`when`: node registered) deletes the typed range and inserts `:`, which opens
+the suggestion. Markdown is `:shortcode:`; an unknown shortcode imports as plain text.
+
+```ts
 // @slash-editor/core/markdown — a separate entry (dist/markdown.mjs), so marked +
 // @tiptap/markdown (~20 KB gzipped) stay out of bundles that never import it.
 const Markdown: Extension<MarkdownOptions, MarkdownExtensionStorage>; // Tiptap's Markdown, extended
@@ -707,6 +731,15 @@ function useMention(editor: Editor | null): MentionMenu;
 interface MentionMenu extends MentionState {
   activeItem: MentionItem | null;
   anchor: MentionMenuAnchor | null; // { getBoundingClientRect } virtual element
+  setActiveIndex(index: number): void;
+  select(index?: number): void;
+  close(): void;
+}
+
+function useEmoji(editor: Editor | null): EmojiMenu;
+interface EmojiMenu extends EmojiMenuState {
+  activeItem: EmojiItem | null;
+  anchor: EmojiMenuAnchor | null; // { getBoundingClientRect } virtual element
   setActiveIndex(index: number): void;
   select(index?: number): void;
   close(): void;

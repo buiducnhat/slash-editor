@@ -64,6 +64,15 @@ Same `subscribe`/`setActiveIndex`/`select`/`close` shape as `useSlashMenu`, plus
 the async provider's promise for the current query is in flight. See the
 [mentions guide](/docs/guides/mentions).
 
+## useEmoji
+
+```tsx
+useEmoji(editor: Editor | null): EmojiMenu
+```
+
+Same `subscribe`/`setActiveIndex`/`select`/`close` shape as `useSlashMenu`; `items` are
+`EmojiItem`s ranked for the query. See the [emoji guide](/docs/guides/emoji).
+
 ## useLinkEditor
 
 ```tsx

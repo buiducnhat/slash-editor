@@ -16,6 +16,7 @@ import { Callout } from "./callout.ts";
 import { collaboration, type CollaborationOptions } from "./collaboration.ts";
 import { column, columns, type ColumnsOptions } from "./columns.ts";
 import { comment, type CommentOptions } from "./comment.ts";
+import { emoji, type EmojiOptions } from "./emoji.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 import { file, type FileOptions } from "./file.ts";
 import { image, type ImageOptions } from "./image.ts";
@@ -173,6 +174,12 @@ export interface BlockKitOptions {
    */
   mention?: (Partial<MentionOptions> & Pick<MentionOptions, "items">) | false;
   /**
+   * Emoji node with a `:shortcode:` picker and a `/emoji` slash item. Opt-in
+   * (`emoji: {}` enables it): the bundled emoji dataset is sizeable, and
+   * enabling it turns typed `:shortcode:` text into emoji nodes.
+   */
+  emoji?: Partial<EmojiOptions> | false;
+  /**
    * AI slash actions (`Continue writing`, `Summarize`, …) streamed through
    * a bring-your-own `StreamAdapter`. Omit to leave those slash items out —
    * there is no default adapter to fall back to.
@@ -241,6 +248,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     columns: columnsOptions,
     linkEditor: linkEditorOptions,
     mention: mentionOptions,
+    emoji: emojiOptions,
     ai: aiOptions,
     comment: commentOptions,
     collaboration: collaborationOptions,
@@ -300,6 +308,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(resolvedAi ? [ai(resolvedAi)] : []),
     ...(resolvedAi && resolvedAi.node !== false ? [aiBlock()] : []),
     ...(mentionOptions === false || !mentionOptions ? [] : [mention(mentionOptions)]),
+    ...(emojiOptions === false || !emojiOptions ? [] : [emoji(emojiOptions)]),
     ...(slash === false
       ? []
       : [

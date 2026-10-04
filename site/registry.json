@@ -58,6 +58,15 @@
       "files": [{ "path": "registry/components/mention-menu.tsx", "type": "registry:component" }]
     },
     {
+      "name": "emoji-menu",
+      "type": "registry:component",
+      "title": "Emoji Menu",
+      "description": "':shortcode:' emoji picker: shadcn Command inside a Popover, driven by useEmoji.",
+      "registryDependencies": ["command", "@slash-editor/popover"],
+      "dependencies": ["@slash-editor/react", "@tiptap/core"],
+      "files": [{ "path": "registry/components/emoji-menu.tsx", "type": "registry:component" }]
+    },
+    {
       "name": "link-editor-popover",
       "type": "registry:component",
       "title": "Link Editor Popover",
@@ -176,12 +185,13 @@
       "name": "slash-editor-kit",
       "type": "registry:block",
       "title": "slash-editor Kit",
-      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, and the Mermaid node view.",
+      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, emoji menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, and the Mermaid node view.",
       "registryDependencies": [
         "@slash-editor/slash-menu",
         "@slash-editor/bubble-toolbar",
         "@slash-editor/block-handle",
         "@slash-editor/mention-menu",
+        "@slash-editor/emoji-menu",
         "@slash-editor/link-editor-popover",
         "@slash-editor/comment-panel",
         "@slash-editor/presence-avatars",

@@ -280,6 +280,11 @@
     @apply bg-primary/10 text-primary rounded px-1 py-0.5 font-medium;
   }
 
+  /* Emoji without a native glyph render a fallback <img>; size it to the line. */
+  .slash-content [data-type="emoji"] img {
+    @apply inline-block size-[1.2em] align-text-bottom;
+  }
+
   .slash-content [data-type="aiBlock"] {
     @apply border-border bg-muted/40 text-muted-foreground rounded-lg border border-dashed p-3 text-sm;
   }

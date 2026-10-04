@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentComposer } from "@/components/comment-composer.tsx";
+import { EmojiMenu } from "@/components/emoji-menu.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
 import { SlashMenu } from "@/components/slash-menu.tsx";
@@ -35,6 +36,7 @@ export function PlaygroundDemo() {
 </ul>
 <blockquote><p>Built on Tiptap + shadcn/ui</p></blockquote>`,
     blockKit: {
+      emoji: {},
       mention: {
         items: (query: string, { signal }: { signal: AbortSignal }) =>
           mockMentionProvider(query, signal),
@@ -56,6 +58,7 @@ export function PlaygroundDemo() {
       <EditorContent editor={editor} />
       <SlashMenu editor={editor} />
       <MentionMenu editor={editor} />
+      <EmojiMenu editor={editor} />
       <BlockHandle editor={editor} />
       <BubbleToolbar editor={editor} />
       <LinkEditorPopover editor={editor} />

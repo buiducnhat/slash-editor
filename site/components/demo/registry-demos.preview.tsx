@@ -16,6 +16,7 @@ export const SlashMenuDemo = load("SlashMenuDemo");
 export const BubbleToolbarDemo = load("BubbleToolbarDemo");
 export const BlockHandleDemo = load("BlockHandleDemo");
 export const MentionMenuDemo = load("MentionMenuDemo");
+export const EmojiMenuDemo = load("EmojiMenuDemo");
 export const LinkEditorDemo = load("LinkEditorDemo");
 export const CommentPanelDemo = load("CommentPanelDemo");
 export const PresenceAvatarsDemo = load("PresenceAvatarsDemo");
