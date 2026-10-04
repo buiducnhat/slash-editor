@@ -1,0 +1,66 @@
+---
+title: Code Block Node View
+description: Syntax-highlighted code blocks (lowlight) with a language selector, themed from your shadcn tokens.
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { CodeBlockDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+Hover a code block to pick its language; `Auto` detects it from the code. Type `/code`, or
+` ``` ` followed by a space, to add one.
+
+<ComponentPreview name="code-block-node-view">
+  <CodeBlockDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="code-block-node-view" />
+
+## Usage
+
+Highlighting is opt-in: `createBlockKit` keeps StarterKit's plain `codeBlock` unless you pass a
+`codeBlock` option. To get the language selector, opt the default out and append the node with the
+view:
+
+```tsx
+import { CodeBlock } from "@slash-editor/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { CodeBlockNodeView } from "@/components/nodes/code-block-node-view";
+
+const editor = useSlashEditor({
+  blockKit: {
+    codeBlock: false,
+    extend: [CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) })],
+  },
+});
+```
+
+Without a view, `codeBlock: {}` alone highlights; style the `hljs-*` classes yourself or use the
+CSS this item installs.
+
+## Choosing languages
+
+The default grammar set is lowlight's `common` (about 37 languages). Register your own `lowlight`
+instance for more or fewer languages — the selector lists whatever the instance has:
+
+```tsx
+import { createLowlight } from "lowlight";
+import typescript from "highlight.js/lib/languages/typescript";
+
+const lowlight = createLowlight({ typescript });
+
+useSlashEditor({ blockKit: { codeBlock: { lowlight } } });
+```
+
+## Behaviour
+
+- **Same node.** The block is still `codeBlock` with a `language` attribute, so block types, slash
+  items, and markdown round-trips are unchanged.
+- **Decorations only.** Tokens are never stored in the document; undo and collaboration see
+  plain text.
+- **Themed.** Token colours mix `--chart-1`…`--chart-5` toward `--foreground`, so contrast holds in
+  any theme; comments use `--muted-foreground`.
+- **Aliases.** A fence such as ` ```js ` keeps its `js` language and shows it in the selector.
+- **Read-only.** The selector is hidden when the editor is not editable.

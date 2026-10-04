@@ -1,12 +1,13 @@
 "use client";
 
-import { type CommentThreadStore, Mermaid } from "@slash-editor/core";
+import { CodeBlock, type CommentThreadStore, Mermaid } from "@slash-editor/core";
 import { EditorContent } from "@slash-editor/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
+import { CodeBlockNodeView } from "@/components/nodes/code-block-node-view.tsx";
 import { EmojiMenu } from "@/components/emoji-menu.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
@@ -168,6 +169,7 @@ export function NodeViewsDemo() {
       video: false,
       embed: false,
       mermaid: false,
+      codeBlock: false,
       ai: { adapter: mockStreamAdapter, node: false },
       extend: nodeViewExtensions(),
     },
@@ -192,6 +194,27 @@ export function MermaidDemo() {
     blockKit: {
       mermaid: false,
       extend: [Mermaid.extend({ addNodeView: () => ReactNodeViewRenderer(MermaidNodeView) })],
+    },
+    editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
+  });
+  if (!editor) return null;
+  return (
+    <div className={CARD_CLASS}>
+      <EditorContent editor={editor} />
+      <SlashMenu editor={editor} />
+    </div>
+  );
+}
+
+export function CodeBlockDemo() {
+  const editor = useDemoEditor({
+    content: `<p>Hover the block to pick a language, or type <code>/code</code> to add one.</p><pre><code class="language-ts">export function greet(name: string): string {
+  // Tokens are decorations, never stored in the document.
+  return \`Hello, \${name}!\`;
+}</code></pre>`,
+    blockKit: {
+      codeBlock: false,
+      extend: [CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) })],
     },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
