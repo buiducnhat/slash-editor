@@ -100,7 +100,7 @@ jobs:
           pr-title: "chore(release): version packages"
 
   verify:
-    name: Verify v${{ needs.plan.outputs.version }}
+    name: Verify release
     needs: plan
     if: needs.plan.outputs.mode == 'publish'
     runs-on: ubuntu-latest
@@ -185,7 +185,7 @@ jobs:
           retention-days: 7
 
   publish:
-    name: Publish v${{ needs.plan.outputs.version }}
+    name: Publish release
     needs: [plan, verify]
     runs-on: ubuntu-latest
     timeout-minutes: 15
