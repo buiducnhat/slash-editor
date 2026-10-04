@@ -14,6 +14,7 @@ interface BlockKitOptions {
   blockId?: Partial<BlockIdOptions> | false; // default { types: "auto" }
   drag?: Partial<BlockDragOptions> | false; // default {}
   bubbleToolbar?: Partial<BubbleToolbarOptions> | false; // default { items: defaultBubbleToolbarItems }
+  messages?: SlashEditorMessages; // translations by id (messages.ts); also at editor.storage.messages.messages
   image?: Partial<ImageOptions> | false;
   file?: Partial<FileOptions> | false;
   video?: Partial<VideoOptions> | false;
@@ -73,6 +74,32 @@ const Quote: Node<QuoteOptions>; // extends @tiptap/extension-blockquote
 function quote(options?: Partial<QuoteOptions>): Node;
 type QuoteOptions = BlockquoteOptions;
 const quoteInputRegex: RegExp; // /^\s*"\s$/
+
+// messages.ts — every field optional; unset strings keep their English default
+interface SlashEditorMessages {
+  items?: Record<string, ItemMessage>; // slash items, block types, AI actions by id
+  groups?: Record<string, string>; // slash group headings, keyed by English group name
+  hint?: string; // slash hint; `slash.hint` wins
+  placeholder?: Partial<Record<PlaceholderKey, string>>; // `placeholder.text` wins
+  blockMenu?: Record<string, string>; // BlockMenuItem title by id; applied by useBlockMenu
+  bubbleToolbar?: Record<string, string>; // BubbleToolbarItem label by id
+}
+interface ItemMessage {
+  title?: string;
+  description?: string;
+  aliases?: string[]; // replaces, not merges
+  keywords?: string[]; // replaces, not merges
+}
+function localizeItems<T>(items: T[], messages?: SlashEditorMessages): T[];
+function localizeBlockMenuItems(
+  items: BlockMenuItem[],
+  messages?: SlashEditorMessages,
+): BlockMenuItem[];
+function localizeBubbleToolbarItems(
+  items: BubbleToolbarItem[],
+  messages?: SlashEditorMessages,
+): BubbleToolbarItem[];
+const Messages: Extension<{ messages: SlashEditorMessages }, MessagesStorage>; // always registered by createBlockKit
 
 // bubble-toolbar.ts
 const BubbleToolbar: Extension<BubbleToolbarOptions, BubbleToolbarStorage>;

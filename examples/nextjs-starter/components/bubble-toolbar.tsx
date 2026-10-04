@@ -1,5 +1,5 @@
-import { defaultBlockTypes, type BubbleToolbarItem } from "@slash-editor/core";
-import { useBubbleToolbar } from "@slash-editor/react";
+import type { BubbleToolbarItem } from "@slash-editor/core";
+import { useBlockTypes, useBubbleToolbar } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import {
   ChevronDownIcon,
@@ -21,7 +21,8 @@ import { resolveIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils.ts";
 
 function BlockTypeDropdown({ editor }: { editor: Editor }) {
-  const active = defaultBlockTypes.find((type) => type.isActive(editor));
+  const blockTypes = useBlockTypes(editor).items;
+  const active = blockTypes.find((type) => type.isActive(editor));
   const ActiveIcon = resolveIcon(active?.icon);
 
   return (
@@ -41,7 +42,7 @@ function BlockTypeDropdown({ editor }: { editor: Editor }) {
         }
       />
       <DropdownMenuContent align="start" className="w-48">
-        {defaultBlockTypes
+        {blockTypes
           .filter((type) => type.when?.(editor) ?? true)
           .map((type) => {
             const Icon = resolveIcon(type.icon);

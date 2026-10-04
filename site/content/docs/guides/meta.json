@@ -6,6 +6,7 @@
     "upload-adapter",
     "mentions",
     "emoji",
+    "localization",
     "ai-stream-adapter",
     "collaboration",
     "comments",

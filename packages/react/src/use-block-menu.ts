@@ -1,7 +1,7 @@
 import type { BlockMenuItem, BlockTarget } from "@slash-editor/core";
 import type { Editor } from "@tiptap/core";
 import { useMemo } from "react";
-import { defaultBlockMenuItems } from "@slash-editor/core";
+import { defaultBlockMenuItems, localizeBlockMenuItems } from "@slash-editor/core";
 import { useBlockDrag } from "./use-block-drag.ts";
 
 export interface BlockMenu {
@@ -14,15 +14,16 @@ export interface BlockMenu {
 
 export function useBlockMenu(editor: Editor | null): BlockMenu {
   const drag = useBlockDrag(editor);
-  const items = useMemo(
-    () =>
-      drag.menuTarget
-        ? defaultBlockMenuItems.filter(
-            (item) => item.when?.({ editor: editor!, target: drag.menuTarget! }) ?? true,
-          )
-        : defaultBlockMenuItems,
-    [drag.menuTarget, editor],
-  );
+  const messages = editor?.storage.messages?.messages;
+  const items = useMemo(() => {
+    const localized = localizeBlockMenuItems(defaultBlockMenuItems, messages);
+
+    return drag.menuTarget
+      ? localized.filter(
+          (item) => item.when?.({ editor: editor!, target: drag.menuTarget! }) ?? true,
+        )
+      : localized;
+  }, [drag.menuTarget, editor, messages]);
 
   return {
     items,

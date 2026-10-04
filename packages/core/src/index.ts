@@ -56,6 +56,16 @@ export {
 export { defaultBlockMenuItems, type BlockMenuContext, type BlockMenuItem } from "./block-menu.ts";
 export { type BlockKitOptions, createBlockKit, type HeadingLevel } from "./block-kit.ts";
 export {
+  localizeBlockMenuItems,
+  localizeBubbleToolbarItems,
+  localizeItems,
+  Messages,
+  messages,
+  type ItemMessage,
+  type MessagesStorage,
+  type SlashEditorMessages,
+} from "./messages.ts";
+export {
   BubbleToolbar,
   bubbleToolbar,
   type BubbleToolbarItem,

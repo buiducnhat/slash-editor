@@ -1,0 +1,104 @@
+---
+title: Localization
+description: Translate slash items, placeholders, block menu actions, and toolbar labels with the `messages` option.
+---
+
+Every user-facing string the core ships is English by default. Pass `messages` to
+`createBlockKit` (or `useSlashEditor`'s `blockKit`) to override any of them. Everything is
+optional — a partial translation keeps English for whatever you leave out.
+
+<AutoTypeTable path="../packages/core/src/messages.ts" name="SlashEditorMessages" />
+
+| Field           | Keyed by                                                    | Overrides                                          |
+| --------------- | ----------------------------------------------------------- | -------------------------------------------------- |
+| `items`         | item `id`                                                   | `title`, `description`, `aliases`, `keywords`      |
+| `groups`        | English group name (`"Basic blocks"`, `"Media"`, `"AI"`, …) | Slash menu section headings                        |
+| `hint`          | —                                                           | Text shown after `/` (`slash.hint` wins)           |
+| `placeholder`   | [`PlaceholderKey`](/docs/guides/block-kit)                  | Empty-block placeholders (`placeholder.text` wins) |
+| `blockMenu`     | block menu item `id` (`duplicate`, `delete`)                | Titles returned by `useBlockMenu`                  |
+| `bubbleToolbar` | bubble item `id` (`bold`, `italic`, `link`, …)              | Toolbar labels                                     |
+
+`items` covers slash items, the block types shared by the slash, bubble, and block menus
+(`useBlockTypes`), and AI actions. Ids are the ones in `defaultSlashItems`,
+`defaultBlockTypes`, and `defaultAiActions`.
+
+`aliases` and `keywords` **replace** the English ones. Searching matches `title` and `aliases`,
+so list the English shorthands too if you want `/h1` to keep working.
+
+## Vietnamese example
+
+```tsx
+import type { SlashEditorMessages } from "@slash-editor/core";
+import { useSlashEditor } from "@slash-editor/react";
+
+const vi: SlashEditorMessages = {
+  hint: "Gõ để tìm kiếm",
+  groups: {
+    "Basic blocks": "Khối cơ bản",
+    "Advanced blocks": "Khối nâng cao",
+    Media: "Phương tiện",
+    Structure: "Cấu trúc",
+    Inline: "Nội tuyến",
+    AI: "Trợ lý AI",
+  },
+  items: {
+    paragraph: {
+      title: "Văn bản",
+      description: "Đoạn văn thường",
+      aliases: ["paragraph", "van ban"],
+    },
+    "heading-1": {
+      title: "Tiêu đề 1",
+      description: "Tiêu đề phần lớn",
+      aliases: ["h1", "tieu de"],
+    },
+    "heading-2": { title: "Tiêu đề 2", description: "Tiêu đề phần vừa", aliases: ["h2"] },
+    "heading-3": { title: "Tiêu đề 3", description: "Tiêu đề phần nhỏ", aliases: ["h3"] },
+    "bullet-list": { title: "Danh sách dấu đầu dòng", aliases: ["ul", "bullet", "danh sach"] },
+    "ordered-list": { title: "Danh sách đánh số", aliases: ["ol", "numbered"] },
+    "task-list": { title: "Danh sách việc cần làm", aliases: ["todo", "checklist"] },
+    blockquote: { title: "Trích dẫn", aliases: ["quote", "trich dan"] },
+    "code-block": { title: "Khối mã", aliases: ["code", "ma"] },
+    "horizontal-rule": { title: "Đường kẻ", aliases: ["hr", "divider", "duong ke"] },
+    image: {
+      title: "Hình ảnh",
+      description: "Tải lên hoặc nhúng hình ảnh",
+      aliases: ["image", "anh"],
+    },
+    table: { title: "Bảng", aliases: ["table", "bang"] },
+    summarize: { title: "Tóm tắt" },
+  },
+  placeholder: {
+    paragraph: "Nhấn '/' để chọn lệnh…",
+    heading1: "Tiêu đề 1",
+    heading2: "Tiêu đề 2",
+    heading3: "Tiêu đề 3",
+    listItem: "Danh sách",
+    taskItem: "Việc cần làm",
+    blockquote: "Trích dẫn",
+  },
+  blockMenu: { duplicate: "Nhân bản", delete: "Xóa" },
+  bubbleToolbar: {
+    bold: "In đậm",
+    italic: "In nghiêng",
+    strike: "Gạch ngang",
+    code: "Mã",
+    link: "Liên kết",
+  },
+};
+
+const editor = useSlashEditor({ blockKit: { messages: vi } });
+```
+
+An id that does not exist is ignored, so one translation object can be shared across editors
+whose kits enable different blocks.
+
+## What stays in your hands
+
+The registry components (`block-handle`, `bubble-toolbar`, `slash-menu`, …) are copied into
+your project, so their own chrome — "Ask AI", "Turn into", "Copy", tooltips, `aria-label`s — is
+plain JSX you edit directly. Everything the core and hooks supply is translated through
+`messages`; the registry components render those strings as-is.
+
+`messages` is also available at runtime as `editor.storage.messages.messages` if your own UI
+wants to read from the same object.
