@@ -12,7 +12,7 @@ Current suites (`vp test`, Node environment, no DOM):
 | `packages/core/tests/block-kit.test.ts`         | schema node/mark inventory, doc JSON round trip, `extend` registration, `history: false`, heading levels, slash/bubble opt-out                                                                                                                     |
 | `packages/core/tests/block-nodes.test.ts`       | callout icon default, task item checked default, toggle (`details`) open/`level` defaults, JSON round trips                                                                                                                                        |
 | `packages/core/tests/bubble-toolbar.test.ts`    | default items per baseline mark, `when` gating, `isActive` reflecting the live selection                                                                                                                                                           |
-| `packages/core/tests/link-editor.test.ts`       | `canOpenLinkEditor` gating (mark presence, editability, selection/active-link), kit opt-out, `link` mark editing config                                                                                                                            |
+| `packages/core/tests/link-editor.test.ts`       | `canOpenLinkEditor` gating (mark presence, editability, selection/active-link), kit opt-out, `link` mark editing config, `Mod-k` opens over a selection / falls through otherwise / `shortcut: false` unbinds                                      |
 | `packages/core/tests/media-nodes.test.ts`       | image/file/video/embed attribute defaults, JSON round trips, `false` opt-out                                                                                                                                                                       |
 | `packages/core/tests/markdown.test.ts`          | every custom node round-trips through markdown, empty-paragraph counts in containers, GitHub-facing syntax + marker grammar, exclusions leave no residue, unusable/unclosed markers fall back, inline images stay valid, global `marked` untouched |
 | `packages/core/tests/emoji.test.ts`             | opt-in wiring and `/emoji` `when` gating, `searchEmojis` ranking and regional-indicator and glyph-less exclusion, markdown round trip, unknown shortcode stays text                                                                                |
@@ -24,7 +24,7 @@ Current suites (`vp test`, Node environment, no DOM):
 | `packages/core/tests/pages.test.ts`             | opt-in wiring (no `pages` -> no nodes), `collectPageRefs` at any depth, `subPageDelta` detach/attach/move/remote/undo rules, duplicate and foreign-parent conversion to `pageLink`, markdown round trip, page mention merge                        |
 | `packages/core/tests/upload.test.ts`            | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                                                                                                                                          |
 
-Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function. Anything that needs a live `Editor` is verified in a browser instead of mocked.
+Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function, keyboard shortcuts by feeding a key event to an unmounted (`element: null`) `Editor`'s plugins. Anything that needs a mounted view is verified in a browser instead of mocked.
 
 ## Browser regression suite (Playwright)
 
@@ -41,7 +41,7 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 | `structure.spec.ts`         | table/columns/embed insertion via the slash menu, embed URL input → bookmark card                                                                                                                       |
 | `mention.spec.ts`           | async directory search → chip insertion, empty-result state, Escape leaves typed text                                                                                                                   |
 | `emoji.spec.ts`             | `:query` → pick, arrow-key highlight, complete `:shortcode:` input rule, `/emoji`, empty state + Escape                                                                                                 |
-| `link-editor.spec.ts`       | drafting a link over a selection, click-to-edit an existing link, remove                                                                                                                                |
+| `link-editor.spec.ts`       | drafting a link over a selection (bubble toolbar and `Mod+k`), click-to-edit an existing link, remove                                                                                                   |
 | `ai-actions.spec.ts`        | slash action → real stream → Keep (paragraph)/Discard, and error → retry, against the mock `StreamAdapter`                                                                                              |
 | `toggle-blocks.spec.ts`     | `>` makes a toggle and `"` a quote; `# ` + `> ` and in-title `##` set the level; level and block id survive open/close; body caret in/out, per-line handles, whitespace between toggles focusing a line |
 | `slash-menu-ux.spec.ts`     | arrow-key scrolling keeps the highlight in view, one-line rows with icons, a shown `shortcut` really converts the block, per-block placeholders, `/` hint                                               |
@@ -92,8 +92,9 @@ Assert on DOM facts, not screenshots alone: `[data-slot=popover-content]` presen
 7. Typing `@` opens the mention menu with a loading state, then results; arrow keys and Enter behave
    like the slash menu; Escape leaves the typed `@query` text.
 8. Placing the cursor inside an existing link auto-opens the link popover with edit controls; selecting
-   plain text and clicking "Link" in the bubble toolbar opens it empty; typing in the popover's input
-   never loses focus to the editor mid-keystroke.
+   plain text and clicking "Link" in the bubble toolbar (or pressing ⌘K/Ctrl+K) opens it empty; typing
+   in the popover's input never loses focus to the editor mid-keystroke. ⌘K with nothing selected
+   opens the docs search instead.
 9. An AI slash action streams visibly into a dashed placeholder block; Keep replaces it with a real
    paragraph in one undo step, Discard removes it, and Try again restarts the same request.
 10. Typing `/` shows the "Type to search" hint next to the caret, which disappears at the first
