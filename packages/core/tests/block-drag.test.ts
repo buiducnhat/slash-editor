@@ -138,7 +138,8 @@ test("a source that can't sit beside a list item lands after the whole list inst
   expect(result).toMatchObject({ pos: 20, mode: "after" });
 });
 
-// The registry handle spans [left - 72, left - 14] of the row it anchors to.
+// The registry handle spans [left - 72, left - 14] inside core's hover band,
+// which reaches BLOCK_GUTTER_WIDTH left of the row (or the editor box).
 for (const padding of [0, 96]) {
   test(`the gutter handle keeps its row hovered with ${padding}px of editor padding`, () => {
     const editorBox = { left: 100, right: 700, top: 0, bottom: 200 };
@@ -152,7 +153,8 @@ for (const padding of [0, 96]) {
     const rects = [paragraph, list, item];
 
     for (const target of [paragraph, item]) {
-      for (const x of [target.left - 72, target.left - 14]) {
+      const hoverLeft = Math.min(editorBox.left, target.left) - BLOCK_GUTTER_WIDTH;
+      for (const x of [hoverLeft, target.left - 72, target.left - 14]) {
         expect(
           resolveHoverRect(rects, { x, y: target.top + 10 }, editorBox, BLOCK_GUTTER_WIDTH),
         ).toBe(target);
