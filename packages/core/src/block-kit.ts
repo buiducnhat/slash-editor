@@ -23,6 +23,7 @@ import { image, type ImageOptions } from "./image.ts";
 import { linkEditor, type LinkEditorOptions } from "./link-editor.ts";
 import { mention, type MentionOptions } from "./mention.ts";
 import { mermaid, type MermaidOptions } from "./mermaid.ts";
+import { createPagesSlashItems, pages, type PagesOptions, withPageMentions } from "./pages.ts";
 import { placeholder, type PlaceholderOptions } from "./placeholder.ts";
 import { quote } from "./quote.ts";
 import {
@@ -201,6 +202,13 @@ export interface BlockKitOptions {
    */
   comment?: Partial<CommentOptions> | false;
   /**
+   * Notion-style pages: `subPage` blocks, inline `pageLink`s, `/page` and
+   * `/link to page`, page entries in the `@` menu, and detach/attach reports,
+   * all backed by a host-provided `PageStore`. Omit to leave them out — there
+   * is no default store. The editor shows one page; remount it per page.
+   */
+  pages?: PagesOptions | false;
+  /**
    * Document outline store (top-level headings, recomputed on change), or
    * `false` to opt out. An outline is read-only state, not an insertable
    * block, so this registers no slash item; and with no subscriber listening
@@ -248,6 +256,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     columns: columnsOptions,
     linkEditor: linkEditorOptions,
     mention: mentionOptions,
+    pages: pagesOptions,
     emoji: emojiOptions,
     ai: aiOptions,
     comment: commentOptions,
@@ -261,6 +270,12 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
   const resolvedAi: AiKitOptions | undefined = aiOptions
     ? { actions: defaultAiActions, node: true, ...aiOptions }
     : undefined;
+  const resolvedMention =
+    mentionOptions === false
+      ? undefined
+      : pagesOptions
+        ? withPageMentions(mentionOptions, pagesOptions)
+        : mentionOptions;
 
   // Yjs owns the undo stack once a document is shared; running StarterKit's
   // undoRedo alongside it corrupts it, so collaboration always wins.
@@ -307,7 +322,8 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     ...(columnsOptions === false ? [] : [columns(columnsOptions), column()]),
     ...(resolvedAi ? [ai(resolvedAi)] : []),
     ...(resolvedAi && resolvedAi.node !== false ? [aiBlock()] : []),
-    ...(mentionOptions === false || !mentionOptions ? [] : [mention(mentionOptions)]),
+    ...(pagesOptions ? pages(pagesOptions) : []),
+    ...(resolvedMention ? [mention(resolvedMention)] : []),
     ...(emojiOptions === false || !emojiOptions ? [] : [emoji(emojiOptions)]),
     ...(slash === false
       ? []
@@ -320,6 +336,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
                 (item) => !blockTypes.some((type) => type.id === item.id),
               ),
               ...(resolvedAi ? createAiSlashItems(resolvedAi.actions) : []),
+              ...(pagesOptions ? createPagesSlashItems() : []),
             ])(),
           }),
         ]),

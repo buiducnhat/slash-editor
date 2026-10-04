@@ -1,10 +1,12 @@
 import { AiBlock, Embed, File as FileNode, Image, Mermaid, Video } from "@slash-editor/core";
+import type { PagesOptions } from "@slash-editor/core";
 import { type NodeViewProps, ReactNodeViewRenderer } from "@tiptap/react";
 import { AiBlockNodeView } from "@/components/nodes/ai-block-node-view.tsx";
 import { EmbedNodeView } from "@/components/nodes/embed-node-view.tsx";
 import { FileNodeView } from "@/components/nodes/file-node-view.tsx";
 import { ImageNodeView } from "@/components/nodes/image-node-view.tsx";
 import { MermaidNodeView } from "@/components/nodes/mermaid-node-view.tsx";
+import { PageLinkNodeView, SubPageNodeView } from "@/components/nodes/page-node-views.tsx";
 import { VideoNodeView } from "@/components/nodes/video-node-view.tsx";
 import { mockUploadAdapter } from "@/lib/upload-adapter.ts";
 
@@ -39,4 +41,12 @@ export function nodeViewExtensions() {
     AiBlock.extend({ addNodeView: () => ReactNodeViewRenderer(AiBlockNodeView) }),
     Mermaid.extend({ addNodeView: () => ReactNodeViewRenderer(MermaidNodeView) }),
   ];
+}
+
+/** `PagesOptions['nodeViews']` for `createBlockKit({ pages })`. */
+export function pageNodeViews() {
+  return {
+    subPage: ReactNodeViewRenderer(SubPageNodeView),
+    pageLink: ReactNodeViewRenderer(PageLinkNodeView),
+  } satisfies NonNullable<PagesOptions["nodeViews"]>;
 }

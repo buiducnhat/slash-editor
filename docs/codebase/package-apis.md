@@ -382,6 +382,7 @@ interface MentionItem {
   label: string;
   description?: string;
   icon?: string;
+  kind?: "page"; // set by the pages kit: selecting it inserts a `pageLink`, not a `mention`
 }
 interface MentionOptions {
   char: string; // default "@"
@@ -689,6 +690,68 @@ outline is unchanged — caret-only transactions never churn the list. It is def
 `createBlockKit` (`tableOfContents: false` opts out) and registers no slash item: an outline is not
 an insertable block.
 
+### Pages (`pages.ts`)
+
+```ts
+interface PageMeta {
+  id: string;
+  parentId: string | null;
+  title: string;
+  icon?: string;
+  cover?: string;
+  trashed?: boolean;
+}
+interface PageStore {
+  create(input: { parentId: string | null; title?: string }): PageMeta | Promise<PageMeta>;
+  update(
+    id: string,
+    patch: Partial<Pick<PageMeta, "title" | "icon" | "cover">>,
+  ): void | Promise<void>;
+  peek(id: string): PageMeta | undefined; // sync cache; stable object until the page changes
+  load(id: string): Promise<PageMeta | undefined>;
+  listChildren(parentId: string | null): PageMeta[] | Promise<PageMeta[]>;
+  search(query: string, context: { signal: AbortSignal }): PageMeta[] | Promise<PageMeta[]>;
+  backlinks?(id: string): string[] | Promise<string[]>;
+  subscribe(listener: () => void): () => void;
+}
+interface PagesOptions {
+  store: PageStore;
+  currentPageId: string | null;
+  onNavigate: (pageId: string) => void;
+  onSubPagesDetached?: (pageIds: string[]) => void;
+  onSubPagesAttached?: (pageIds: string[]) => void;
+  resolveHref?: (pageId: string) => string; // default `#<pageId>`
+  onError?: (error: unknown, context: { editor: Editor }) => void; // `store.create` rejected
+  nodeViews?: { subPage?: NodeViewRenderer; pageLink?: NodeViewRenderer };
+}
+interface PagesStorage {
+  options: PagesOptions;
+} // editor.storage.pages
+interface PageRefs {
+  subPages: string[];
+  links: string[];
+}
+
+function pages(options: PagesOptions): Extensions; // subPage + pageLink + the watcher extension
+const SubPage: Node; // store-less: titles/hrefs fall back to the page id
+const PageLink: Node;
+function collectPageRefs(doc: JSONContent): PageRefs; // any depth, de-duplicated
+function getPagesOptions(editor: Editor): PagesOptions | undefined;
+function pageTitle(page: Pick<PageMeta, "title"> | undefined): string; // "Untitled" when empty
+const UNTITLED_PAGE: "Untitled";
+function createPagesSlashItems(): SlashItem[]; // `/page`, `/link to page`
+function withPageMentions(mention, options: PagesOptions): MentionOptions; // merges store.search into `@`
+function isRemoteTransaction(tr: Transaction): boolean;
+function subPageDelta(trs: readonly Transaction[]): { attached: string[]; detached: string[] };
+function findSubPageConversions(doc, ranges, isOwned): { pos: number; node: PMNode }[];
+const pagesPluginKey: PluginKey;
+// editor.commands.createSubPage() · setSubPage(pageId) · setPageLink(pageId)
+```
+
+Opt-in through `createBlockKit({ pages })`; the kit also wraps the `mention` provider with
+`withPageMentions` (enabling a pages-only `@` menu when `mention` is absent) and adds the page
+slash items. See [`architecture/editor-runtime.md`](../architecture/editor-runtime.md#pages).
+
 ## `@slash-editor/react`
 
 ```ts
@@ -825,6 +888,28 @@ shape `useLinkEditor.confirm` uses for the `link` mark. `usePresence` is unrelat
 outside the editor (an avatar row, an "N online" badge).
 
 `useTableOfContents` follows core's store for `items`, and `active` has two sources with explicit precedence: the caret (`findActiveItem` over the selection, while the editor is editable and focused) wins, and scroll geometry (`pickActiveByScroll` over the headings' rects, rAF-throttled) covers the read-only or unfocused case. `select` pins `active` optimistically so the row highlights before any scroll event fires. The returned interface is named `TableOfContents` after the hook's read surface, not core's extension — core's is only ever configured through `createBlockKit`.
+
+### Pages hooks (`use-pages.ts`)
+
+```ts
+type PageStatus = "loading" | "ready" | "missing";
+function usePage(
+  store: PageStore,
+  pageId: string | null | undefined,
+): { page: PageMeta | undefined; status: PageStatus };
+function usePageTree(
+  store: PageStore,
+  rootId?: string | null,
+  options?: { defaultExpanded?: readonly string[] },
+): { rows: PageTreeRow[]; toggle; expand; collapse };
+function useBreadcrumb(store: PageStore, pageId: string | null | undefined): PageMeta[];
+function useBacklinks(
+  store: PageStore,
+  pageId: string | null | undefined,
+): { pages: PageMeta[]; loading: boolean };
+```
+
+These read a `PageStore` directly and never touch an editor (like `usePresence`). `PageTreeRow` is `{ page, depth, expanded, loading }`.
 
 ## Demo surface
 
