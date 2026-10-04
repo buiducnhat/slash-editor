@@ -22,6 +22,7 @@ export {
   type StreamContext,
 } from "./ai-block.ts";
 export {
+  BLOCK_GUTTER_WIDTH,
   BlockDrag,
   blockDrag,
   blockDragPluginKey,
@@ -34,6 +35,7 @@ export {
   type DropMode,
   type DropTarget,
   resolveDropTarget,
+  resolveHoverRect,
   toBlockTarget,
 } from "./block-drag.ts";
 export {

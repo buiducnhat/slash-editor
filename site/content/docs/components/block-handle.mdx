@@ -21,3 +21,19 @@ is what the playground itself uses).
 It renders nothing while the editor is read-only: the gutter only ever inserts, reorders, or
 deletes blocks, so it stands down with the document instead of offering actions that would have
 to be rejected.
+
+## Gutter placement
+
+The handle renders in a gutter just left of each block: the band
+`[block.left - BLOCK_GUTTER_WIDTH, block.left]` (80px, exported from `@slash-editor/core`), which
+is also how far left of a block `BlockDrag` keeps that block hovered. It works with any left
+padding on the editor, including none: the handle then sits outside the editor element, so make
+sure no ancestor clips it (`overflow: hidden`) or covers it. Left padding of at least 80px keeps
+the gutter inside the editor's own box.
+
+If you restyle the handle wider than that band, raise `gutterWidth` to match, or the handle
+vanishes while the pointer travels to it:
+
+```ts
+useSlashEditor({ blockKit: { drag: { gutterWidth: 120 } } });
+```

@@ -1,4 +1,4 @@
-import type { BlockTarget } from "@slash-editor/core";
+import { BLOCK_GUTTER_WIDTH, type BlockTarget } from "@slash-editor/core";
 import { useAiActions, useBlockDrag, useBlockTypes, useEditorState } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import {
@@ -26,7 +26,11 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { resolveIcon } from "@/lib/icons.ts";
 
-const GUTTER_OFFSET = 72;
+// The controls fill core's hover band, `[row.left - BLOCK_GUTTER_WIDTH, row.left]`,
+// right-aligned and this far clear of the text, so the pointer never leaves
+// the zone on its way to them — whatever the editor's left padding.
+const HANDLE_GAP = 14;
+const HANDLE_BUTTON_SIZE = 28;
 
 export function BlockHandle({ editor }: { editor: Editor }) {
   const drag = useBlockDrag(editor);
@@ -82,11 +86,13 @@ export function BlockHandle({ editor }: { editor: Editor }) {
     <>
       {activeRect && (drag.menuTarget || drag.hovered) ? (
         <div
-          className="fixed flex items-center gap-0.5"
+          className="pointer-events-none fixed flex items-center justify-end gap-0.5"
           style={{
             top: activeRect.top,
-            left: activeRect.left - GUTTER_OFFSET,
+            left: activeRect.left - BLOCK_GUTTER_WIDTH,
+            width: BLOCK_GUTTER_WIDTH,
             height: activeRect.height,
+            paddingRight: HANDLE_GAP,
           }}
         >
           <Tooltip>
@@ -96,6 +102,7 @@ export function BlockHandle({ editor }: { editor: Editor }) {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
+                  className="pointer-events-auto"
                   aria-label="Insert block below"
                   onClick={() => {
                     if (!drag.hovered) return;
@@ -124,7 +131,7 @@ export function BlockHandle({ editor }: { editor: Editor }) {
                   variant="ghost"
                   size="icon-sm"
                   aria-label="Drag to reorder, click to open the block menu"
-                  className="cursor-grab active:cursor-grabbing"
+                  className="pointer-events-auto cursor-grab active:cursor-grabbing"
                   {...drag.handleProps}
                   onPointerDown={(event) => {
                     pointerRef.current = { x: event.clientX, y: event.clientY };
@@ -168,7 +175,12 @@ export function BlockHandle({ editor }: { editor: Editor }) {
               const offset = gripOffsetRef.current;
               return offset
                 ? new DOMRect(row.left + offset.x, row.top + offset.y, offset.width, offset.height)
-                : new DOMRect(row.left - GUTTER_OFFSET + 28, row.top, 28, 28);
+                : new DOMRect(
+                    row.left - HANDLE_GAP - HANDLE_BUTTON_SIZE,
+                    row.top,
+                    HANDLE_BUTTON_SIZE,
+                    HANDLE_BUTTON_SIZE,
+                  );
             },
           }}
           align="start"

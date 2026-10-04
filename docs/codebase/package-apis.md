@@ -156,9 +156,10 @@ interface BlockIdOptions {
 const BlockDrag: Extension<BlockDragOptions, BlockDragStorage>;
 function blockDrag(options?: Partial<BlockDragOptions>): Extension;
 const blockDragPluginKey: PluginKey;
+const BLOCK_GUTTER_WIDTH: number; // 80 — default gutterWidth; a gutter UI must fit in [row.left - BLOCK_GUTTER_WIDTH, row.left]
 
 interface BlockDragOptions {
-  gutterWidth: number; // default 48
+  gutterWidth: number; // default BLOCK_GUTTER_WIDTH; px left of the hovered block (or editor box, whichever is further left) that keep it hovered
   indentThreshold: number; // default 32
   autoScrollMargin: number; // default 48
   onError?: (error: unknown, ctx: { editor: Editor }) => void;
@@ -198,6 +199,12 @@ function resolveDropTarget(
   options: ResolveDropTargetOptions,
 ): DropTarget | null;
 function canAppendChild(target: PMNode, source: NodeType): boolean;
+function resolveHoverRect(
+  rects: readonly BlockRect[],
+  point: { x: number; y: number },
+  editorBox: { left: number; right: number; top: number; bottom: number },
+  gutterWidth: number,
+): BlockRect | null; // smallest rect spanning point.y; x down to min(editorBox.left, rect.left) - gutterWidth
 
 // slash-command.ts
 const SlashCommand: Extension<SlashCommandOptions, SlashCommandStorage>;
@@ -961,7 +968,7 @@ These read a `PageStore` directly and never touch an editor (like `usePresence`)
 
 `site/registry/components/bubble-toolbar.tsx` is the reference toolbar: a `Popover` anchored to `useBubbleToolbar().anchor`, `open` fully controlled by `toolbar.open` (no `onOpenChange` — visibility is entirely selection-driven), rendering one `Button` per item with `onMouseDown={(e) => e.preventDefault()}` so a click never blurs the editor before `item.run` fires.
 
-`site/registry/components/block-handle.tsx` is the reference gutter: a hover group (insert-below + drag/click grip, both with `Tooltip`), the drop indicator, and a `DropdownMenu` (Duplicate/Delete) anchored at `menuAnchor` — all `position: fixed` or portal-rendered, positioned from `useBlockDrag`'s anchors, no markup in core. The dragged block's visual fade (`[data-dragging]` in `styles.css`) is a core-owned ProseMirror decoration, not a DOM mutation from the demo — PM's own view reconciliation strips foreign attributes set directly on its managed nodes.
+`site/registry/components/block-handle.tsx` is the reference gutter: a hover group (insert-below + drag/click grip, both with `Tooltip`), the drop indicator, and a `DropdownMenu` (Duplicate/Delete) anchored at `menuAnchor` — all `position: fixed` or portal-rendered, positioned from `useBlockDrag`'s anchors, no markup in core. The hover group lays itself out inside core's hover band, `[row.left - BLOCK_GUTTER_WIDTH, row.left]` (right-aligned, 14px clear of the text), so it stays reachable whatever the editor's left padding; a custom gutter wider than that band must raise `gutterWidth` to match. The dragged block's visual fade (`[data-dragging]` in `styles.css`) is a core-owned ProseMirror decoration, not a DOM mutation from the demo — PM's own view reconciliation strips foreign attributes set directly on its managed nodes.
 
 `site/registry/components/table-of-contents.tsx` is the reference outline: `useTableOfContents` rendered as a `<nav aria-label="Table of contents">` with one row per item — a `<button data-testid="toc-item">`, keyed by `item.id ?? String(item.pos)` — indentation from each row's depth below the shallowest heading through a **static** class record (Tailwind cannot see a computed class name), `truncate` labels per the one-line-row rule, and `aria-current="location"` on the active row. A row click calls `select(item)` — the jump is core's `scrollToHeading`, so the same component works in a read-only viewer — and the component returns `null` while the document has no headings.
 

@@ -230,13 +230,25 @@ declare module "@tiptap/core" {
 
 export const blockDragPluginKey = new PluginKey<null>("blockDrag");
 
+/**
+ * Default `gutterWidth`: the band left of every block that still resolves
+ * to that block. A gutter UI anchored to `BlockTarget.getClientRect()` must
+ * fit inside `[left - BLOCK_GUTTER_WIDTH, left]` of that rect, or the pointer
+ * leaves the hover zone on its way to the controls and they vanish. The
+ * registry `BlockHandle` lays itself out in exactly this band.
+ */
+export const BLOCK_GUTTER_WIDTH = 80;
+
 export interface BlockDragOptions {
   /**
-   * Pixels to the left of the content box that still resolve to a block,
-   * so hovering the gutter (which is rendered outside the editor DOM)
-   * highlights the row underneath it.
+   * Pixels left of the hovered block's left edge (or of the editor's content
+   * box, whichever is further left) that still resolve to that block, so
+   * moving the pointer onto a gutter rendered outside the editor DOM keeps
+   * the row hovered. Independent of the editor's own padding; a container
+   * that clips this band (`overflow: hidden`) clips the gutter with it.
+   * Raise it if your gutter is wider than the default.
    *
-   * @default 48
+   * @default BLOCK_GUTTER_WIDTH (80)
    */
   gutterWidth: number;
   /**
@@ -370,34 +382,31 @@ export function toBlockTarget(view: EditorView, pos: number): BlockTarget | null
 }
 
 /**
- * Resolves the block under viewport coordinates from cached rects, not
- * `posAtCoords`: the gutter and a block's own left padding are empty space
- * with no caret position there, where `posAtCoords` reliably returns
- * nothing. Matches the smallest (most specific) rect whose vertical range
- * contains the pointer, so a list item wins over its enclosing list.
+ * Picks the block a pointer hovers from cached rects, not `posAtCoords`:
+ * the gutter and a block's own left padding are empty space with no caret
+ * position there, where `posAtCoords` reliably returns nothing. Matches the
+ * smallest (most specific) rect whose vertical range contains the pointer,
+ * so a list item wins over its enclosing list.
+ *
+ * Horizontally the pointer may sit up to `gutterWidth` left of the matched
+ * block's left edge — where a gutter anchored to that block renders — or of
+ * the editor box, whichever reaches further, so the zone holds regardless of
+ * the editor's padding or a block's indentation.
  */
-function resolveHover(
-  view: EditorView,
-  clientX: number,
-  clientY: number,
-  gutterWidth: number,
+export function resolveHoverRect(
   rects: readonly BlockRect[],
-): BlockTarget | null {
-  const box = view.dom.getBoundingClientRect();
-
-  if (
-    clientY < box.top ||
-    clientY > box.bottom ||
-    clientX < box.left - gutterWidth ||
-    clientX > box.right
-  ) {
+  point: { x: number; y: number },
+  editorBox: { left: number; right: number; top: number; bottom: number },
+  gutterWidth: number,
+): BlockRect | null {
+  if (point.y < editorBox.top || point.y > editorBox.bottom || point.x > editorBox.right) {
     return null;
   }
 
   let match: BlockRect | null = null;
 
   for (const rect of rects) {
-    if (clientY < rect.top || clientY > rect.bottom) {
+    if (point.y < rect.top || point.y > rect.bottom) {
       continue;
     }
 
@@ -406,7 +415,11 @@ function resolveHover(
     }
   }
 
-  return match ? toBlockTarget(view, match.pos) : null;
+  if (!match || point.x < Math.min(editorBox.left, match.left) - gutterWidth) {
+    return null;
+  }
+
+  return match;
 }
 
 function computeRects(view: EditorView): BlockRect[] {
@@ -462,7 +475,7 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
   name: "blockDrag",
 
   addOptions() {
-    return { gutterWidth: 48, indentThreshold: 32, autoScrollMargin: 48 };
+    return { gutterWidth: BLOCK_GUTTER_WIDTH, indentThreshold: 32, autoScrollMargin: 48 };
   },
 
   addStorage() {
@@ -666,7 +679,13 @@ export const BlockDrag = Extension.create<BlockDragOptions, BlockDragStorage>({
             }
 
             if (!storage.state.dragging) {
-              storage.setHovered(resolveHover(view, clientX, clientY, gutterWidth, rects));
+              const match = resolveHoverRect(
+                rects,
+                { x: clientX, y: clientY },
+                view.dom.getBoundingClientRect(),
+                gutterWidth,
+              );
+              storage.setHovered(match ? toBlockTarget(view, match.pos) : null);
               return false;
             }
 
