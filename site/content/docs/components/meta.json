@@ -10,6 +10,7 @@
     "comment-panel",
     "presence-avatars",
     "table-of-contents",
+    "pages",
     "node-views",
     "mermaid-node-view",
     "code-block-node-view",

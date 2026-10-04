@@ -96,6 +96,21 @@ searchEmojis(emojis: EmojiItem[], query: string, limit: number): EmojiItem[]
 
 See the [emoji guide](/docs/guides/emoji).
 
+## Pages
+
+```ts
+pages(options: PagesOptions): Extensions
+createPagesSlashItems(): SlashItem[]
+withPageMentions(mention, options: PagesOptions): MentionOptions
+collectPageRefs(doc: JSONContent): { subPages: string[]; links: string[] }
+getPagesOptions(editor: Editor): PagesOptions | undefined
+pageTitle(page: Pick<PageMeta, "title"> | undefined): string
+```
+
+Types `PageMeta`, `PageStore`, `PagesOptions` and nodes `SubPage`/`PageLink` (bare, store-less) are
+exported too. The kit builds all of it from `createBlockKit({ pages })`. See the
+[pages guide](/docs/guides/pages).
+
 ## Markdown
 
 ```ts

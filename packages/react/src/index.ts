@@ -27,5 +27,17 @@ export {
 export { type EmojiMenu, type EmojiMenuAnchor, useEmoji } from "./use-emoji.ts";
 export { type MentionMenu, type MentionMenuAnchor, useMention } from "./use-mention.ts";
 export { type PresencePeer, type PresenceProvider, usePresence } from "./use-presence.ts";
+export {
+  type Backlinks,
+  type PageState,
+  type PageStatus,
+  type PageTree,
+  type PageTreeRow,
+  useBacklinks,
+  useBreadcrumb,
+  usePage,
+  usePageTree,
+  type UsePageTreeOptions,
+} from "./use-pages.ts";
 export { type SlashMenu, type SlashMenuAnchor, useSlashMenu } from "./use-slash-menu.ts";
 export type { VirtualAnchor } from "./virtual-anchor.ts";

@@ -16,6 +16,11 @@ export interface MentionItem {
   description?: string;
   /** Icon key resolved by the UI layer; the core ships no components. */
   icon?: string;
+  /**
+   * `"page"` makes a pick insert a `pageLink` to page `id` rather than a
+   * `mention`; `createBlockKit({ pages })` merges such items into the menu.
+   */
+  kind?: "page";
 }
 
 export interface MentionState {
@@ -84,6 +89,13 @@ declare module "@tiptap/core" {
       insertMention: (item: MentionItem) => ReturnType;
     };
   }
+}
+
+/** The node a picked item inserts: a page link for `kind: "page"` items, a mention otherwise. */
+function mentionContent(editor: Editor, item: MentionItem) {
+  return item.kind === "page" && editor.schema.nodes.pageLink
+    ? { type: "pageLink", attrs: { pageId: item.id } }
+    : { type: "mention", attrs: { id: item.id, label: item.label } };
 }
 
 export const mentionPluginKey = new PluginKey("mention");
@@ -187,10 +199,7 @@ export const Mention = Node.create<MentionOptions, MentionStorage>({
       insertMention:
         (item: MentionItem) =>
         ({ chain }) =>
-          chain()
-            .insertContent({ type: this.name, attrs: { id: item.id, label: item.label } })
-            .insertContent(" ")
-            .run(),
+          chain().insertContent(mentionContent(this.editor, item)).insertContent(" ").run(),
     };
   },
 
@@ -293,10 +302,7 @@ export const Mention = Node.create<MentionOptions, MentionStorage>({
           instance
             .chain()
             .focus()
-            .insertContentAt(range, [
-              { type: "mention", attrs: { id: item.id, label: item.label } },
-              { type: "text", text: " " },
-            ])
+            .insertContentAt(range, [mentionContent(instance, item), { type: "text", text: " " }])
             .run();
         },
         render: () => ({

@@ -18,6 +18,7 @@ packages/core/src/markdown-syntax.ts      dependency-free marker/link/block-scan
 packages/core/src/code-block.ts           CodeBlock/codeBlock(): lowlight-highlighted codeBlock, opt-in via `codeBlock` option
 packages/core/src/emoji.ts                Emoji node: wraps @tiptap/extension-emoji, `:` picker storage store, markdown shortcode
 packages/core/src/mention.ts              Mention node, async Suggestion provider, storage store
+packages/core/src/pages.ts                PageStore contract, subPage/pageLink nodes, pages() factory, collectPageRefs, detach/attach watcher, page slash items and `@` merge
 packages/core/src/mermaid.ts              Mermaid node: CodeBlock.extend, source as text, ```mermaid rule, markdown fence
 packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
 packages/core/src/slash-items.ts          SlashItem type, filterSlashItems(), defaultSlashItems
@@ -40,6 +41,7 @@ packages/core/tests/emoji.test.ts         opt-in wiring, /emoji `when` gating, s
 packages/core/tests/slash-items.test.ts   ranking, keyword shorthands, `when` gating
 packages/core/tests/table-columns.test.ts table/columns schema inventory, columns{2,} minimum
 packages/core/tests/table-of-contents.test.ts  outline computation, nested-heading exclusion, maxLevel, active-item/scroll selection
+packages/core/tests/pages.test.ts         opt-in wiring, collectPageRefs, subPageDelta rules, uniqueness conversion, markdown round trip, page mentions
 packages/core/tests/upload.test.ts        findNodeById, PendingUploadRegistry
 packages/core/tests/tsconfig.json         type-checks tests without widening the build rootDir
 packages/core/tsconfig.json               build scope: src only
@@ -54,6 +56,7 @@ packages/react/               @slash-editor/react
   src/use-mention.ts          useMention(): store subscription + caret anchor, same shape as useSlashMenu plus loading
   src/use-emoji.ts            useEmoji(): store subscription + caret anchor, same shape as useSlashMenu
   src/use-presence.ts         usePresence(): awareness state -> peer list, cached/event-driven
+  src/use-pages.ts            usePage/usePageTree/useBreadcrumb/useBacklinks(): editor-independent PageStore hooks
   src/use-table-of-contents.ts  useTableOfContents(): store subscription + active heading (caret or scroll)
   tsconfig.json               resolves core via ../core/dist/index.d.mts
 
@@ -74,6 +77,10 @@ site/                          the one app: playground, docs site, landing page,
     components/emoji-menu.tsx      Command + Popover surface for the `:` emoji picker
     components/link-editor-popover.tsx  Input-driven popover: href, Open/Remove when editing
     components/table-of-contents.tsx  heading outline nav, active row, click-to-jump
+    components/page-header.tsx     icon/cover/title editor outside EditorContent, focusPageTitle()
+    components/page-tree.tsx       lazily expanded page tree over usePageTree
+    components/page-breadcrumb.tsx ancestor trail over useBreadcrumb
+    components/page-backlinks.tsx  referencing pages over useBacklinks
     components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video; `adapter` passed as a prop, never imported
     components/nodes/image-node-view.tsx   ReactNodeViewRenderer target for Image; takes `adapter` as a prop
     components/nodes/file-node-view.tsx    ReactNodeViewRenderer target for File; takes `adapter` as a prop
@@ -82,6 +89,7 @@ site/                          the one app: playground, docs site, landing page,
     components/nodes/ai-block-node-view.tsx  ReactNodeViewRenderer target for AiBlock: stream/Keep/Discard/Try again
     components/nodes/code-block-node-view.tsx  ReactNodeViewRenderer target for the lowlight codeBlock: language selector
     components/nodes/mermaid-node-view.tsx  ReactNodeViewRenderer target for Mermaid: preview, click-to-edit source
+    components/nodes/page-node-views.tsx   SubPageNodeView / PageLinkNodeView: live title, loading and trashed states
     components/ui/*.tsx        shadcn components (added via CLI, owned by the repo); `popover.tsx`/`dropdown-menu.tsx` forward `anchor` for caret/block-rect positioning
     lib/utils.ts               re-exports cn from the `cn` package
     lib/mermaid.ts             renderMermaid(): lazy `mermaid` import, serialised renders, shadcn-token theme; useThemeSnapshot()
@@ -91,6 +99,7 @@ site/                          the one app: playground, docs site, landing page,
     lib/collaboration.ts       createDemoCollaboration(): shared Y.Doc + HocuspocusProvider per room
     lib/comment-store.ts       createMockCommentThreadStore(): in-memory CommentThreadStore
     lib/upload-adapter.ts      mockUploadAdapter: data-URL upload, `fail-`-prefixed names reject once
+    lib/page-store.ts          demo PageStore (in-memory/localStorage)
     lib/mention-provider.ts    mockMentionProvider: filters an in-memory directory after a delay
     lib/stream-adapter.ts      mockStreamAdapter: per-action canned response, `trigger-ai-error` fails once
     theme.css                  Nova design tokens: base scale, dark-mode overrides, `@theme inline` mapping
@@ -115,6 +124,7 @@ site/                          the one app: playground, docs site, landing page,
   components/playground/playground-editor.tsx  EditorWorkspace + SoloEditor / CollabEditor: editor card, sticky outline/comment rail, read-only toggle
   components/playground/markdown-panel.tsx     solo editor's "Markdown" panel: live `getMarkdown()`, edit + apply, import/download `.md`
   components/playground/playground-editor.preview.tsx  `ssr: false` wrapper — same DOM-globals constraint as the demo previews
+  components/playground/pages-editor.tsx  playground `?page=<id>` workspace: tree, header, editor per page
   components/landing/feature-bento.tsx         landing page bento feature grid (cards, chip marquees)
   components/landing/registry-marquee.tsx      landing page registry item catalog (two marquee rows)
   components/magicui/*.tsx                     vendored MagicUI components (site chrome only, never registry source)
@@ -135,6 +145,7 @@ site/                          the one app: playground, docs site, landing page,
   tests/e2e/toggle-blocks.spec.ts       `>`/`"` shorthands, toggle headings, level survives open/close
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
   tests/e2e/table-of-contents.spec.ts   outline rows track the caret/scroll and jump to a heading
+  tests/e2e/pages.spec.ts               create + navigate + breadcrumb, rename, @ page chip, trash/restore, backlinks
 .github/workflows/release.yml tag-triggered (`v*`) publish: build, `vp check`, registry schema gate, `bun publish` core then react
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases

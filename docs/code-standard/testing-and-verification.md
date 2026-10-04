@@ -21,6 +21,7 @@ Current suites (`vp test`, Node environment, no DOM):
 | `packages/core/tests/slash-items.test.ts`       | empty-query ordering, ranking precedence, keyword shorthands, no-match, `when` gating, tie stability                                                                                                                                               |
 | `packages/core/tests/table-columns.test.ts`     | table/columns/column schema inventory, JSON round trip, `columns{2,}` minimum enforced by the schema, `false` opt-out                                                                                                                              |
 | `packages/core/tests/table-of-contents.test.ts` | top-level-only outline computation with `pos` addressing each node, nested-heading exclusion (callout/toggle/columns/table cell), `maxLevel`, empty-doc, `findActiveItem`/`pickActiveByScroll` boundary cases                                      |
+| `packages/core/tests/pages.test.ts`             | opt-in wiring (no `pages` -> no nodes), `collectPageRefs` at any depth, `subPageDelta` detach/attach/move/remote/undo rules, duplicate and foreign-parent conversion to `pageLink`, markdown round trip, page mention merge                        |
 | `packages/core/tests/upload.test.ts`            | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                                                                                                                                          |
 
 Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function. Anything that needs a live `Editor` is verified in a browser instead of mocked.
@@ -45,6 +46,7 @@ Core logic is written so it can be tested without a DOM: schemas via `getSchema(
 | `toggle-blocks.spec.ts`     | `>` makes a toggle and `"` a quote; `# ` + `> ` and in-title `##` set the level; level and block id survive open/close; body caret in/out, per-line handles, whitespace between toggles focusing a line |
 | `slash-menu-ux.spec.ts`     | arrow-key scrolling keeps the highlight in view, one-line rows with icons, a shown `shortcut` really converts the block, per-block placeholders, `/` hint                                               |
 | `table-of-contents.spec.ts` | outline rows match the headings, active row follows the caret in edit mode and the scroll position in the read-only demo, click-to-jump, row text tracking live edits                                   |
+| `pages.spec.ts`             | `/page` create + navigate + breadcrumb, rename propagates to block and tree, `@` page chip, delete -> trashed and undo -> restored, backlinks                                                           |
 
 `tests/e2e/support.ts` holds the shared helpers:
 
