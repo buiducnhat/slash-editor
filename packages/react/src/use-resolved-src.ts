@@ -40,7 +40,12 @@ function resolve(
  *   requests the raw (possibly unauthorized) URL in the meantime.
  * - A thrown error or rejected promise falls back to the raw `src`.
  * - Re-resolves only when `src` or `resolveSrc` change, not on other attr
- *   edits; a result for a superseded `src` is discarded.
+ *   edits (typing an `alt` must not re-sign the URL); a result for a
+ *   superseded `src` is discarded. `node` is context for the resolver, not a
+ *   key: derive the URL from `src`, not from other attrs.
+ * - Keep `resolveSrc` referentially stable (e.g. the extension option, not an
+ *   inline closure): each new function restarts resolution, and an async one
+ *   shows nothing until it settles.
  */
 export function useResolvedSrc(
   src: string | null | undefined,
