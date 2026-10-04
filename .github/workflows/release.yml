@@ -1,42 +1,135 @@
 name: Release
 
+# Release flow (CONTRIBUTING.md#releasing). Every push to main runs `plan`:
+#
+# - changesets pending → `version` opens or updates the "Version Packages" PR
+#   (`bun run version-packages`: lockstep bump, CHANGELOGs, root version, bun.lock);
+# - no changesets, and npm lacks a package at the committed version → `verify`
+#   builds, checks, tests and packs read-only, then `publish` (environment
+#   `npm-release`, reviewer approval) uploads the tarballs, tags vX.Y.Z and
+#   creates the GitHub Release;
+# - otherwise nothing.
+#
+# Merging the Version Packages PR is the release. A failed publish is retried by
+# re-running the failed job; already-published packages are skipped.
+#
+# npm Trusted Publishing for both packages is bound to this workflow filename:
+# renaming the file breaks publishing.
+
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
-permissions:
-  contents: read
-  id-token: write # required for npm OIDC trusted publishing
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  plan:
+    name: Plan
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      version: ${{ steps.plan.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select mode
+        id: plan
+        run: |
+          version=$(jq -r .version packages/core/package.json)
+          pending=$(find .changeset -maxdepth 1 -name '*.md' ! -name README.md | wc -l)
+          mode=none
+          if [ "$pending" -gt 0 ]; then
+            mode=version
+          else
+            for pkg in core react; do
+              # 200 = published, 404 = not yet; anything else must not guess.
+              status=$(curl -sS -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/@slash-editor%2f$pkg/$version")
+              case "$status" in
+                200) ;;
+                404) mode=publish ;;
+                *) echo "::error::npm registry returned $status for @slash-editor/$pkg@$version"; exit 1 ;;
+              esac
+            done
+          fi
+          echo "$pending pending changesets, version $version → mode $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  version:
+    name: Version Packages PR
+    needs: plan
+    if: needs.plan.outputs.mode == 'version'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.2"
+          no-cache: true
 
-      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855) — the
-      # registry upload runs through real npm instead. Trusted publishing needs
-      # npm >= 11.5.1, so put a recent Node on PATH and pin that floor rather
-      # than trust whatever the runner image bundles.
-      - name: Set up Node (npm publish supports OIDC; bun publish does not)
-        uses: actions/setup-node@v7
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # The PR is created with GITHUB_TOKEN, so CI does not run on it; `verify`
+      # re-runs every check on the merged commit before anything is published.
+      - name: Create or update the Version Packages PR
+        uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          script: bun run version-packages
+          commit-message: "chore(release): version packages"
+          pr-title: "chore(release): version packages"
 
-      - name: Ensure npm supports trusted publishing
+  verify:
+    name: Verify v${{ needs.plan.outputs.version }}
+    needs: plan
+    if: needs.plan.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.4.2"
+          no-cache: true
+
+      - name: Check lockstep versions
         run: |
-          npm install -g npm@^11.5.1
-          npm --version
+          for manifest in package.json packages/core/package.json packages/react/package.json; do
+            actual=$(jq -r .version "$manifest")
+            if [ "$actual" != "$VERSION" ]; then
+              echo "::error file=$manifest::version $actual, expected $VERSION"
+              exit 1
+            fi
+          done
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -54,34 +147,108 @@ jobs:
       - name: Check (format, lint, typecheck)
         run: bunx vp check
 
+      - name: Unit tests
+        run: bun run test
+
       - name: Validate registry schema
         working-directory: site
         run: bunx --bun shadcn build
 
-      # The version bump is committed ahead of the tag (`changeset version`), so
-      # these steps only upload what the tag already says. Two constraints shape
-      # them:
-      #
-      # - `npm pack` leaves `workspace:*` in react's manifest (`npm pack` in
-      #   packages/react ships `@slash-editor/core: "workspace:*"`, which no
-      #   consumer can resolve), while `bun pm pack` resolves it to the concrete
-      #   version — so pack with bun and upload the tarball with npm;
-      # - npm refuses to run anywhere inside this tree: the root `devEngines`
-      #   pins bun, and devEngines resolves against the workspace root rather
-      #   than cwd (EBADDEVENGINES), so publish from /tmp, where no package.json
-      #   governs it.
-      - name: Pack @slash-editor/core
-        working-directory: packages/core
-        run: bun pm pack --destination /tmp/pack/core
+      # `bun pm pack`, not `npm pack`: only bun resolves react's `workspace:*`
+      # dependency on core to a concrete version.
+      - name: Pack
+        run: |
+          (cd packages/core && bun pm pack --destination "$RUNNER_TEMP/release/core")
+          (cd packages/react && bun pm pack --destination "$RUNNER_TEMP/release/react")
 
-      - name: Publish @slash-editor/core
-        working-directory: /tmp
-        run: npm publish /tmp/pack/core/*.tgz --access public --ignore-scripts
+      - name: Check packed manifests
+        run: bun scripts/check-packs.ts "$RUNNER_TEMP/release" "$VERSION"
 
-      - name: Pack @slash-editor/react
-        working-directory: packages/react
-        run: bun pm pack --destination /tmp/pack/react
+      - name: Extract release notes
+        run: |
+          awk -v heading="## [$VERSION]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/release/notes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/release/notes.md"; then
+            echo "::error file=CHANGELOG.md::no section for [$VERSION]"
+            exit 1
+          fi
 
-      - name: Publish @slash-editor/react
-        working-directory: /tmp
-        run: npm publish /tmp/pack/react/*.tgz --access public --ignore-scripts
+      - name: Upload release artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release
+          path: ${{ runner.temp }}/release
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish v${{ needs.plan.outputs.version }}
+    needs: [plan, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Required reviewers on this environment are the human gate before npm.
+    environment: npm-release
+    permissions:
+      contents: write # tag + GitHub Release
+      id-token: write # npm OIDC trusted publishing
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      # `bun publish` has no OIDC support (oven-sh/bun#22423, #24855), so the
+      # tarballs bun packed are uploaded by real npm. Trusted publishing needs
+      # npm >= 11.5.1. No checkout: this job only handles the verified artifact.
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
+      - name: Download release artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release
+          path: ${{ runner.temp }}/release
+
+      # Core first: react depends on it. Re-runs skip what npm already has.
+      - name: Publish to npm
+        working-directory: ${{ runner.temp }}
+        run: |
+          case "$VERSION" in
+            *-*) dist_tag=$(echo "${VERSION#*-}" | cut -d. -f1) ;;
+            *) dist_tag=latest ;;
+          esac
+          for pkg in core react; do
+            status=$(curl -sS -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/@slash-editor%2f$pkg/$VERSION")
+            case "$status" in
+              200) echo "@slash-editor/$pkg@$VERSION already published, skipping" ;;
+              404) npm publish release/$pkg/*.tgz --access public --tag "$dist_tag" ;;
+              *) echo "::error::npm registry returned $status for @slash-editor/$pkg@$VERSION"; exit 1 ;;
+            esac
+          done
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$VERSION"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "GitHub Release $tag already exists"
+            exit 0
+          fi
+          prerelease=()
+          case "$VERSION" in *-*) prerelease=(--prerelease) ;; esac
+          gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$tag" \
+            --notes-file "$RUNNER_TEMP/release/notes.md" \
+            "${prerelease[@]}"

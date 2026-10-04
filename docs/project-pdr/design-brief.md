@@ -187,10 +187,12 @@ instance scoped to that one feature).
 `/` keeps today's full playground. This matches the non-goal against adding docs tooling that
 duplicates the Vite/Tailwind/shadcn stack already in place.
 
-Release stays `bumpp`-driven: one invocation bumps `package.json`,
-`packages/core/package.json`, and `packages/react/package.json` to the same version in one prompt
-(true lockstep, not two separate releases). A tag push (`v*`) runs GitHub Actions: build, `vp
-check`, `shadcn build` (registry schema gate), then publish. Publishing uses real `npm publish`
+Release is Changesets-driven and lockstep (`fixed` group: core and react always share one
+version). Every push to `main` runs `.github/workflows/release.yml`: while changesets are pending
+it opens a "version packages" PR (`bun run version-packages`); merging that PR leaves a version npm
+lacks, so the workflow builds, runs `vp check`, unit tests and `shadcn build` (registry schema
+gate), checks the packed manifests, and publishes behind the `npm-release` environment's reviewer
+approval, then tags `vX.Y.Z` and creates the GitHub Release. Publishing uses real `npm publish`
 (not `bun publish`, which has no OIDC support — oven-sh/bun#22423, #24855) authenticated via npm's
 OIDC Trusted Publishing, so the workflow stores no long-lived npm token at all; `bun pm pack`
 still does the packing (it resolves `packages/react`'s `workspace:*` dependency on core to a real
@@ -269,7 +271,7 @@ No snapshot tests of markup — registry markup is user-owned and expected to ch
 
 ### Rollout
 
-- `0.x` semver, `bumpp` for releases; core/react versioned in lockstep.
+- `0.x` semver, Changesets Version PR for releases; core/react versioned in lockstep.
 - Registry served from the docs site as `/r/[name].json`, validated in CI against the shadcn registry schema.
 - Docs site doubles as the playground; every component page shows live editor + copy-paste command.
 

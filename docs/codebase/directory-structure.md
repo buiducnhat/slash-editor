@@ -146,7 +146,9 @@ site/                          the one app: playground, docs site, landing page,
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
   tests/e2e/table-of-contents.spec.ts   outline rows track the caret/scroll and jump to a heading
   tests/e2e/pages.spec.ts               create + navigate + breadcrumb, rename, @ page chip, trash/restore, backlinks
-.github/workflows/release.yml tag-triggered (`v*`) publish: build, `vp check`, registry schema gate, `bun publish` core then react
+.github/workflows/release.yml push-to-main release: Version Packages PR while changesets pend; then verify (build, `vp check`, tests, registry gate, packed manifests) and environment-gated npm publish via OIDC, tag, GitHub Release
+scripts/version-packages.ts   release version step: `changeset version` + root version, root CHANGELOG section, bun.lock refresh
+scripts/check-packs.ts        pre-publish gate: packed manifests at the release version, no `workspace:`/`catalog:` left
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases
 vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, vitest excludes site/tests/e2e

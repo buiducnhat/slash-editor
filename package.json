@@ -23,13 +23,12 @@
     "check": "vp check",
     "check:fix": "vp check --fix",
     "changeset": "changeset",
-    "release": "bun run build && changeset publish",
+    "version-packages": "bun scripts/version-packages.ts",
     "prepare": "vp config"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
     "@types/node": "^26.1.1",
-    "bumpp": "^11.1.0",
     "typescript": "^7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
     "vite-plus": "^0.2.4"

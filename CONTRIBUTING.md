@@ -88,6 +88,24 @@ release.
 | `minor`           | New features, backward-compatible API additions |
 | `major`           | Breaking API changes                            |
 
+### Releasing
+
+`@slash-editor/core` and `@slash-editor/react` release in lockstep from
+`.github/workflows/release.yml`, which runs on every push to `main`:
+
+1. While changesets are pending, the workflow opens or updates a **"chore(release): version
+   packages"** PR. Its commit is `bun run version-packages`: `changeset version` bumps both
+   packages and writes their changelogs, and the script syncs the root version, adds the root
+   `CHANGELOG.md` section from the changesets, and refreshes `bun.lock`. Edit the root changelog
+   wording in that PR if needed.
+2. Merging the PR is the release. The workflow sees a version npm does not have yet, builds,
+   checks, tests and packs it, then waits for approval on the `npm-release` environment.
+3. Once approved, it publishes both tarballs to npm through Trusted Publishing (no npm token),
+   tags `vX.Y.Z` and creates the GitHub Release from the root changelog section.
+
+A failed publish is retried by re-running the failed job; packages already on npm are skipped.
+Never bump versions or push release tags by hand.
+
 ## Testing
 
 ### Unit tests

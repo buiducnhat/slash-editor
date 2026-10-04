@@ -27,6 +27,7 @@
     "packages/*/tests",
     "site/tests",
     "site/playwright.config.ts",
+    "scripts",
     "*.ts"
   ]
 }
