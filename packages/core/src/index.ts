@@ -56,7 +56,12 @@ export {
   type BlockTypesStorage,
 } from "./block-types.ts";
 export { defaultBlockMenuItems, type BlockMenuContext, type BlockMenuItem } from "./block-menu.ts";
-export { type BlockKitOptions, createBlockKit, type HeadingLevel } from "./block-kit.ts";
+export {
+  type BlockKitOptions,
+  type BlockKitStarterKitOptions,
+  createBlockKit,
+  type HeadingLevel,
+} from "./block-kit.ts";
 export {
   localizeBlockMenuItems,
   localizeBubbleToolbarItems,

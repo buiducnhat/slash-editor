@@ -10,6 +10,7 @@ function createBlockKit(options?: BlockKitOptions): Extensions;
 interface BlockKitOptions {
   headingLevels?: HeadingLevel[]; // default [1, 2, 3]
   history?: boolean; // default true
+  starterKit?: BlockKitStarterKitOptions; // default {}; forwarded to StarterKit.configure, e.g. { underline: false }
   slash?: Partial<SlashCommandOptions> | false;
   blockId?: Partial<BlockIdOptions> | false; // default { types: "auto" }
   drag?: Partial<BlockDragOptions> | false; // default {}
@@ -37,6 +38,17 @@ interface BlockKitOptions {
   extend?: Extensions;
 }
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+// Owned keys are excluded so each setting has one seam: heading (headingLevels), undoRedo
+// (history/collaboration), link, codeBlock, blockquote (always off: quote() registers its own
+// `blockquote`), gapcursor (always off: margin clicks focus the nearest text instead).
+// Slash items, block types, and bubble buttons hide when their node/mark leaves the schema;
+// disabling a node another node's content requires (listItem with lists on, paragraph) throws.
+type BlockKitStarterKitOptions = Partial<
+  Omit<
+    StarterKitOptions,
+    "heading" | "undoRedo" | "link" | "codeBlock" | "blockquote" | "gapcursor"
+  >
+>;
 
 // Baseline schema also carries taskList/taskItem (@tiptap/extension-list, nested: true) and
 // details/detailsSummary/detailsContent unconditionally, the same way codeBlock is — no

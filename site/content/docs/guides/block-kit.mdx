@@ -29,6 +29,30 @@ useSlashEditor({
 The [Media & AI Node Views](/docs/components/node-views) component ships exactly this pattern —
 `adapter` is always a prop, never a hardcoded mock.
 
+## Configuring StarterKit
+
+The kit builds on Tiptap's `StarterKit`. `starterKit` forwards options to it for the extensions
+the kit leaves alone — drop the underline mark (with its `Mod-u` shortcut and `++text++`
+markdown), restyle the drop cursor, configure hard breaks:
+
+```tsx
+useSlashEditor({
+  blockKit: {
+    starterKit: { underline: false, dropcursor: { color: "var(--primary)" } },
+  },
+});
+```
+
+Keys the kit owns are not accepted, so each setting has one place to live: `heading` is
+`headingLevels`, `undoRedo` is `history` (and `collaboration`), `link` and `codeBlock` are the kit's
+own options. `blockquote` stays off because `Quote` registers its own `blockquote` node, and
+`gapcursor` stays off so clicks in block margins focus the nearest text.
+
+Slash items, block types, and bubble toolbar buttons hide themselves when their node or mark is
+missing, so `starterKit: { bulletList: false }` simply drops "Bulleted list". Disabling a node
+other nodes' content requires — `listItem` while `bulletList`/`orderedList` stay on, or
+`paragraph` — throws a schema error.
+
 ## No-default options
 
 `mention`, `ai`, and `collaboration` have no default provider/adapter, so they stay unregistered

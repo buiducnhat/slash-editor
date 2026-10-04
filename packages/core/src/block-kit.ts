@@ -1,5 +1,5 @@
 import type { Editor, Extensions } from "@tiptap/core";
-import { StarterKit } from "@tiptap/starter-kit";
+import { StarterKit, type StarterKitOptions } from "@tiptap/starter-kit";
 import { DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { TaskItem, type TaskItemOptions, TaskList } from "@tiptap/extension-list";
 import {
@@ -50,6 +50,25 @@ import { tableOfContents, type TableOfContentsOptions } from "./table-of-content
 import { toggle, type ToggleOptions } from "./toggle.ts";
 import { video, type VideoOptions } from "./video.ts";
 
+/**
+ * StarterKit keys the kit owns. `heading`, `undoRedo`, `link`, and
+ * `codeBlock` are set through `headingLevels`, `history` (and
+ * `collaboration`), `link`, and `codeBlock`; `blockquote` stays off because
+ * `quote()` registers its own node under that name; `gapcursor` stays off so
+ * clicks in block margins focus the nearest text instead.
+ */
+type BlockKitOwnedStarterKitKey =
+  | "heading"
+  | "undoRedo"
+  | "link"
+  | "codeBlock"
+  | "blockquote"
+  | "gapcursor";
+
+export type BlockKitStarterKitOptions = Partial<
+  Omit<StarterKitOptions, BlockKitOwnedStarterKitKey>
+>;
+
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface BlockKitOptions {
@@ -70,6 +89,22 @@ export interface BlockKitOptions {
    * @default true
    */
   history?: boolean;
+  /**
+   * Options forwarded to StarterKit for the extensions the kit does not
+   * configure itself: `{ underline: false }` drops the underline mark (and
+   * its `Mod-u` shortcut and `++text++` markdown), `{ dropcursor: { color } }`
+   * restyles the drop indicator, and so on. Keys with a dedicated option
+   * (`headingLevels`, `history`, `link`, `codeBlock`) or that must stay fixed
+   * (`blockquote`, `gapcursor`) are not accepted here.
+   *
+   * Slash items, block types, and bubble toolbar buttons hide themselves when
+   * their node or mark is missing from the schema. Disabling a node another
+   * node's content requires (`listItem` while `bulletList`/`orderedList` stay
+   * on, `paragraph`) leaves an invalid schema.
+   *
+   * @default {}
+   */
+  starterKit?: BlockKitStarterKitOptions;
   /**
    * Slash menu configuration, or `false` to leave the trigger character inert.
    *
@@ -297,6 +332,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
     tableOfContents: tableOfContentsOptions,
     toggle: toggleOptions,
     extend = [],
+    starterKit: starterKitOptions,
   } = options;
   const resolvedAi: AiKitOptions | undefined = aiOptions
     ? { actions: defaultAiActions, node: true, ...aiOptions }
@@ -326,6 +362,7 @@ export function createBlockKit(options: BlockKitOptions = {}): Extensions {
 
   return [
     StarterKit.configure({
+      ...starterKitOptions,
       /*
        * No gap cursor. ProseMirror hands one to any click that lands on an
        * isolated block's boundary — the strip a margin leaves between two
