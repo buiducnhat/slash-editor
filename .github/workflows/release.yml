@@ -218,7 +218,9 @@ jobs:
           name: release
           path: ${{ runner.temp }}/release
 
-      # Core first: react depends on it. Re-runs skip what npm already has.
+      # Core first: react depends on it. Re-runs skip what npm already has. The
+      # registry's read side lags a fresh publish by minutes, so a 404 can still
+      # meet "cannot publish over" from npm publish: that also means done.
       - name: Publish to npm
         working-directory: ${{ runner.temp }}
         run: |
@@ -230,7 +232,16 @@ jobs:
             status=$(curl -sS -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/@slash-editor%2f$pkg/$VERSION")
             case "$status" in
               200) echo "@slash-editor/$pkg@$VERSION already published, skipping" ;;
-              404) npm publish release/$pkg/*.tgz --access public --tag "$dist_tag" ;;
+              404)
+                if out=$(npm publish release/$pkg/*.tgz --access public --tag "$dist_tag" 2>&1); then
+                  echo "$out"
+                elif grep -qi 'cannot publish over' <<< "$out"; then
+                  echo "@slash-editor/$pkg@$VERSION already published (registry not caught up), skipping"
+                else
+                  echo "$out"
+                  exit 1
+                fi
+                ;;
               *) echo "::error::npm registry returned $status for @slash-editor/$pkg@$VERSION"; exit 1 ;;
             esac
           done
