@@ -34,9 +34,11 @@ const comments = useComments(editor);
 ```
 
 Core anchors comments in the document and owns the inline composer anchor. The store remains
-host-owned; it is not serialized into the document. `unsetComment` removes only that `threadId`'s
-mark instances from the selection: ProseMirror's built-in `unsetMark` would strip every distinct
-thread anchored there, since the mark type sets `excludes: ""` so overlapping threads can coexist.
+host-owned; it is not serialized into the document. `unsetComment(threadId)` removes that thread's
+anchors everywhere in the document, regardless of the selection, so `removeAnchor` works from a
+sidebar without moving the caret. It removes only that `threadId`'s mark instances: ProseMirror's
+built-in `unsetMark` would strip every distinct thread anchored there, since the mark type sets
+`excludes: ""` so overlapping threads can coexist.
 
 See [Comment Panel](/docs/components/comment-panel) for the rendered sidebar surface and the
 bubble toolbar composer.

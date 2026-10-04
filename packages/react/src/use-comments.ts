@@ -80,7 +80,9 @@ export function useComments(editor: Editor | null): Comments {
     [store],
   );
   const removeAnchor = useCallback(
-    (threadId: string) => editor?.chain().focus().unsetComment(threadId).run(),
+    // No focus(): removal is document-wide and usually triggered from a sidebar; focusing would
+    // jump the caret and scroll the editor.
+    (threadId: string) => editor?.commands.unsetComment(threadId),
     [editor],
   );
   const close = useCallback(() => editor?.commands.closeCommentComposer(), [editor]);

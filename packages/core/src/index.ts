@@ -95,6 +95,7 @@ export {
   Comment,
   comment,
   type CommentComposerState,
+  removeCommentThread,
   type CommentMessage,
   type CommentOptions,
   type CommentState,
