@@ -1,13 +1,6 @@
-import {
-  AiBlock,
-  CodeBlock,
-  Embed,
-  File as FileNode,
-  Image,
-  Mermaid,
-  Video,
-} from "@slash-editor/core";
+import { AiBlock, Embed, File as FileNode, Image, Mermaid, Video } from "@slash-editor/core";
 import type { PagesOptions } from "@slash-editor/core";
+import { CodeBlock } from "@slash-editor/core/code-block";
 import { type NodeViewProps, ReactNodeViewRenderer } from "@tiptap/react";
 import { AiBlockNodeView } from "@/components/nodes/ai-block-node-view.tsx";
 import { CodeBlockNodeView } from "@/components/nodes/code-block-node-view.tsx";

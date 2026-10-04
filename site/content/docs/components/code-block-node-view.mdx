@@ -21,24 +21,24 @@ Hover a code block to pick its language; `Auto` detects it from the code. Type `
 ## Usage
 
 Highlighting is opt-in: `createBlockKit` keeps StarterKit's plain `codeBlock` unless you pass a
-`codeBlock` option. To get the language selector, opt the default out and append the node with the
-view:
+highlighted node as the `codeBlock` option. It comes from its own entry,
+`@slash-editor/core/code-block`, so lowlight never lands in a bundle that doesn't use it. To get the
+language selector, pass the node extended with the view:
 
 ```tsx
-import { CodeBlock } from "@slash-editor/core";
+import { CodeBlock } from "@slash-editor/core/code-block";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { CodeBlockNodeView } from "@/components/nodes/code-block-node-view";
 
 const editor = useSlashEditor({
   blockKit: {
-    codeBlock: false,
-    extend: [CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) })],
+    codeBlock: CodeBlock.extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockNodeView) }),
   },
 });
 ```
 
-Without a view, `codeBlock: {}` alone highlights; style the `hljs-*` classes yourself or use the
-CSS this item installs.
+Without a view, `codeBlock: codeBlock()` alone highlights; style the `hljs-*` classes yourself or
+use the CSS this item installs.
 
 ## Choosing languages
 
@@ -51,13 +51,17 @@ bun add lowlight highlight.js
 ```
 
 ```tsx
+import { codeBlock } from "@slash-editor/core/code-block";
 import { createLowlight } from "lowlight";
 import typescript from "highlight.js/lib/languages/typescript";
 
 const lowlight = createLowlight({ typescript });
 
-useSlashEditor({ blockKit: { codeBlock: { lowlight } } });
+useSlashEditor({ blockKit: { codeBlock: codeBlock({ lowlight }) } });
 ```
+
+With the view, extend first and configure after:
+`CodeBlock.extend({ addNodeView }).configure({ lowlight })`.
 
 ## Behaviour
 

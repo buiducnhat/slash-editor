@@ -20,7 +20,9 @@ import { EmojiMenuDemo } from "~/components/demo/registry-demos.preview.tsx";
 Enable the `emoji` extension in the block kit and render the menu next to the editor:
 
 ```tsx
-useSlashEditor({ blockKit: { emoji: {} } });
+import { emoji } from "@slash-editor/core/emoji";
+
+useSlashEditor({ blockKit: { emoji: emoji() } });
 
 <EmojiMenu editor={editor} />;
 ```

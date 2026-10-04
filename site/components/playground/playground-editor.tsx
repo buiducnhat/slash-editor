@@ -1,6 +1,7 @@
 "use client";
 
 import type { CommentThreadStore } from "@slash-editor/core";
+import { emoji } from "@slash-editor/core/emoji";
 import { markdown } from "@slash-editor/core/markdown";
 import type { Editor } from "@tiptap/core";
 import type { WebrtcProvider } from "y-webrtc";
@@ -165,7 +166,7 @@ const BLOCK_KIT_DEFAULTS = {
   mermaid: false,
   codeBlock: false,
   ai: { adapter: mockStreamAdapter, node: false },
-  emoji: {},
+  emoji: emoji(),
   mention: {
     items: (query: string, { signal }: { signal: AbortSignal }) =>
       mockMentionProvider(query, signal),

@@ -5,7 +5,8 @@
     // Built types, not core sources: resolving through the source alias makes
     // the dts generator emit declarations next to `packages/core/src`.
     "paths": {
-      "@slash-editor/core": ["../core/dist/index.d.mts"]
+      "@slash-editor/core": ["../core/dist/index.d.mts"],
+      "@slash-editor/core/emoji": ["../core/dist/emoji.d.mts"]
     }
   },
   "include": ["src"]

@@ -1,3 +1,9 @@
+/*
+ * `@slash-editor/core/emoji` — a separate entry so the emoji dataset
+ * `@tiptap/extension-emoji` bundles (~70 KB gzipped) stays out of apps that
+ * never enable the picker. `createBlockKit` only takes the configured node
+ * (`emoji: emoji()`); it never imports this module.
+ */
 import type { Editor, JSONContent, MarkdownParseHelpers, MarkdownToken } from "@tiptap/core";
 import {
   Emoji as TiptapEmoji,

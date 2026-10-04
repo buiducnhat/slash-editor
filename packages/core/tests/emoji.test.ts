@@ -1,21 +1,16 @@
 import { getSchema } from "@tiptap/core";
 import { expect, test } from "vite-plus/test";
-import {
-  createBlockKit,
-  defaultSlashItems,
-  filterSlashItems,
-  searchEmojis,
-  type EmojiItem,
-} from "../src/index.ts";
+import { emoji, searchEmojis, type EmojiItem } from "../src/emoji.ts";
+import { createBlockKit, defaultSlashItems, filterSlashItems } from "../src/index.ts";
 import { parseMarkdown, serializeMarkdown } from "../src/markdown.ts";
 
-const kit = createBlockKit({ emoji: {} });
+const kit = createBlockKit({ emoji: emoji() });
 const names = (options?: Parameters<typeof createBlockKit>[0]) =>
   createBlockKit(options).map((extension) => extension.name);
 
 test("emoji is opt-in and brings the /emoji slash item with it", () => {
   expect(names()).not.toContain("emoji");
-  expect(names({ emoji: {} })).toContain("emoji");
+  expect(names({ emoji: emoji() })).toContain("emoji");
   expect(names({ emoji: false })).not.toContain("emoji");
 
   const withEmoji = { schema: { nodes: { emoji: {} } } } as never;
