@@ -59,6 +59,13 @@ export function PageHeader({ store, pageId, editor, className }: PageHeaderProps
   const [coverDraft, setCoverDraft] = useState("");
   const focused = useRef(false);
   const storeTitle = page?.title;
+  const [titleFor, setTitleFor] = useState(pageId);
+
+  // A different page without a remount: drop the old draft instead of writing it to the new page.
+  if (titleFor !== pageId) {
+    setTitleFor(pageId);
+    setTitle(storeTitle ?? "");
+  }
 
   useEffect(() => {
     if (!focused.current && storeTitle !== undefined) setTitle(storeTitle);

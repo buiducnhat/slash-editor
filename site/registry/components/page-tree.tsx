@@ -32,7 +32,7 @@ export function PageTree({
   onCreate,
   className,
 }: PageTreeProps): ReactNode {
-  const { rows, toggle } = usePageTree(store, rootId, { defaultExpanded });
+  const { rows, toggle, expand, collapse } = usePageTree(store, rootId, { defaultExpanded });
 
   return (
     <div data-testid="page-tree" className={cn("flex flex-col gap-1", className)}>
@@ -54,7 +54,7 @@ export function PageTree({
         {rows.length === 0 ? (
           <p className="text-muted-foreground px-2 py-1 text-sm">No pages yet.</p>
         ) : null}
-        {rows.map(({ page, depth, expanded }) => {
+        {rows.map(({ page, depth, expanded }, index) => {
           const active = page.id === activePageId;
           return (
             <div
@@ -72,10 +72,45 @@ export function PageTree({
               )}
               onClick={() => onNavigate(page.id)}
               onKeyDown={(event) => {
-                if (event.target === event.currentTarget && event.key === "Enter") {
-                  event.preventDefault();
-                  onNavigate(page.id);
+                if (event.target !== event.currentTarget) return;
+
+                const items =
+                  event.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
+                    '[role="treeitem"]',
+                  );
+                const focusRow = (target: number) => items?.[target]?.focus();
+                const parentIndex = () => {
+                  for (let at = index - 1; at >= 0; at--) {
+                    if ((rows[at]?.depth ?? 0) < depth) return at;
+                  }
+                  return -1;
+                };
+
+                switch (event.key) {
+                  case "Enter":
+                    onNavigate(page.id);
+                    break;
+                  case "ArrowDown":
+                    focusRow(index + 1);
+                    break;
+                  case "ArrowUp":
+                    focusRow(index - 1);
+                    break;
+                  case "ArrowRight":
+                    // Collapsed: open it. Open: step into its first child.
+                    if (!expanded) expand(page.id);
+                    else if ((rows[index + 1]?.depth ?? 0) > depth) focusRow(index + 1);
+                    break;
+                  case "ArrowLeft":
+                    // Open: close it. Otherwise: step out to the parent row.
+                    if (expanded) collapse(page.id);
+                    else focusRow(parentIndex());
+                    break;
+                  default:
+                    return;
                 }
+
+                event.preventDefault();
               }}
             >
               <button

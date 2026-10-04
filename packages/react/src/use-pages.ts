@@ -232,13 +232,17 @@ export interface Backlinks {
  */
 export function useBacklinks(store: PageStore, pageId: string | null | undefined): Backlinks {
   const { version } = useStoreVersion(store);
-  const [state, setState] = useState<Backlinks>({ pages: [], loading: Boolean(pageId) });
+  // Remembers which page a result belongs to, so a page change never shows the previous
+  // page's backlinks, while a store notification refetches without blanking the list.
+  const [state, setState] = useState<{ forId: string | null | undefined } & Backlinks>({
+    forId: undefined,
+    pages: [],
+    loading: true,
+  });
+  const indexed = Boolean(pageId) && typeof store.backlinks === "function";
 
   useEffect(() => {
-    if (!pageId || !store.backlinks) {
-      setState({ pages: [], loading: false });
-      return;
-    }
+    if (!pageId || !store.backlinks) return;
 
     let live = true;
 
@@ -250,16 +254,20 @@ export function useBacklinks(store: PageStore, pageId: string | null | undefined
         (found) =>
           live &&
           setState({
+            forId: pageId,
             pages: found.filter((page): page is PageMeta => Boolean(page) && !page?.trashed),
             loading: false,
           }),
-        () => live && setState({ pages: [], loading: false }),
+        () => live && setState({ forId: pageId, pages: [], loading: false }),
       );
 
     return () => {
       live = false;
     };
   }, [store, pageId, version]);
+
+  if (!indexed) return { pages: [], loading: false };
+  if (state.forId !== pageId) return { pages: [], loading: true };
 
   return state;
 }

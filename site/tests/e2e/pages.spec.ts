@@ -79,6 +79,24 @@ test.describe("pages", () => {
     await expect(page.getByTestId("page-backlinks")).toContainText("Home");
   });
 
+  test("the tree opens, closes and walks rows from the keyboard", async ({ page }) => {
+    await page.goto("/playground?page=home");
+    const home = treeRow(page, "Home");
+    await home.focus();
+
+    await page.keyboard.press("ArrowLeft");
+    await expect(treeRow(page, "Getting started")).toHaveCount(0);
+
+    await page.keyboard.press("ArrowRight");
+    await expect(treeRow(page, "Getting started")).toBeVisible();
+
+    // Open row: ArrowRight steps into its first child, ArrowLeft back out.
+    await page.keyboard.press("ArrowRight");
+    await expect(treeRow(page, "Getting started")).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await expect(home).toBeFocused();
+  });
+
   test("ArrowUp at the document start returns to the title, Enter goes back down", async ({
     page,
   }) => {

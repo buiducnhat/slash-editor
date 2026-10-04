@@ -175,21 +175,42 @@ backlinks: (id) => [...index].filter(([, refs]) => refs.has(id)).map(([source]) 
 
 ## Collaboration: one `Y.Doc` per page
 
-Create the document and provider per `pageId`, inside the keyed component, so each page has its own
-room. Titles and the tree reach other clients through `store.subscribe`, not the `Y.Doc`.
+Give each page its own document and provider, and tear them down when the page unmounts. Create
+them in an effect, not `useMemo`: React StrictMode mounts, unmounts and remounts, so the effect's
+cleanup destroys the first provider and the second one is the one the editor keeps. Titles and the
+tree reach other clients through `store.subscribe`, not the `Y.Doc`.
 
 ```tsx
-const document = useMemo(() => new Y.Doc(), []); // remounted with key={pageId}
-const provider = useMemo(
-  () => new HocuspocusProvider({ url, name: `page:${pageId}`, document }),
-  [document, pageId],
-);
-useSlashEditor({
-  blockKit: {
-    collaboration: { document, provider, user },
-    pages: { store, currentPageId: pageId, onNavigate },
-  },
-});
+function PageRoom({ pageId }: { pageId: string }) {
+  const [session, setSession] = useState<{ document: Y.Doc; provider: HocuspocusProvider } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const document = new Y.Doc();
+    const provider = new HocuspocusProvider({ url, name: `page:${pageId}`, document });
+    setSession({ document, provider });
+
+    return () => {
+      provider.destroy();
+      document.destroy();
+      setSession(null);
+    };
+  }, [pageId]);
+
+  // The editor latches its extensions, so it only mounts once the session exists.
+  return session ? <PageEditor key={pageId} pageId={pageId} session={session} /> : null;
+}
+
+function PageEditor({ pageId, session }: { pageId: string; session: Session }) {
+  useSlashEditor({
+    blockKit: {
+      collaboration: { document: session.document, provider: session.provider, user },
+      pages: { store, currentPageId: pageId, onNavigate },
+    },
+  });
+  // …
+}
 ```
 
 Provider setup is covered in the [collaboration guide](/docs/guides/collaboration).

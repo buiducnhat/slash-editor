@@ -54,16 +54,52 @@ function seed(): Snapshot {
   };
 }
 
+const isObject = (value: unknown): value is object => typeof value === "object" && value !== null;
+
+/** Stored data is untrusted: a hand-edited or older entry must fall back to the seed, not crash. */
+function isSnapshot(value: unknown): value is Snapshot {
+  if (!isObject(value)) return false;
+
+  const { pages, content, refs } = value as Partial<Record<keyof Snapshot, unknown>>;
+
+  return (
+    isObject(pages) &&
+    Object.values(pages).every(
+      (page: Partial<PageMeta> | null) =>
+        typeof page?.id === "string" && typeof page.title === "string",
+    ) &&
+    isObject(content) &&
+    isObject(refs) &&
+    Object.values(refs).every(
+      (entry: Partial<PageRefs> | null) =>
+        Array.isArray(entry?.links) && Array.isArray(entry.subPages),
+    )
+  );
+}
+
 function load(storage: Storage | undefined): Snapshot {
   try {
     const raw = storage?.getItem(STORAGE_KEY);
 
-    if (raw) return JSON.parse(raw) as Snapshot;
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+
+      if (isSnapshot(parsed)) return parsed;
+    }
   } catch {
     // Unreadable or blocked storage: start from the seed rather than fail the demo.
   }
 
   return seed();
+}
+
+/** `localStorage` itself throws when the browser denies storage, so even reading the property is guarded. */
+function browserStorage(): Storage | undefined {
+  try {
+    return typeof localStorage === "undefined" ? undefined : localStorage;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -74,10 +110,21 @@ function load(storage: Storage | undefined): Snapshot {
  * real host swaps the `Map`-style bookkeeping for its API and cache.
  */
 export function createDemoPageStore(
-  storage: Storage | undefined = typeof localStorage === "undefined" ? undefined : localStorage,
+  storage: Storage | undefined = browserStorage(),
 ): DemoPageStore {
-  const snapshot = load(storage);
+  let snapshot = load(storage);
   const listeners = new Set<() => void>();
+
+  // Every commit writes the whole snapshot, so a tab that kept an old copy would erase
+  // pages another tab created. Adopting the other tab's write keeps them converged.
+  if (storage && typeof window !== "undefined") {
+    window.addEventListener("storage", (event) => {
+      if (event.storageArea === storage && event.key === STORAGE_KEY) {
+        snapshot = load(storage);
+        listeners.forEach((listener) => listener());
+      }
+    });
+  }
 
   const commit = () => {
     try {

@@ -73,7 +73,19 @@ function PageEditor({
       pending.current = null;
     }
   }, [store, pageId]);
-  useEffect(() => flush, [flush]);
+  useEffect(() => {
+    // Unmount covers navigation; closing or reloading the tab never unmounts React.
+    const onLeave = () => flush();
+
+    window.addEventListener("pagehide", onLeave);
+    document.addEventListener("visibilitychange", onLeave);
+
+    return () => {
+      window.removeEventListener("pagehide", onLeave);
+      document.removeEventListener("visibilitychange", onLeave);
+      flush();
+    };
+  }, [flush]);
 
   const editor = useDemoEditor({
     content: store.getContent(pageId) ?? EMPTY_DOC,

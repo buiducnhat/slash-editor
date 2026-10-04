@@ -463,8 +463,11 @@ function buildPages(options: PagesOptions) {
               .then((page) => {
                 if (editor.isDestroyed) return;
 
-                editor.chain().focus().setSubPage(page.id).run();
-                options.onNavigate(page.id);
+                // A block the schema rejected at this selection must not strand the user on
+                // a page nothing in this document points to.
+                if (editor.chain().focus().setSubPage(page.id).run()) {
+                  options.onNavigate(page.id);
+                }
               })
               .catch((error: unknown) => options.onError?.(error, { editor }));
 
@@ -504,6 +507,9 @@ function buildPages(options: PagesOptions) {
               combineTransactionSteps(oldState.doc, [...transactions]),
             ).map((change) => change.newRange);
             const conversions = findSubPageConversions(newState.doc, ranges, (pageId) => {
+              // A page the cache has not seen is treated as ours: loading existing content
+              // and `createSubPage` both insert blocks before a host's cache knows them, and
+              // converting those would break the very pages the user just made.
               const parentId = store.peek(pageId)?.parentId;
 
               return parentId === undefined || parentId === currentPageId;
