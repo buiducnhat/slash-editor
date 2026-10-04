@@ -211,6 +211,7 @@ export {
   type BlockLocation,
   findNodeById,
   PendingUploadRegistry,
+  type ResolveSrc,
   retryUpload,
   runUpload,
   type RetryUploadOptions,
@@ -219,6 +220,7 @@ export {
   type UploadContext,
   type UploadResult,
   type UploadStatus,
+  type UploadToAttrs,
 } from "./upload.ts";
 export {
   Video,

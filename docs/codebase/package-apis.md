@@ -322,6 +322,12 @@ interface UploadContext {
 interface UploadResult {
   url: string;
 }
+// Maps the adapter's full result onto node attrs, merged over the existing ones (narrow
+// `result` to your adapter's type to reach extra fields).
+type UploadToAttrs = (result: UploadResult) => Record<string, unknown>;
+// Display-only URL rewrite for node views (signed URLs, auth). Never used by renderHTML/getHTML/
+// markdown; a throw or rejection falls back to the stored value.
+type ResolveSrc = (src: string, node: PMNode) => string | Promise<string>;
 interface UploadAdapter<TResult extends UploadResult = UploadResult> {
   upload(file: File, context: UploadContext): Promise<TResult>;
 }
@@ -373,20 +379,28 @@ const Image: Node<ImageOptions, ImageStorage>;
 function image(options?: Partial<ImageOptions>): Node;
 interface ImageOptions {
   HTMLAttributes: Record<string, unknown>;
+  // Used by both setImage and retryImage on success. Default: (result) => ({ src: result.url })
+  toAttrs: UploadToAttrs;
+  resolveSrc?: ResolveSrc; // display-only; the stored `src` stays canonical
 }
 // editor.commands.setImage({ file, adapter, alt? } | { src, alt?, width? } | undefined)
 // editor.commands.retryImage(id, override?: { file, adapter })
 // attrs: src, alt, width, status, error
 
-const File: Node<FileOptions, FileStorage>; // same shape as Image; setFile/retryFile
-// attrs: src, name, size, mime, status, error — name/size/mime read from the File immediately
+const File: Node<FileOptions, FileStorage>; // same shape as Image (toAttrs, resolveSrc); setFile/retryFile
+// attrs: src, name, size, mime, status, error — name/size/mime read from the File immediately;
+// a custom `toAttrs` can overwrite them with the server's canonical values
 
-const Video: Node<VideoOptions, VideoStorage>; // same shape as Image; setVideo/retryVideo
+const Video: Node<VideoOptions, VideoStorage>; // same shape as Image (toAttrs, resolveSrc); setVideo/retryVideo
 // attrs: src, poster, status, error
 
 // embed.ts — no adapter: nothing async, the URL is set directly.
 const Embed: Node<EmbedOptions>;
 function embed(options?: Partial<EmbedOptions>): Node;
+interface EmbedOptions {
+  HTMLAttributes: Record<string, unknown>;
+  resolveSrc?: ResolveSrc; // receives the stored `url` attr; display-only
+}
 // editor.commands.setEmbed({ url?, mode?: "bookmark" | "iframe", title?, description?, thumbnail? })
 // attrs: url, mode (default "bookmark"), title, description, thumbnail
 
@@ -914,6 +928,15 @@ interface TableOfContents extends TableOfContentsState {
 function useBlockTypes(editor: Editor | null): BlockTypes;
 function useAiActions(editor: Editor | null, context: AiActionContext): AiActions;
 function useBlockMenu(editor: Editor | null): BlockMenu;
+// Display URL for a media node view: `useResolvedSrc(node.attrs.src, node, extension.options.resolveSrc)`.
+// No src → null; no resolver → src. Sync results return on the same render; async results yield
+// null until settled (the raw URL is never requested meanwhile); throw/reject → raw src. Re-resolves
+// only when `src` or `resolveSrc` change; a result for a superseded src is discarded.
+function useResolvedSrc(
+  src: string | null | undefined,
+  node: PMNode,
+  resolveSrc: ResolveSrc | undefined,
+): string | null;
 
 function usePresence(provider: PresenceProvider | null | undefined): PresencePeer[];
 interface PresencePeer {
@@ -995,10 +1018,12 @@ These read a `PageStore` directly and never touch an editor (like `usePresence`)
 `site/registry/components/nodes/*` are the M2 `NodeView`s, wired into `app.tsx`'s
 `useSlashEditor({ blockKit: { image: false, …, extend: [Image.extend({ addNodeView: … }), …] } })`:
 `uploadable-node-view.tsx` is the shared placeholder/progress/error chrome for `image`/`file`/`video`,
-parameterized by an `accept` filter, an icon, and the bound `retry<Type>` command; `image-node-view.tsx`/
-`file-node-view.tsx`/`video-node-view.tsx` are thin wrappers supplying the ready-state markup;
-`embed-node-view.tsx` has no upload step — an empty node renders a URL input that calls
-`updateAttributes({ url })` directly. `src/lib/upload-adapter.ts` is the playground's `UploadAdapter`:
+parameterized by an `accept` filter, an icon, and the bound `retry<Type>` command; it passes the
+stored `src` through `useResolvedSrc` (the extension's `resolveSrc` option) and hands the display URL
+to `renderReady`. `image-node-view.tsx`/`file-node-view.tsx`/`video-node-view.tsx` are thin wrappers
+supplying the ready-state markup; `embed-node-view.tsx` has no upload step — an empty node renders a
+URL input that calls `updateAttributes({ url })` directly; the iframe `src`/bookmark `href` go through
+`useResolvedSrc` too. `src/lib/upload-adapter.ts` is the playground's `UploadAdapter`:
 resolves to a data URL after a simulated delay, rejecting once for a `fail-`-prefixed file name so the
 retry affordance (and `tests/e2e/media-upload.spec.ts`) has a real error to recover from.
 

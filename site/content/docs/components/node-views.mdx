@@ -28,5 +28,15 @@ image.extend({
 });
 ```
 
+To display signed or authorized URLs, configure the node's display-only `resolveSrc` before
+extending it — the views pass the stored URL through it, while the document keeps the original:
+
+```tsx
+Image.configure({ resolveSrc: (src) => signUrl(src) }).extend({
+  addNodeView: () =>
+    ReactNodeViewRenderer((props) => <ImageNodeView {...props} adapter={yourUploadAdapter} />),
+});
+```
+
 See the [upload adapter guide](/docs/guides/upload-adapter) for the full `UploadAdapter`
-contract, including retry.
+contract, including retry, `toAttrs`, and `resolveSrc`.

@@ -39,5 +39,6 @@ export {
   usePageTree,
   type UsePageTreeOptions,
 } from "./use-pages.ts";
+export { useResolvedSrc } from "./use-resolved-src.ts";
 export { type SlashMenu, type SlashMenuAnchor, useSlashMenu } from "./use-slash-menu.ts";
 export type { VirtualAnchor } from "./virtual-anchor.ts";

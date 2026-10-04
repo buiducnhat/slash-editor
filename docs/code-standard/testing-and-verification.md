@@ -22,9 +22,9 @@ Current suites (`vp test`, Node environment, no DOM):
 | `packages/core/tests/table-columns.test.ts`     | table/columns/column schema inventory, JSON round trip, `columns{2,}` minimum enforced by the schema, `false` opt-out                                                                                                                              |
 | `packages/core/tests/table-of-contents.test.ts` | top-level-only outline computation with `pos` addressing each node, nested-heading exclusion (callout/toggle/columns/table cell), `maxLevel`, empty-doc, `findActiveItem`/`pickActiveByScroll` boundary cases                                      |
 | `packages/core/tests/pages.test.ts`             | opt-in wiring (no `pages` -> no nodes), `collectPageRefs` at any depth, `subPageDelta` detach/attach/move/remote/undo rules, duplicate and foreign-parent conversion to `pageLink`, markdown round trip, page mention merge                        |
-| `packages/core/tests/upload.test.ts`            | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete                                                                                                                                                                          |
+| `packages/core/tests/upload.test.ts`            | `findNodeById` at any depth, `PendingUploadRegistry` replace/abort/delete, `toAttrs` applied on first success and on retry (headless `Editor` with `element: null`), `resolveSrc` never reaching HTML/markdown output                              |
 
-Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function, keyboard shortcuts by feeding a key event to an unmounted (`element: null`) `Editor`'s plugins. Anything that needs a mounted view is verified in a browser instead of mocked.
+Core logic is written so it can be tested without a DOM: schemas via `getSchema(...)`, ranking as a pure function, keyboard shortcuts by feeding a key event to an unmounted (`element: null`) `Editor`'s plugins. Commands that only need state and transactions run on a headless `new Editor({ element: null })` with `bubbleToolbar: false` (its plugin reads `view.hasFocus()`); anything that needs a mounted view is verified in a browser instead of mocked.
 
 ## Browser regression suite (Playwright)
 

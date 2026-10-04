@@ -92,6 +92,18 @@ Reads the `CommentThreadStore` configured through `createBlockKit({ comment: { s
 subscribes to store changes, and exposes the selection-driven composer state. See the
 [comments guide](/docs/guides/comments).
 
+## useResolvedSrc
+
+```tsx
+useResolvedSrc(src: string | null | undefined, node: Node, resolveSrc: ResolveSrc | undefined): string | null
+```
+
+The display URL for a media node view: `src` passed through the node's display-only `resolveSrc`
+option (`props.extension.options.resolveSrc`). Sync results return on the same render; async
+results yield `null` until they settle, a result for a superseded `src` is discarded, and a thrown
+error or rejection falls back to `src`. See the
+[upload adapter guide](/docs/guides/upload-adapter#signed-urls-and-files-behind-auth).
+
 ## usePresence
 
 ```tsx

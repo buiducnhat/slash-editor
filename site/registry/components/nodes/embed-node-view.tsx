@@ -1,3 +1,5 @@
+import type { ResolveSrc } from "@slash-editor/core";
+import { useResolvedSrc } from "@slash-editor/react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { LinkIcon } from "lucide-react";
@@ -9,14 +11,18 @@ import { Input } from "@/components/ui/input.tsx";
  * No upload adapter here: an embed only ever needs a URL, set directly via
  * `updateAttributes` (built into every Tiptap node view). `image`/`file`/
  * `video` go through core's `retry<Type>` commands instead because those
- * carry an async `status` transition this node never has.
+ * carry an async `status` transition this node never has. The iframe/link
+ * target goes through the extension's display-only `resolveSrc` option; the
+ * visible text keeps the stored `url`.
  */
-export function EmbedNodeView({ node, updateAttributes }: NodeViewProps) {
+export function EmbedNodeView({ node, extension, updateAttributes }: NodeViewProps) {
   const url = node.attrs.url as string | null;
   const mode = node.attrs.mode as "bookmark" | "iframe";
   const title = node.attrs.title as string | null;
   const description = node.attrs.description as string | null;
   const [draft, setDraft] = useState("");
+  const displayUrl =
+    useResolvedSrc(url, node, extension.options.resolveSrc as ResolveSrc | undefined) ?? undefined;
 
   if (!url) {
     const submit = () => {
@@ -62,7 +68,7 @@ export function EmbedNodeView({ node, updateAttributes }: NodeViewProps) {
     return (
       <NodeViewWrapper data-mode="iframe">
         <iframe
-          src={url}
+          src={displayUrl}
           loading="lazy"
           referrerPolicy="no-referrer"
           sandbox="allow-scripts allow-same-origin allow-popups"
@@ -76,7 +82,7 @@ export function EmbedNodeView({ node, updateAttributes }: NodeViewProps) {
   return (
     <NodeViewWrapper data-mode="bookmark">
       <a
-        href={url}
+        href={displayUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="border-border bg-card hover:bg-muted/60 flex flex-col gap-1 rounded-md border p-3 no-underline"

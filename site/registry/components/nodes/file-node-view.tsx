@@ -28,9 +28,9 @@ export function FileNodeView(props: NodeViewProps & { adapter: UploadAdapter }) 
       icon={PaperclipIcon}
       emptyLabel="Add a file"
       retry={(id, override) => props.editor.commands.retryFile(id, override)}
-      renderReady={(attrs) => (
+      renderReady={(src) => (
         <a
-          href={attrs.src ?? undefined}
+          href={src}
           download={name}
           target="_blank"
           rel="noopener noreferrer"

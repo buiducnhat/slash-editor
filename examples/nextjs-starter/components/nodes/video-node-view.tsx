@@ -11,9 +11,9 @@ export function VideoNodeView(props: NodeViewProps & { adapter: UploadAdapter })
       icon={VideoIcon}
       emptyLabel="Add a video"
       retry={(id, override) => props.editor.commands.retryVideo(id, override)}
-      renderReady={(attrs) => (
+      renderReady={(src) => (
         <video
-          src={attrs.src ?? undefined}
+          src={src}
           poster={(props.node.attrs.poster as string | null) ?? undefined}
           controls
           className="max-w-full rounded-md"

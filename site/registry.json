@@ -136,9 +136,14 @@
       "name": "node-views",
       "type": "registry:component",
       "title": "Media & AI Node Views",
-      "description": "ReactNodeViewRenderer targets for image/file/video (shared upload/retry chrome, adapter passed as a prop — never a hardcoded mock), embed, and aiBlock. Wire with `<Type>.extend({ addNodeView: () => ReactNodeViewRenderer((props) => <XNodeView {...props} adapter={yourAdapter} />) })`.",
+      "description": "ReactNodeViewRenderer targets for image/file/video (shared upload/retry chrome, adapter passed as a prop — never a hardcoded mock), embed, and aiBlock. Media URLs go through the node's display-only `resolveSrc` option. Wire with `<Type>.extend({ addNodeView: () => ReactNodeViewRenderer((props) => <XNodeView {...props} adapter={yourAdapter} />) })`.",
       "registryDependencies": ["button", "input"],
-      "dependencies": ["@slash-editor/core", "@tiptap/react", "lucide-react"],
+      "dependencies": [
+        "@slash-editor/core",
+        "@slash-editor/react",
+        "@tiptap/react",
+        "lucide-react"
+      ],
       "files": [
         {
           "path": "registry/components/nodes/uploadable-node-view.tsx",

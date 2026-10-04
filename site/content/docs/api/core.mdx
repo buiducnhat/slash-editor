@@ -36,7 +36,9 @@ runUpload(options): void
 retryUpload(options): boolean
 ```
 
-Shared by `image`, `file`, and `video`. See the [upload adapter guide](/docs/guides/upload-adapter).
+Shared by `image`, `file`, and `video`, each of which also takes `toAttrs` (map the upload result
+onto node attrs, default `{ src: result.url }`) and, with `embed`, a display-only `resolveSrc`.
+See the [upload adapter guide](/docs/guides/upload-adapter).
 
 ## AI stream contract
 

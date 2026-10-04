@@ -1,4 +1,5 @@
-import type { UploadAdapter, UploadStatus } from "@slash-editor/core";
+import type { ResolveSrc, UploadAdapter, UploadStatus } from "@slash-editor/core";
+import { useResolvedSrc } from "@slash-editor/react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { RotateCcwIcon, UploadIcon, type LucideIcon } from "lucide-react";
 import { useRef, type ReactNode } from "react";
@@ -20,8 +21,12 @@ interface UploadableNodeViewProps extends NodeViewProps {
   adapter: UploadAdapter;
   /** `editor.commands.retry<Type>` — bound by the per-node wrapper so this stays generic. */
   retry: (id: string, override?: { file: File; adapter: UploadAdapter }) => boolean;
-  /** Renders the node once it has a `src` (ready or mid-retry after a prior success). */
-  renderReady: (attrs: UploadableNodeAttrs) => ReactNode;
+  /**
+   * Renders the node once it has a `src` (ready or mid-retry after a prior
+   * success). `src` is the display URL from the node's `resolveSrc` option —
+   * `undefined` while an async resolution is in flight.
+   */
+  renderReady: (src: string | undefined) => ReactNode;
 }
 
 /**
@@ -29,16 +34,23 @@ interface UploadableNodeViewProps extends NodeViewProps {
  * node views: core carries `status`/`error` in doc attrs (see `upload.ts`),
  * this renders them and drives `retry<Type>` — the demo's only job is
  * picking a `File` and an adapter; core owns the upload/retry mechanics.
+ * The stored `src` is passed through the extension's display-only
+ * `resolveSrc` option before rendering; the document keeps the raw value.
  */
 export function UploadableNodeView(props: UploadableNodeViewProps) {
-  const { node, accept, icon: Icon, emptyLabel, adapter, retry, renderReady } = props;
+  const { node, extension, accept, icon: Icon, emptyLabel, adapter, retry, renderReady } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const attrs = node.attrs as UploadableNodeAttrs;
+  const displaySrc = useResolvedSrc(
+    attrs.src,
+    node,
+    extension.options.resolveSrc as ResolveSrc | undefined,
+  );
 
   if (attrs.src) {
     return (
       <NodeViewWrapper data-status={attrs.status} className="group relative">
-        {renderReady(attrs)}
+        {renderReady(displaySrc ?? undefined)}
         {attrs.status === "error" && (
           <Button
             type="button"
