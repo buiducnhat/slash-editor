@@ -1,5 +1,51 @@
 # @slash-editor/react
 
+## 0.7.0
+
+### Minor Changes
+
+- 7181263: Emoji and highlighted code blocks move to their own entries (`@slash-editor/core`, `@slash-editor/react`):
+
+  - **Breaking: `@slash-editor/core/emoji` and `@slash-editor/core/code-block` subpaths.** `Emoji`, `emoji`, `searchEmojis` and the `EmojiItem`/`EmojiMenuState`/`EmojiMenuStorage`/`EmojiOptions` types now import from `@slash-editor/core/emoji`; `CodeBlock`, `codeBlock` and the `CodeBlockOptions`/`Lowlight` types from `@slash-editor/core/code-block`. The root entry no longer exports them.
+  - **Breaking: `createBlockKit` takes the built node.** `emoji` and `codeBlock` accept the extension instead of its options (`codeBlock` still accepts `false` for no code block), so the kit never imports the emoji dataset or lowlight. `createBlockKit()` drops from ~323 KB to ~198 KB gzipped (minified browser bundle, dependencies included) when neither is used.
+  - **`"sideEffects": false`** in both packages, so bundlers can drop unused modules.
+
+  Migration:
+
+  ```ts
+  // Before
+  import { CodeBlock, createBlockKit } from "@slash-editor/core";
+
+  createBlockKit({ emoji: { limit: 24 }, codeBlock: { lowlight } });
+  createBlockKit({ codeBlock: false, extend: [CodeBlock.extend({ addNodeView })] });
+
+  // After
+  import { createBlockKit } from "@slash-editor/core";
+  import { CodeBlock, codeBlock } from "@slash-editor/core/code-block";
+  import { emoji } from "@slash-editor/core/emoji";
+
+  createBlockKit({ emoji: emoji({ limit: 24 }), codeBlock: codeBlock({ lowlight }) });
+  createBlockKit({ codeBlock: CodeBlock.extend({ addNodeView }) });
+  ```
+
+- 67ef143: Media upload result mapping and display URLs (`@slash-editor/core`, `@slash-editor/react`):
+
+  - **`toAttrs` option on `image`, `file`, and `video`.** Maps the adapter's full upload result onto node attrs (default `{ src: result.url }`) on the first success and on every retry, merged over the existing attrs — persist a server's canonical name/size/mime or id without reimplementing `retryImage`/`retryFile`/`retryVideo`. Also reachable through `createBlockKit({ image | file | video: { toAttrs } })`.
+  - **Display-only `resolveSrc` option on `image`, `file`, `video`, and `embed`** (`embed` receives its stored `url`). Rewrites the URL a node view displays — signed URLs, files behind auth — while `getHTML()`, markdown, and JSON keep the canonical stored value. New `ResolveSrc` and `UploadToAttrs` types.
+  - **`useResolvedSrc(src, node, resolveSrc)`** hook: sync results on the same render, async results once settled (stale results for a changed `src` are discarded), errors fall back to the stored URL. The registry `node-views` image/file/video/embed views apply it.
+
+### Patch Changes
+
+- 2d5cdca: `unsetComment(threadId)` now removes the thread's anchors across the whole document instead of only the selection (new pure `removeCommentThread` helper), so `useComments().removeAnchor` works from a sidebar; it no longer focuses the editor.
+- Updated dependencies [fa6359d]
+- Updated dependencies [2d5cdca]
+- Updated dependencies [7181263]
+- Updated dependencies [1eaa2d9]
+- Updated dependencies [1ecdd25]
+- Updated dependencies [67ef143]
+- Updated dependencies [fb434be]
+  - @slash-editor/core@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
