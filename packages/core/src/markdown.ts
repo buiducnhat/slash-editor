@@ -28,12 +28,25 @@ type ManagerOptions = ConstructorParameters<typeof MarkdownManager>[0] & object;
 
 const SYNTAX_EXTENSION_NAME = "slashMarkdownSyntax";
 
+// One whole `<!-- slash:… -->` comment at the start of a line. A marker
+// payload never contains `-->` (see `renderMarker`), so the first one ends it.
+const LEADING_MARKER = String.raw`^ {0,3}<!-- \/?slash:(?:(?!-->)[^\n])*-->`;
+// A line holding nothing but one marker: how every block marker is written.
+// A line with more after its first marker is inline content — a mention or
+// page link opening a paragraph — and lexes as such.
+const MARKER_LINE = new RegExp(String.raw`${LEADING_MARKER}[ \t]*(?:\n|$)`);
+const MARKER_LED = new RegExp(LEADING_MARKER);
+
 /**
  * Catch-all for any `<!-- slash:… -->` marker a node tokenizer declined — a
  * malformed payload, a node missing from this schema, an orphaned column
  * separator. Swallowed, so the block after it still parses as plain markdown
  * instead of the comment surfacing as literal text, which is what
  * `MarkdownManager` does with raw HTML when there is no DOM to parse it.
+ *
+ * The block catch-all takes only a line holding a single marker. Its `start`
+ * still stops a paragraph at every marker-led line; when nothing claims that
+ * line as a block, `marked` merges it back into the paragraph it cut.
  *
  * Priority is high so these register with `marked` first: `marked` tries the
  * most recently registered tokenizer first, which leaves the catch-alls last,
@@ -51,7 +64,7 @@ const MarkdownSyntax = Extension.create({
           level: "block",
           start: (src) => src.search(/^ {0,3}<!-- \/?slash:/m),
           tokenize: (src) => {
-            const match = /^ {0,3}<!-- \/?slash:[^\n]*?-->[ \t]*(?:\n|$)/.exec(src);
+            const match = MARKER_LINE.exec(src);
 
             return match ? { type: "slashMarkdownBlockMarker", raw: match[0] } : undefined;
           },
@@ -103,12 +116,16 @@ function pruneExcluded(node: JSONContent, exclusions: Map<string, Exclusion>): J
 }
 
 /**
- * `MarkdownManager` with two changes:
+ * `MarkdownManager` with three changes:
  *
  * - its own `marked` instance by default. The upstream default is the global
  *   `marked` singleton, and every manager registers its tokenizers into it —
  *   so each editor would stack another copy, and a host app rendering its own
  *   markdown through `marked` would start parsing `> [!NOTE]` as a callout.
+ * - a line led by a slash marker is never an HTML block. CommonMark reads any
+ *   line opening with `<!--` as one, which would turn a paragraph that starts
+ *   with a mention into literal text; whole-line block markers are claimed by
+ *   the node tokenizers and the catch-all before `marked` gets there.
  * - `serialize` drops nodes whose `excludeFromMarkdown` matches.
  */
 class SlashMarkdownManager extends MarkdownManager {
@@ -121,6 +138,12 @@ class SlashMarkdownManager extends MarkdownManager {
       // `setOptions`, all of which a `Marked` instance has; the option is just
       // typed as the global function-object.
       marked: options.marked ?? (new Marked() as unknown as typeof marked),
+    });
+
+    // `undefined` skips `marked`'s HTML rule, so the line lexes as a paragraph;
+    // `false` falls through to it.
+    this.instance.use({
+      tokenizer: { html: (src) => (MARKER_LED.test(src) ? undefined : false) },
     });
 
     for (const extension of flattenExtensions(options.extensions)) {

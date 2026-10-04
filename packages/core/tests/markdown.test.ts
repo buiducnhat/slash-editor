@@ -117,6 +117,34 @@ test("empty paragraphs inside and after containers keep their count", () => {
   );
 });
 
+test("a mention opening a line stays inline content of its block", () => {
+  const mention: JSONContent = { type: "mention", attrs: { id: "u-1", label: "Ada" } };
+  const para = (...content: JSONContent[]): JSONContent => ({ type: "paragraph", content });
+
+  expectRoundTrip(
+    doc(
+      para(mention, text(" starts")),
+      para(text("ends "), mention),
+      para(mention),
+      { type: "heading", attrs: { level: 2 }, content: [mention] },
+      { type: "blockquote", content: [para(mention, text(" quoted"))] },
+      {
+        type: "bulletList",
+        content: [{ type: "listItem", content: [para(mention, text(" item"))] }],
+      },
+    ),
+  );
+
+  // A line opening with a marker continues the paragraph, as any other line would.
+  const marker = '<!-- slash:mention {"id":"u-1","label":"Ada"} -->@Ada<!-- /slash:mention -->';
+
+  const parsed = parseMarkdown(`Hi\n${marker} there`, kit);
+
+  expect(schema.nodeFromJSON(parsed).toJSON()).toEqual(
+    schema.nodeFromJSON(doc(para(text("Hi\n"), mention, text(" there")))).toJSON(),
+  );
+});
+
 test("custom blocks use syntax GitHub renders, with identity in hidden markers", () => {
   const markdown = serializeMarkdown(
     doc(
