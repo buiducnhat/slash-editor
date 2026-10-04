@@ -14,3 +14,16 @@ import { LinkEditorDemo } from "~/components/demo/registry-demos.preview.tsx";
 ## Installation
 
 <InstallCommand item="link-editor-popover" />
+
+## Keyboard shortcut
+
+`Mod-k` (⌘K on macOS, Ctrl+K elsewhere) opens the popover over a text selection, or for the link
+under the cursor. With nothing to link, the key falls through to any other handler on the page.
+Change or remove the binding through the kit:
+
+```ts
+createBlockKit({ linkEditor: { shortcut: "Mod-Shift-k" } }); // or `shortcut: false`
+```
+
+The bubble toolbar's Link button shows a fixed `⌘K` hint; if you rebind or remove the shortcut,
+pass your own `bubbleToolbar.items` with a matching (or no) `shortcut` label.

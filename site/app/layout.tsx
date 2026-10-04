@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RootProvider } from "fumadocs-ui/provider/next";
+import { SiteProvider } from "~/components/site-provider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
@@ -89,9 +89,9 @@ export default function Layout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="font-sans flex min-h-screen flex-col">
-        <RootProvider>
+        <SiteProvider>
           <TooltipProvider delay={400}>{children}</TooltipProvider>
-        </RootProvider>
+        </SiteProvider>
         <Analytics />
       </body>
     </html>

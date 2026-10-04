@@ -24,6 +24,15 @@ export interface LinkEditorStorage {
 export interface LinkEditorOptions {
   /** Opens automatically when the selection lands inside an existing link. @default true */
   autoOpenOnLinkActive: boolean;
+  /**
+   * Keyboard shortcut (Tiptap key syntax) that runs `openLinkEditor`, or
+   * `false` for none. When the editor can't open (no text selected, cursor
+   * outside a link) the key falls through to other handlers. The default
+   * bubble toolbar's Link item labels this "⌘K"; rebinding it means passing
+   * toolbar items with a matching label.
+   * @default "Mod-k"
+   */
+  shortcut: string | false;
 }
 
 declare module "@tiptap/core" {
@@ -83,8 +92,9 @@ function computeAutoState(editor: Editor): LinkEditorState {
 
 /**
  * Selection-anchored link editing popover. Two entry points feed the same
- * state: a bubble-toolbar "Link" button calls `openLinkEditor` over a fresh
- * text selection (`editing: false`), and this extension auto-opens itself
+ * state: a bubble-toolbar "Link" button or the `shortcut` key (`Mod-k` by
+ * default) calls `openLinkEditor` over a fresh text selection
+ * (`editing: false`), and this extension auto-opens itself
  * (`editing: true`) whenever the cursor lands inside an existing link — a
  * case a plain "selection is non-empty" check (à la `BubbleToolbar`) can't
  * catch, since placing a cursor inside a link selects no text.
@@ -104,7 +114,7 @@ export const LinkEditor = Extension.create<LinkEditorOptions, LinkEditorStorage>
   name: "linkEditor",
 
   addOptions() {
-    return { autoOpenOnLinkActive: true };
+    return { autoOpenOnLinkActive: true, shortcut: "Mod-k" };
   },
 
   // Methods read and write through `this` because Tiptap hands each editor its
@@ -172,6 +182,16 @@ export const LinkEditor = Extension.create<LinkEditorOptions, LinkEditorStorage>
           return true;
         },
     };
+  },
+
+  addKeyboardShortcuts() {
+    const { shortcut } = this.options;
+    if (shortcut === false) {
+      return {};
+    }
+    // `openLinkEditor` returns `false` whenever `canOpenLinkEditor` does, so
+    // the key falls through to other bindings instead of being swallowed.
+    return { [shortcut]: () => this.editor.commands.openLinkEditor() };
   },
 
   onTransaction() {

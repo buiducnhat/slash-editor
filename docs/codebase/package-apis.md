@@ -134,7 +134,9 @@ interface BubbleToolbarStorage {
 }
 
 function filterBubbleToolbarItems(items: BubbleToolbarItem[], editor: Editor): BubbleToolbarItem[];
-const defaultBubbleToolbarItems: BubbleToolbarItem[]; // ids: bold, italic, strike, code
+const defaultBubbleToolbarItems: BubbleToolbarItem[]; // ids: bold, italic, strike, code, link
+// `shortcut` labels are static display hints; link's "⌘K" mirrors LinkEditor's default `shortcut`
+// ("Mod-k") — rebinding/unbinding it means passing items with a matching (or no) label.
 // Visibility is recomputed on onTransaction/onFocus/onBlur: open only for a non-empty
 // TextSelection in a focused, editable view. Rank/query don't apply here — unlike the
 // slash menu there's nothing to type, so filtering is just `when` gating.
@@ -522,6 +524,7 @@ function canOpenLinkEditor(editor: Editor): boolean; // link mark present, edita
 
 interface LinkEditorOptions {
   autoOpenOnLinkActive: boolean; // default true — opens (editing: true) when the cursor lands in a link
+  shortcut: string | false; // default "Mod-k" — runs openLinkEditor; falls through when it can't open; false unbinds
 }
 interface LinkEditorState {
   open: boolean;
