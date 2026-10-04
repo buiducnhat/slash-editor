@@ -109,6 +109,20 @@ test("heading levels are configurable", () => {
   expect(starterKit.options.heading.levels).toEqual([1, 2]);
 });
 
+test("starterKit options pass through without overriding the kit's dedicated options", () => {
+  const extensions = createBlockKit({
+    headingLevels: [1, 2],
+    starterKit: { underline: false },
+  });
+  const schema = getSchema(extensions);
+
+  expect(getSchema(createBlockKit()).marks.underline).toBeDefined();
+  expect(schema.marks.underline).toBeUndefined();
+  expect(schema.marks.bold).toBeDefined();
+  expect(extensions[0].options.heading.levels).toEqual([1, 2]);
+  expect(extensions[0].options.blockquote).toBe(false);
+});
+
 test("the slash menu ships with the kit and can be opted out or retriggered", () => {
   const names = (options?: Parameters<typeof createBlockKit>[0]) =>
     createBlockKit(options).map((extension) => extension.name);
