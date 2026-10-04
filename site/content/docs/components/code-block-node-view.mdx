@@ -43,7 +43,12 @@ CSS this item installs.
 ## Choosing languages
 
 The default grammar set is lowlight's `common` (about 37 languages). Register your own `lowlight`
-instance for more or fewer languages — the selector lists whatever the instance has:
+instance for more or fewer languages — the selector lists whatever the instance has. The example
+imports both packages directly, so install them in your app first:
+
+```bash
+bun add lowlight highlight.js
+```
 
 ```tsx
 import { createLowlight } from "lowlight";

@@ -37,7 +37,7 @@ export function CodeBlockNodeView({ editor, extension, node, updateAttributes }:
         onChange={(event) => updateAttributes({ language: event.target.value || null })}
         className={cn(
           "border-border bg-background text-muted-foreground absolute top-2 right-2 z-10 h-6 max-w-32 rounded-md border px-1.5 font-sans text-xs",
-          "focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none",
+          "focus-visible:ring-foreground focus-visible:ring-2 focus-visible:outline-none",
           // Out of the way until the block is hovered or the selector has focus.
           "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 disabled:hidden",
         )}
