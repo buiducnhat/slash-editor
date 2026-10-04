@@ -101,6 +101,18 @@ usePresence(provider: PresenceProvider | null): PresencePeer[]
 Reads any awareness-shaped provider — the same duck-typed surface
 [collaboration](/docs/guides/collaboration) uses — into a plain array of connected peers.
 
+## Pages hooks
+
+```tsx
+usePage(store: PageStore, pageId: string | null | undefined): { page: PageMeta | undefined; status: "loading" | "ready" | "missing" }
+usePageTree(store: PageStore, rootId?: string | null, options?: { defaultExpanded?: string[] }): { rows; toggle; expand; collapse }
+useBreadcrumb(store: PageStore, pageId: string | null | undefined): PageMeta[]
+useBacklinks(store: PageStore, pageId: string | null | undefined): { pages: PageMeta[]; loading: boolean }
+```
+
+Editor-independent, like `usePresence`: they read a `PageStore` directly. See the
+[pages guide](/docs/guides/pages) and [Pages components](/docs/components/pages).
+
 ## useActiveItemScroll
 
 ```tsx

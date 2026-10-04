@@ -1,0 +1,92 @@
+---
+title: Pages
+description: Node views, header, tree, breadcrumb and backlinks for host-owned sub-pages.
+---
+
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+
+These components render a [`PageStore`](/docs/guides/pages). All except the node views work with no
+editor mounted. There is no isolated preview; see them together in the
+[playground](/playground?page=home).
+
+## Node views
+
+<InstallCommand item="page-node-views" />
+
+`SubPageNodeView` and `PageLinkNodeView` render the `subPage` block and `pageLink` inline node. They
+read `{ store, onNavigate }` from the kit's `pages` option, show the live title, and display a
+skeleton while loading and a "missing / in trash" state otherwise. Attach them with the `nodeViews`
+option:
+
+```tsx
+pages: {
+  store,
+  currentPageId: pageId,
+  onNavigate,
+  nodeViews: {
+    subPage: ReactNodeViewRenderer(SubPageNodeView),
+    pageLink: ReactNodeViewRenderer(PageLinkNodeView),
+  },
+}
+```
+
+## Page header
+
+<InstallCommand item="page-header" />
+
+Icon, cover and title for one page, rendered outside `EditorContent`. Edits go to `store.update`.
+Enter or ArrowDown in the title moves focus to the document start; ArrowUp at the document start
+moves it back.
+
+| Prop        | Type             | Description                          |
+| ----------- | ---------------- | ------------------------------------ |
+| `store`     | `PageStore`      | Source of the title, icon and cover. |
+| `pageId`    | `string`         | Page to edit.                        |
+| `editor`    | `Editor \| null` | Receives focus on Enter/ArrowDown.   |
+| `className` | `string`         | Merged onto the root.                |
+
+`focusPageTitle()` focuses the title input — call it after creating a page to start typing.
+
+## Page tree
+
+<InstallCommand item="page-tree" />
+
+A lazily expanded tree built on `usePageTree`; children load through `store.listChildren` on first
+expand and refresh when the store notifies.
+
+| Prop              | Type                       | Description                                             |
+| ----------------- | -------------------------- | ------------------------------------------------------- |
+| `store`           | `PageStore`                | Page directory.                                         |
+| `activePageId`    | `string \| null`           | Highlighted row.                                        |
+| `rootId`          | `string \| null`           | Parent whose children are the top rows. Default `null`. |
+| `onNavigate`      | `(pageId: string) => void` | Called when a row is chosen.                            |
+| `onCreate`        | `() => void`               | Called from the header's `New page` button.             |
+| `defaultExpanded` | `string[]`                 | Ids expanded on first render.                           |
+| `className`       | `string`                   | Merged onto the root.                                   |
+
+## Breadcrumb
+
+<InstallCommand item="page-breadcrumb" />
+
+Ancestors of a page, root first, built on `useBreadcrumb`.
+
+| Prop         | Type                       | Description                    |
+| ------------ | -------------------------- | ------------------------------ |
+| `store`      | `PageStore`                | Page directory.                |
+| `pageId`     | `string`                   | Last crumb.                    |
+| `onNavigate` | `(pageId: string) => void` | Called when a crumb is chosen. |
+| `className`  | `string`                   | Merged onto the root.          |
+
+## Backlinks
+
+<InstallCommand item="page-backlinks" />
+
+Pages that reference this one, built on `useBacklinks`. Needs `store.backlinks`; renders nothing
+useful without it. See [Backlinks](/docs/guides/pages#backlinks) for the index recipe.
+
+| Prop         | Type                       | Description                      |
+| ------------ | -------------------------- | -------------------------------- |
+| `store`      | `PageStore`                | Page directory.                  |
+| `pageId`     | `string`                   | Page whose referrers are listed. |
+| `onNavigate` | `(pageId: string) => void` | Called when an entry is chosen.  |
+| `className`  | `string`                   | Merged onto the root.            |

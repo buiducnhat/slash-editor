@@ -4,7 +4,7 @@
 
 Bun workspace: `@slash-editor/core` (engine, no React/CSS) → `@slash-editor/react` (hooks) → `site` (the one app: playground, Fumadocs/Next.js docs site, landing page, and the shadcn registry host). Toolchain is Vite+ (`vp`) with TypeScript 7, Vitest, and Playwright for browser regression coverage against `site`; `site` itself builds with Next.js.
 
-**Status:** M0–M10 complete — block editing, slash menu, drag/nest, callout/toggle/task-list nodes, bubble toolbar, image/file/video/embed with a pluggable `UploadAdapter` (upload/retry), tables, columns, `@`-mentions with an async provider, inline link editing, AI slash actions over a `StreamAdapter`, real-time collaboration (Yjs + Hocuspocus self-host recipe, presence carets, comment mark + thread store), a Playwright regression suite, markdown import/export (`@slash-editor/core/markdown`: GitHub alerts, `<details>`, hidden markers for the rest), Mermaid diagram blocks (click-to-edit, token-themed, lazy-loaded), distribution (`@slash-editor/core`/`react` on npm, a shadcn registry, unattended OIDC release pipeline), and a single Fumadocs/Next.js app — docs site, landing page, and playground — deployed at [slasheditor.dev](https://slasheditor.dev) all ship. See [`project-pdr/milestones.md`](project-pdr/milestones.md).
+**Status:** M0–M10 complete, M11 (Pages) in progress — block editing, slash menu, drag/nest, callout/toggle/task-list nodes, bubble toolbar, image/file/video/embed with a pluggable `UploadAdapter` (upload/retry), tables, columns, `@`-mentions with an async provider, inline link editing, AI slash actions over a `StreamAdapter`, real-time collaboration (Yjs + Hocuspocus self-host recipe, presence carets, comment mark + thread store), a Playwright regression suite, markdown import/export (`@slash-editor/core/markdown`: GitHub alerts, `<details>`, hidden markers for the rest), Mermaid diagram blocks (click-to-edit, token-themed, lazy-loaded), Notion-style pages (M11: host-owned `PageStore`, `subPage`/`pageLink` nodes, tree/breadcrumb/backlinks), distribution (`@slash-editor/core`/`react` on npm, a shadcn registry, unattended OIDC release pipeline), and a single Fumadocs/Next.js app — docs site, landing page, and playground — deployed at [slasheditor.dev](https://slasheditor.dev) all ship. See [`project-pdr/milestones.md`](project-pdr/milestones.md).
 
 ## Agent Context Guide
 
@@ -45,12 +45,13 @@ Conventions, naming rules, tech stack versions, and development workflows.
 
 Product goals, use cases, business rules, and constraints.
 
-| File                                                                                     | Description                                                                                 |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [project-pdr/product-goals.md](project-pdr/product-goals.md)                             | Problem framing, licensing landscape, goals, non-goals, users, constraints                  |
-| [project-pdr/milestones.md](project-pdr/milestones.md)                                   | M0–M4 and distribution status with per-slice checkboxes, deferred decisions                 |
-| [project-pdr/design-brief.md](project-pdr/design-brief.md)                               | Accepted design brief: foundation, technical details, delivery plan, risks                  |
-| [project-pdr/docs-site-design-brief.md](project-pdr/docs-site-design-brief.md)           | Accepted design for the Fumadocs/Next.js docs site replacing the hand-rolled `/docs` routes |
-| [project-pdr/markdown-design-brief.md](project-pdr/markdown-design-brief.md)             | Accepted design for markdown import/export: mapping, marker grammar, subpath entry          |
-| [project-pdr/mermaid-design-brief.md](project-pdr/mermaid-design-brief.md)               | Accepted design for Mermaid diagram blocks: core node, click-to-edit NodeView, theming      |
-| [project-pdr/ui-consistency-design-brief.md](project-pdr/ui-consistency-design-brief.md) | Accepted design unifying slash/bubble/block menu, Ask AI, and comments on core registries   |
+| File                                                                                     | Description                                                                                       |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [project-pdr/product-goals.md](project-pdr/product-goals.md)                             | Problem framing, licensing landscape, goals, non-goals, users, constraints                        |
+| [project-pdr/milestones.md](project-pdr/milestones.md)                                   | M0–M4 and distribution status with per-slice checkboxes, deferred decisions                       |
+| [project-pdr/design-brief.md](project-pdr/design-brief.md)                               | Accepted design brief: foundation, technical details, delivery plan, risks                        |
+| [project-pdr/docs-site-design-brief.md](project-pdr/docs-site-design-brief.md)           | Accepted design for the Fumadocs/Next.js docs site replacing the hand-rolled `/docs` routes       |
+| [project-pdr/markdown-design-brief.md](project-pdr/markdown-design-brief.md)             | Accepted design for markdown import/export: mapping, marker grammar, subpath entry                |
+| [project-pdr/mermaid-design-brief.md](project-pdr/mermaid-design-brief.md)               | Accepted design for Mermaid diagram blocks: core node, click-to-edit NodeView, theming            |
+| [project-pdr/pages-design-brief.md](project-pdr/pages-design-brief.md)                   | Accepted design for Notion-style pages: `PageStore` adapter, sub-page/link nodes, tree, backlinks |
+| [project-pdr/ui-consistency-design-brief.md](project-pdr/ui-consistency-design-brief.md) | Accepted design unifying slash/bubble/block menu, Ask AI, and comments on core registries         |

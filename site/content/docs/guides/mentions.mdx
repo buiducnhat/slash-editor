@@ -24,3 +24,7 @@ newer keystroke supersedes it — the `signal` argument is that abort. A rejecti
 
 See the [Mention Menu](/docs/components/mention-menu) component for the rendered async search
 surface, including its loading state.
+
+`MentionItem.kind` is optional. `kind: "page"` marks a page entry: selecting it inserts a
+`pageLink` instead of a `mention`. The kit adds these itself when `pages` is set — see the
+[pages guide](/docs/guides/pages#linking-to-a-page).

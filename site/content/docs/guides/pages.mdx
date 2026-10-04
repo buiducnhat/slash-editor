@@ -1,0 +1,208 @@
+---
+title: Pages
+description: Notion-style sub-pages — a sub-page block, inline page links, and a host-owned page store.
+---
+
+A page is two things: an editor surface (sub-page blocks, links between pages) and an application
+(storage, a page tree, routing, permissions). The library owns the first. You own the second.
+
+| The library owns                                             | You own                                      |
+| ------------------------------------------------------------ | -------------------------------------------- |
+| `subPage` block and `pageLink` inline node (only a `pageId`) | Persistence of titles, icons, covers, tree   |
+| `/page`, `/link to page`, and page entries in the `@` menu   | Routing — the library calls `onNavigate`     |
+| Reporting that a sub-page block left or entered the document | What to do about it (trash, restore)         |
+| Markdown export/import of the nodes, `collectPageRefs`       | The backlinks index and the `Y.Doc` per page |
+
+Titles never live in the document, so a rename shows in every block and link at once. `pages` is
+opt-in; without it no page node is registered. Try it in the
+[playground](/playground?page=home).
+
+## Writing a `PageStore`
+
+<AutoTypeTable path="../packages/core/src/pages.ts" name="PageStore" />
+
+Two rules matter. `peek` is a synchronous cache read and **must return a stable object** until
+that page changes — hooks compare by identity. `create` and `update` **must notify**
+`subscribe` listeners, or nothing re-renders. A minimal in-memory store:
+
+```ts
+import type { PageMeta, PageStore } from "@slash-editor/core";
+
+export function createMemoryPageStore(initial: PageMeta[] = []): PageStore {
+  const pages = new Map(initial.map((page) => [page.id, page]));
+  const listeners = new Set<() => void>();
+  const notify = () => listeners.forEach((listener) => listener());
+
+  return {
+    create({ parentId, title = "" }) {
+      const page: PageMeta = { id: crypto.randomUUID(), parentId, title };
+      pages.set(page.id, page);
+      notify();
+      return page;
+    },
+    update(id, patch) {
+      const page = pages.get(id);
+      if (!page) return;
+      // A new object, so `peek` changes identity exactly when the page does.
+      pages.set(id, { ...page, ...patch });
+      notify();
+    },
+    peek: (id) => pages.get(id),
+    load: async (id) => pages.get(id),
+    listChildren: (parentId) =>
+      [...pages.values()].filter((page) => page.parentId === parentId && !page.trashed),
+    search: (query) =>
+      [...pages.values()].filter(
+        (page) => !page.trashed && page.title.toLowerCase().includes(query.toLowerCase()),
+      ),
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+}
+```
+
+A real store fills its cache from `load`, notifies when a collaborator changes a page, and may
+make every method async except `peek` and `subscribe`.
+
+## Wiring the kit
+
+```tsx
+import { createBlockKit } from "@slash-editor/core";
+
+const extensions = createBlockKit({
+  pages: { store, currentPageId: pageId, onNavigate: (id) => router.push(`/p/${id}`) },
+});
+```
+
+<AutoTypeTable path="../packages/core/src/pages.ts" name="PagesOptions" />
+
+Extensions are latched once per editor instance, so **remount the editor per page** with
+`key={pageId}` and pass **stable callbacks** (memoize `onNavigate` and friends) — later changes to
+the options are not picked up.
+
+```tsx
+function PageEditor({ pageId }: { pageId: string }) {
+  const onNavigate = useCallback((id: string) => router.push(`/p/${id}`), []);
+  const editor = useSlashEditor({
+    blockKit: { pages: { store, currentPageId: pageId, onNavigate } },
+  });
+  return <EditorContent editor={editor} />;
+}
+
+<PageEditor key={pageId} pageId={pageId} />;
+```
+
+## Rendering the nodes
+
+Core emits only `data-page-id` elements. Attach the registry views from
+[Pages components](/docs/components/pages) through the `nodeViews` option — it exists so you do not
+re-register `subPage`/`pageLink`, which Tiptap would reject as a name collision:
+
+```tsx
+import { ReactNodeViewRenderer } from "@slash-editor/react";
+import { PageLinkNodeView, SubPageNodeView } from "@/components/nodes/page-node-views.tsx";
+
+const pages = {
+  store,
+  currentPageId: pageId,
+  onNavigate,
+  nodeViews: {
+    subPage: ReactNodeViewRenderer(SubPageNodeView),
+    pageLink: ReactNodeViewRenderer(PageLinkNodeView),
+  },
+};
+```
+
+## Creating and navigating
+
+`/page` calls `store.create({ parentId: currentPageId })`, inserts a `subPage` block, and calls
+`onNavigate` with the new id. If `create` rejects, nothing is inserted and `onError` runs.
+Clicking a sub-page block, or pressing Enter on it, calls `onNavigate`; so does a page link.
+
+## Linking to a page
+
+`/link to page` and the `@` menu insert a `pageLink`. With `pages` set, the kit merges
+`store.search(query)` results into the [mention](/docs/guides/mentions) items — after your own — as
+entries with `kind: "page"`. With `pages` set and no `mention` option, the `@` menu lists pages
+alone. Selecting a `kind: "page"` item inserts a `pageLink`, not a `mention`.
+
+## Deleting and restoring
+
+Deleting a sub-page block does not delete the page. The library reports it; you decide:
+
+```ts
+pages: {
+  store,
+  currentPageId: pageId,
+  onNavigate,
+  onSubPagesDetached: (ids) => ids.forEach((id) => trash(id)), // set `trashed: true`
+  onSubPagesAttached: (ids) => ids.forEach((id) => restore(id)), // undo, paste
+}
+```
+
+Only the **local** edit reports: remote transactions are skipped, so the collaborator who deleted
+the block is the one who trashes the page. A Yjs undo/redo counts as local. Counting is net per
+dispatch, so moving a block (`moveBlock`) or cut-and-paste within one transaction fires nothing.
+The node view shows a "missing / in trash" state for a trashed page and never removes the node.
+
+## One parent per page
+
+A page has exactly one parent. Duplicating a sub-page block — or pasting one whose `pageId` is
+already in the document, or whose `store.peek(id).parentId` is not `currentPageId` — converts it
+into a paragraph holding a `pageLink`. Cut and paste within the same page keeps the block and
+reports detach then attach.
+
+## Backlinks
+
+`collectPageRefs` is pure and finds references at any depth (toggles, columns, table cells). Call it
+on save, update your index, and serve it through `store.backlinks`:
+
+```ts
+import { collectPageRefs } from "@slash-editor/core";
+
+function onSave(pageId: string, editor: Editor) {
+  const { subPages, links } = collectPageRefs(editor.getJSON());
+  index.set(pageId, new Set([...subPages, ...links])); // pageId -> pages it references
+}
+
+// in the store:
+backlinks: (id) => [...index].filter(([, refs]) => refs.has(id)).map(([source]) => source),
+```
+
+`useBacklinks` and `PageBacklinks` read this; trashed pages are left out.
+
+## Collaboration: one `Y.Doc` per page
+
+Create the document and provider per `pageId`, inside the keyed component, so each page has its own
+room. Titles and the tree reach other clients through `store.subscribe`, not the `Y.Doc`.
+
+```tsx
+const document = useMemo(() => new Y.Doc(), []); // remounted with key={pageId}
+const provider = useMemo(
+  () => new HocuspocusProvider({ url, name: `page:${pageId}`, document }),
+  [document, pageId],
+);
+useSlashEditor({
+  blockKit: {
+    collaboration: { document, provider, user },
+    pages: { store, currentPageId: pageId, onNavigate },
+  },
+});
+```
+
+Provider setup is covered in the [collaboration guide](/docs/guides/collaboration).
+
+## Markdown
+
+With the kit's `pages` option, export writes a marker plus a link:
+
+```md
+<!-- slash:subPage {"pageId":"abc"} -->[Roadmap](#abc)
+```
+
+The title comes from `store.peek`, the href from `resolveHref` (default `#<pageId>`). Import keeps
+only `pageId`; the store stays the source of truth for titles. Without the kit's `pages` option,
+export falls back to the marker with the page id as link text. See the
+[markdown guide](/docs/guides/markdown).

@@ -182,10 +182,66 @@
       "files": [{ "path": "registry/components/ui/dropdown-menu.tsx", "type": "registry:ui" }]
     },
     {
+      "name": "page-node-views",
+      "type": "registry:component",
+      "title": "Page Node Views",
+      "description": "React node views for the subPage block and the inline pageLink chip; titles render live from the PageStore and click/Enter navigates through PagesOptions.onNavigate.",
+      "dependencies": [
+        "@slash-editor/core",
+        "@slash-editor/react",
+        "@tiptap/react",
+        "lucide-react",
+        "cn"
+      ],
+      "files": [
+        { "path": "registry/components/nodes/page-node-views.tsx", "type": "registry:component" }
+      ]
+    },
+    {
+      "name": "page-header",
+      "type": "registry:component",
+      "title": "Page Header",
+      "description": "Page icon, cover and borderless title editing host-owned metadata through PageStore.update; Enter/ArrowDown moves focus into the editor.",
+      "registryDependencies": ["button", "input", "@slash-editor/popover"],
+      "dependencies": [
+        "@slash-editor/core",
+        "@slash-editor/react",
+        "@tiptap/core",
+        "lucide-react",
+        "cn"
+      ],
+      "files": [{ "path": "registry/components/page-header.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "page-tree",
+      "type": "registry:component",
+      "title": "Page Tree",
+      "description": "Lazily expanded sidebar tree of pages with an active-row highlight and an optional New page button, driven by usePageTree.",
+      "registryDependencies": ["button"],
+      "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react", "cn"],
+      "files": [{ "path": "registry/components/page-tree.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "page-breadcrumb",
+      "type": "registry:component",
+      "title": "Page Breadcrumb",
+      "description": "Ancestor trail for the open page, driven by useBreadcrumb.",
+      "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react", "cn"],
+      "files": [{ "path": "registry/components/page-breadcrumb.tsx", "type": "registry:component" }]
+    },
+    {
+      "name": "page-backlinks",
+      "type": "registry:component",
+      "title": "Page Backlinks",
+      "description": "List of pages that link to the open page, driven by useBacklinks and the host's store.backlinks index.",
+      "dependencies": ["@slash-editor/core", "@slash-editor/react", "lucide-react", "cn"],
+      "files": [{ "path": "registry/components/page-backlinks.tsx", "type": "registry:component" }]
+    },
+    {
       "name": "slash-editor-kit",
       "type": "registry:block",
       "title": "slash-editor Kit",
-      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, emoji menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, and the Mermaid node view.",
+      "description": "Every slash-editor UI piece in one install: slash menu, bubble toolbar, block handle, mention menu, emoji menu, link editor, comment panel, presence avatars, the table of contents, media/AI node views, the Mermaid node view, and the Pages UI (page node views, header, tree, breadcrumb, backlinks).",
       "registryDependencies": [
         "@slash-editor/slash-menu",
         "@slash-editor/bubble-toolbar",
@@ -199,7 +255,12 @@
         "@slash-editor/icons",
         "@slash-editor/table-of-contents",
         "@slash-editor/node-views",
-        "@slash-editor/mermaid-node-view"
+        "@slash-editor/mermaid-node-view",
+        "@slash-editor/page-node-views",
+        "@slash-editor/page-header",
+        "@slash-editor/page-tree",
+        "@slash-editor/page-breadcrumb",
+        "@slash-editor/page-backlinks"
       ],
       "css": {
         ".slash-content [data-placeholder]::before": {

@@ -1,6 +1,6 @@
 import { useActiveItemScroll, useMention } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
-import { Loader2Icon, UserIcon } from "lucide-react";
+import { FileTextIcon, Loader2Icon, UserIcon } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -56,7 +56,7 @@ export function MentionMenu({ editor }: { editor: Editor }) {
                       value={item.id}
                       onSelect={() => mention.select(mention.items.indexOf(item))}
                     >
-                      <UserIcon />
+                      {item.kind === "page" ? <FileTextIcon /> : <UserIcon />}
                       <span className="flex-1">{item.label}</span>
                       {item.description ? (
                         <span className="text-muted-foreground text-xs">{item.description}</span>
