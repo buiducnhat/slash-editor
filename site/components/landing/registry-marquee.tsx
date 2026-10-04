@@ -1,11 +1,12 @@
 import { Marquee } from "~/components/magicui/marquee.tsx";
 
-/** The 15 items published in the registry, as a scrolling catalog. */
+/** The 16 items published in the registry, as a scrolling catalog. */
 const ROW_ONE = [
   "slash-menu",
   "block-handle",
   "bubble-toolbar",
   "mention-menu",
+  "emoji-menu",
   "link-editor-popover",
   "comment-panel",
   "comment-composer",

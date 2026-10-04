@@ -22,6 +22,7 @@
         "@tiptap/extension-collaboration": "^3.31.3",
         "@tiptap/extension-collaboration-caret": "^3.31.3",
         "@tiptap/extension-details": "^3.31.3",
+        "@tiptap/extension-emoji": "^3.31.3",
         "@tiptap/extension-list": "^3.31.3",
         "@tiptap/extension-table": "^3.31.3",
         "@tiptap/markdown": "^3.31.3",
@@ -680,6 +681,8 @@
 
     "@tiptap/extension-dropcursor": ["@tiptap/extension-dropcursor@3.31.3", "", { "peerDependencies": { "@tiptap/extensions": "3.31.3" } }, "sha512-NWomSfu5CSC7VacnMSDzKT8qm66SzMfZwVPEtwY5bPpRTJgTiT1rNK0neDrrzfMN27MfylGyKWWf7Q5Qf8w/fg=="],
 
+    "@tiptap/extension-emoji": ["@tiptap/extension-emoji@3.31.4", "", { "dependencies": { "emoji-regex": "^10.6.0", "emojibase-data": "^17", "is-emoji-supported": "^0.0.5" }, "peerDependencies": { "@tiptap/core": "3.31.4", "@tiptap/pm": "3.31.4", "@tiptap/suggestion": "3.31.4" } }, "sha512-5kLYE0O8QsFLu5lfS2wsP0KPFmQtlveVa39bmw71qrJ6obzcSwy8sOE2B1ypuSRsqq5HaJfIZaARoXJGiyTEhw=="],
+
     "@tiptap/extension-floating-menu": ["@tiptap/extension-floating-menu@3.31.3", "", { "peerDependencies": { "@floating-ui/dom": "^1.0.0", "@tiptap/core": "3.31.3", "@tiptap/pm": "3.31.3" } }, "sha512-rd4VJ9PGSP9Eop8ZTEwaLZcMzMXLuJKe3hUNf58rq+zANpwM+9fI+vB7g9MAc3eXwUNDxNDVACFIL2oeBqpQ3A=="],
 
     "@tiptap/extension-gapcursor": ["@tiptap/extension-gapcursor@3.31.3", "", { "peerDependencies": { "@tiptap/extensions": "3.31.3" } }, "sha512-EBXKb1FrVStsNYCcRGtd9jmzveCvR+eqgg1rVqoONrqFK6U7bga6LN+1dMKroP1kliDVgveYkP3vRYxqw+rFqg=="],
@@ -1258,6 +1261,10 @@
 
     "emoji-regex": ["emoji-regex@10.6.0", "", {}, "sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A=="],
 
+    "emojibase": ["emojibase@17.0.0", "", {}, "sha512-bXdpf4HPY3p41zK5swVKZdC/VynsMZ4LoLxdYDE+GucqkFwzcM1GVc4ODfYAlwoKaf2U2oNNUoOO78N96ovpBA=="],
+
+    "emojibase-data": ["emojibase-data@17.0.0", "", { "peerDependencies": { "emojibase": "*" } }, "sha512-Yvgb5AWoHViHV/gq1qr5ZAarcBip+B27/ZLRsUJkbgAEaLlZ/fof9g882LTpmEpyhBNEC0m2SEmItljHsTygjA=="],
+
     "encodeurl": ["encodeurl@2.0.0", "", {}, "sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg=="],
 
     "enhanced-resolve": ["enhanced-resolve@5.25.1", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.3" } }, "sha512-nGXts5znJzmWPu+mIE9izCOzdg63oJca2mDzGWWTth7sr4aCToKcoyFVBQwN75Ij5Pf6p510EwkTqViTRzDV+w=="],
@@ -1463,6 +1470,8 @@
     "is-decimal": ["is-decimal@2.0.1", "", {}, "sha512-AAB9hiomQs5DXWcRB1rqsxGUstbRroFOPPVAomNk/3XHR5JyEZChOyTWe2oayKnsSsr/kcGqF+z6yuH6HHpN0A=="],
 
     "is-docker": ["is-docker@2.2.1", "", { "bin": { "is-docker": "cli.js" } }, "sha512-F+i2BKsFrH66iaUFc0woD8sLy8getkwTwtOBjvs56Cx4CgJDeKQeqfz8wAYiSb8JOprWhHH5p77PbmYCvvUuXQ=="],
+
+    "is-emoji-supported": ["is-emoji-supported@0.0.5", "", {}, "sha512-WOlXUhDDHxYqcSmFZis+xWhhqXiK2SU0iYiqmth5Ip0FHLZQAt9rKL5ahnilE8/86WH8tZ3bmNNNC+bTzamqlw=="],
 
     "is-extglob": ["is-extglob@2.1.1", "", {}, "sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ=="],
 

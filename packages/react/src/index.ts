@@ -24,6 +24,7 @@ export {
   type UseTableOfContentsOptions,
   useTableOfContents,
 } from "./use-table-of-contents.ts";
+export { type EmojiMenu, type EmojiMenuAnchor, useEmoji } from "./use-emoji.ts";
 export { type MentionMenu, type MentionMenuAnchor, useMention } from "./use-mention.ts";
 export { type PresencePeer, type PresenceProvider, usePresence } from "./use-presence.ts";
 export { type SlashMenu, type SlashMenuAnchor, useSlashMenu } from "./use-slash-menu.ts";

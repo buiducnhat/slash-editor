@@ -64,6 +64,7 @@ function hasNode(editor: Editor, name: string): boolean {
 const BASIC = "Basic blocks";
 const MEDIA = "Media";
 const STRUCTURE = "Structure";
+const INLINE = "Inline";
 
 const MEDIA_ITEMS: SlashItem[] = [
   {
@@ -149,6 +150,19 @@ const MEDIA_ITEMS: SlashItem[] = [
     icon: "columns",
     when: (editor) => hasNode(editor, "columns"),
     run: ({ editor, range }) => editor.chain().focus().deleteRange(range).setColumns(2).run(),
+  },
+  {
+    id: "emoji",
+    title: "Emoji",
+    group: INLINE,
+    description: "Search and insert an emoji",
+    aliases: ["emoji", "emoticon", "smiley"],
+    keywords: [":", "face", "reaction"],
+    shortcut: ":",
+    icon: "smile",
+    when: (editor) => hasNode(editor, "emoji"),
+    // The typed ":" is what opens the picker; the emoji extension owns the rest.
+    run: ({ editor, range }) => editor.chain().focus().deleteRange(range).insertContent(":").run(),
   },
 ];
 

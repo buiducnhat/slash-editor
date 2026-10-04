@@ -1,0 +1,30 @@
+---
+title: Emoji Menu
+description: "Emoji picker for the `:shortcode:` trigger — shadcn Command in a Popover, driven by useEmoji."
+---
+
+import { ComponentPreview } from "~/components/registry/component-preview.tsx";
+import { InstallCommand } from "~/components/registry/install-command.tsx";
+import { EmojiMenuDemo } from "~/components/demo/registry-demos.preview.tsx";
+
+<ComponentPreview name="emoji-menu">
+  <EmojiMenuDemo />
+</ComponentPreview>
+
+## Installation
+
+<InstallCommand item="emoji-menu" />
+
+## Usage
+
+Enable the `emoji` extension in the block kit and render the menu next to the editor:
+
+```tsx
+useSlashEditor({ blockKit: { emoji: {} } });
+
+<EmojiMenu editor={editor} />;
+```
+
+Type `:` followed by a name (`:rocket`) to open the picker, or choose **Emoji** from the slash
+menu. Completing a `:shortcode:` by hand also inserts the emoji. See the
+[emoji guide](/docs/guides/emoji).

@@ -15,6 +15,7 @@ packages/core/src/image.ts                Image node: upload/retry shape, empty-
 packages/core/src/link-editor.ts          LinkEditor extension: popover visibility + draft href only
 packages/core/src/markdown.ts             @slash-editor/core/markdown entry: Markdown extension, serializeMarkdown()/parseMarkdown()
 packages/core/src/markdown-syntax.ts      dependency-free marker/link/block-scan helpers nodes use for their markdown hooks
+packages/core/src/emoji.ts                Emoji node: wraps @tiptap/extension-emoji, `:` picker storage store, markdown shortcode
 packages/core/src/mention.ts              Mention node, async Suggestion provider, storage store
 packages/core/src/mermaid.ts              Mermaid node: CodeBlock.extend, source as text, ```mermaid rule, markdown fence
 packages/core/src/slash-command.ts        SlashCommand extension, storage store, keyboard handling
@@ -34,6 +35,7 @@ packages/core/tests/comment.test.ts       schema round trip, excludes stacking, 
 packages/core/tests/link-editor.test.ts   canOpenLinkEditor gating, kit opt-out, link mark config
 packages/core/tests/media-nodes.test.ts   image/file/video/embed attribute defaults and JSON round trips
 packages/core/tests/mention.test.ts       schema defaults/JSON round trip, opt-in wiring, option pass-through
+packages/core/tests/emoji.test.ts         opt-in wiring, /emoji `when` gating, searchEmojis ranking, markdown round trip
 packages/core/tests/slash-items.test.ts   ranking, keyword shorthands, `when` gating
 packages/core/tests/table-columns.test.ts table/columns schema inventory, columns{2,} minimum
 packages/core/tests/table-of-contents.test.ts  outline computation, nested-heading exclusion, maxLevel, active-item/scroll selection
@@ -49,6 +51,7 @@ packages/react/               @slash-editor/react
   src/use-comments.ts         useComments(): store subscription + CommentThreadStore composition
   src/use-link-editor.ts      useLinkEditor(): store subscription + confirm/remove composed over core commands
   src/use-mention.ts          useMention(): store subscription + caret anchor, same shape as useSlashMenu plus loading
+  src/use-emoji.ts            useEmoji(): store subscription + caret anchor, same shape as useSlashMenu
   src/use-presence.ts         usePresence(): awareness state -> peer list, cached/event-driven
   src/use-table-of-contents.ts  useTableOfContents(): store subscription + active heading (caret or scroll)
   tsconfig.json               resolves core via ../core/dist/index.d.mts
@@ -67,6 +70,7 @@ site/                          the one app: playground, docs site, landing page,
     components/comment-panel.tsx   sidebar: useComments + CommentThreadStore, compose/resolve/reopen
     components/presence-avatars.tsx  usePresence() as a row of colored initials with a Tooltip
     components/mention-menu.tsx    Command + Popover surface for @-mentions, loading row
+    components/emoji-menu.tsx      Command + Popover surface for the `:` emoji picker
     components/link-editor-popover.tsx  Input-driven popover: href, Open/Remove when editing
     components/table-of-contents.tsx  heading outline nav, active row, click-to-jump
     components/nodes/uploadable-node-view.tsx  shared placeholder/progress/error chrome for image/file/video; `adapter` passed as a prop, never imported

@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
+import { EmojiMenu } from "@/components/emoji-menu.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
 import { MermaidNodeView } from "@/components/nodes/mermaid-node-view.tsx";
@@ -89,6 +90,22 @@ export function MentionMenuDemo() {
     <div className={CARD_CLASS}>
       <EditorContent editor={editor} />
       <MentionMenu editor={editor} />
+    </div>
+  );
+}
+
+export function EmojiMenuDemo() {
+  const editor = useDemoEditor({
+    content: "<p>Type <code>:smile</code> or <code>/emoji</code> to pick an emoji.</p>",
+    blockKit: { emoji: {} },
+    editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
+  });
+  if (!editor) return null;
+  return (
+    <div className={CARD_CLASS}>
+      <EditorContent editor={editor} />
+      <SlashMenu editor={editor} />
+      <EmojiMenu editor={editor} />
     </div>
   );
 }

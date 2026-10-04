@@ -11,6 +11,7 @@ import { ArrowLeftIcon, EyeIcon, FileCodeIcon, UsersIcon } from "lucide-react";
 import { BlockHandle } from "@/components/block-handle.tsx";
 import { BubbleToolbar } from "@/components/bubble-toolbar.tsx";
 import { CommentPanel } from "@/components/comment-panel.tsx";
+import { EmojiMenu } from "@/components/emoji-menu.tsx";
 import { CommentComposer } from "@/components/comment-composer.tsx";
 import { LinkEditorPopover } from "@/components/link-editor-popover.tsx";
 import { MentionMenu } from "@/components/mention-menu.tsx";
@@ -65,6 +66,7 @@ const INITIAL_CONTENT = `
 </div>
 <h2>Mentions, links &amp; AI</h2>
 <p>Type <code>@</code> to mention a teammate: cc <span data-type="mention" data-id="1">@Ada Lovelace</span> — thanks!</p>
+<p>Type <code>:</code> then a name, or <code>/emoji</code>, to pick an emoji <span data-type="emoji" data-name="rocket"></span>.</p>
 <p>Click this <a href="https://prosemirror.net">link</a> to edit or remove it inline.</p>
 <p>Type <code>/continue-writing</code>, <code>/summarize</code>, <code>/brainstorm-ideas</code>, or <code>/fix-spelling-grammar</code> to stream an AI response through a mock <code>StreamAdapter</code>.</p>
 <table>
@@ -133,6 +135,7 @@ function EditorWorkspace({ editor, footer }: { editor: Editor | null; footer?: R
           <EditorContent editor={editor} />
           {editor && <SlashMenu editor={editor} />}
           {editor && <MentionMenu editor={editor} />}
+          {editor && <EmojiMenu editor={editor} />}
           {editor && <BlockHandle editor={editor} />}
           {editor && <BubbleToolbar editor={editor} />}
           {editor && <LinkEditorPopover editor={editor} />}
@@ -158,6 +161,7 @@ const BLOCK_KIT_DEFAULTS = {
   embed: {},
   mermaid: {},
   ai: { adapter: mockStreamAdapter, node: false },
+  emoji: {},
   mention: {
     items: (query: string, { signal }: { signal: AbortSignal }) =>
       mockMentionProvider(query, signal),

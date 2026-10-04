@@ -5,6 +5,7 @@
     "block-kit",
     "upload-adapter",
     "mentions",
+    "emoji",
     "ai-stream-adapter",
     "collaboration",
     "comments",
