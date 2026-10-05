@@ -11,7 +11,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "slash-editor — Notion-style block editor for React",
+    default: "slash-editor: Notion-style block editor for React",
     template: "%s | slash-editor",
   },
   description: DESCRIPTION,
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "slash-editor — Notion-style block editor for React",
+    title: "slash-editor: Notion-style block editor for React",
     description: DESCRIPTION,
     url: "/",
     siteName: "slash-editor",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "slash-editor — Notion-style block editor for React",
+    title: "slash-editor: Notion-style block editor for React",
     description: DESCRIPTION,
   },
 };

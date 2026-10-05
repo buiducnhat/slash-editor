@@ -33,9 +33,9 @@ declares the items; `site/components.json` is the shadcn config (`style: base-no
 (`@/components/ui/popover`, `@/lib/utils`) resolve unchanged — the alias name matches shadcn's
 own convention, just scoped to this one directory instead of an entire app.
 
-`site/components/magicui/` is the opposite case: MagicUI presentation components vendored for the
-landing page (and its `magicui.css` keyframes). They are site chrome — never registry source, never
-imported from `site/registry/`, so nothing in `/r/:name.json` can pick up a `motion` dependency.
+`site/components/landing/` is the opposite case: landing-page sections and the `motion`-based
+`Reveal`. They are site chrome: never registry source, never imported from `site/registry/`, so
+nothing in `/r/:name.json` can pick up a `motion` dependency.
 
 ## Live demos, the playground, and SSR
 

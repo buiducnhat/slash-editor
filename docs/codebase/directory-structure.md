@@ -3,7 +3,13 @@
 ````
 packages/core/src/index.ts                public exports
 packages/core/src/ai-block.ts             AiBlock transient node, StreamAdapter contract, createAiSlashItems()
+packages/core/src/block-drag.ts           BlockDrag extension: gutter drag handle, drop-target resolution, nest/reorder, duplicateBlock/deleteBlock commands
+packages/core/src/block-id.ts             BlockId extension: stable per-block `id` attr assigned once at insert
+packages/core/src/block-menu.ts           BlockMenuItem contract, defaultBlockMenuItems (duplicate, delete)
+packages/core/src/block-types.ts          BlockType list shared by slash, "Turn into", and block menu; BlockTypes extension
 packages/core/src/block-kit.ts            createBlockKit(): baseline extension set
+packages/core/src/messages.ts             Messages extension, SlashEditorMessages, localizeItems/localizeBlockMenuItems/localizeBubbleToolbarItems
+packages/core/src/placeholder.ts          Placeholder extension: empty-block hints resolved by node and parent
 packages/core/src/bubble-toolbar.ts       BubbleToolbar extension, storage store, selection-driven visibility
 packages/core/src/callout.ts              Callout node: content block+, wrapIn/toggleWrap/lift commands
 packages/core/src/collaboration.ts        collaboration(): wraps Tiptap's Collaboration/CollaborationCaret over y-prosemirror
@@ -28,10 +34,14 @@ packages/core/src/quote.ts                Blockquote with the `"` shorthand (Sta
 packages/core/src/toggle.ts               Toggle node: Details + `level` attr, `>` and `# >` shorthands, setToggle()
 packages/core/src/upload.ts               UploadAdapter contract, runUpload/retryUpload, PendingUploadRegistry
 packages/core/src/video.ts                Video node: upload/retry shape
+packages/core/tests/block-drag.test.ts    drop-target resolution, nesting rules, moveBlock/duplicateBlock/deleteBlock commands
+packages/core/tests/block-id.test.ts      id derivation, assignment, duplicate regeneration, remote-transaction skip
 packages/core/tests/ai-block.test.ts      schema defaults/JSON round trip, opt-in wiring, createAiSlashItems
 packages/core/tests/block-kit.test.ts     schema inventory, JSON round trip, kit options
 packages/core/tests/block-nodes.test.ts   callout/task-item/details attribute defaults and JSON round trips
 packages/core/tests/bubble-toolbar.test.ts  default items, `when` gating, `isActive` per mark
+packages/core/tests/code-block.test.ts    opt-in swap of codeBlock, host lowlight instance, fence language through markdown
+packages/core/tests/messages.test.ts      translation by id for slash/AI/block types/menu/toolbar/placeholder/pages; English fallback
 packages/core/tests/collaboration.test.ts opt-in wiring, forced history:false, field default/override
 packages/core/tests/comment.test.ts       schema round trip, excludes stacking, activeThreadIds pure function
 packages/core/tests/link-editor.test.ts   canOpenLinkEditor gating, kit opt-out, link mark config
@@ -42,13 +52,20 @@ packages/core/tests/slash-items.test.ts   ranking, keyword shorthands, `when` ga
 packages/core/tests/table-columns.test.ts table/columns schema inventory, columns{2,} minimum
 packages/core/tests/table-of-contents.test.ts  outline computation, nested-heading exclusion, maxLevel, active-item/scroll selection
 packages/core/tests/pages.test.ts         opt-in wiring, collectPageRefs, subPageDelta rules, uniqueness conversion, markdown round trip, page mentions
-packages/core/tests/upload.test.ts        findNodeById, PendingUploadRegistry
+packages/core/tests/upload.test.ts        findNodeById, PendingUploadRegistry, `toAttrs` result mapping on success and retry, display-only `resolveSrc`
 packages/core/tests/tsconfig.json         type-checks tests without widening the build rootDir
 packages/core/tsconfig.json               build scope: src only
 
 packages/react/               @slash-editor/react
   src/index.ts                public exports + curated @tiptap/react re-exports
   src/use-slash-editor.ts     useSlashEditor(): editor lifecycle and defaults
+  src/use-extension-state.ts  useExtensionState(): shared useSyncExternalStore binding for extension storage stores
+  src/virtual-anchor.ts       VirtualAnchor type + toVirtualAnchor(): SSR-safe caret/selection anchors
+  src/use-active-item-scroll.ts  useActiveItemScroll(): keeps the controlled-active row of a menu in view
+  src/use-block-drag.ts       useBlockDrag(): store subscription, hover/drop/menu anchors, grip click-vs-drag
+  src/use-block-menu.ts       useBlockMenu(): block context menu items, target, anchor
+  src/use-block-types.ts      useBlockTypes(): shared block conversions + active type
+  src/use-ai-actions.ts       useAiActions(): AI actions per surface (slash/selection/block) + run()
   src/use-slash-menu.ts       useSlashMenu(): store subscription + caret anchor
   src/use-bubble-toolbar.ts   useBubbleToolbar(): store subscription + selection anchor
   src/use-comments.ts         useComments(): store subscription + CommentThreadStore composition
@@ -56,6 +73,7 @@ packages/react/               @slash-editor/react
   src/use-mention.ts          useMention(): store subscription + caret anchor, same shape as useSlashMenu plus loading
   src/use-emoji.ts            useEmoji(): store subscription + caret anchor, same shape as useSlashMenu
   src/use-presence.ts         usePresence(): awareness state -> peer list, cached/event-driven
+  src/use-resolved-src.ts     useResolvedSrc(): display URL for media node views (sync/async `resolveSrc`, stale results dropped)
   src/use-pages.ts            usePage/usePageTree/useBreadcrumb/useBacklinks(): editor-independent PageStore hooks
   src/use-table-of-contents.ts  useTableOfContents(): store subscription + active heading (caret or scroll)
   tsconfig.json               resolves core via ../core/dist/index.d.mts
@@ -67,6 +85,7 @@ site/                          the one app: playground, docs site, landing page,
   components.json              shadcn config: base UI, nova preset, lucide icons — `tailwind.css: app/globals.css`
   registry.json                shadcn registry manifest: granular items + `slash-editor-kit` umbrella block, file paths under `registry/`
   scripts/prebuild.ts          `shadcn build` into `public/r/`; runs via `build:prepare` before `next build`
+  scripts/generate-media.ts    regenerates README/marketing screenshots and the demo video/GIF into `.github/assets/`
   registry/                    the registry component source `shadcn build`/`shadcn add` ships — this repo's UI, owned and edited directly
     components/slash-menu.tsx  Command + Popover surface, icon-key mapping
     components/bubble-toolbar.tsx  Popover-anchored mark toggle row
@@ -105,11 +124,14 @@ site/                          the one app: playground, docs site, landing page,
     theme.css                  Nova design tokens: base scale, dark-mode overrides, `@theme inline` mapping
     slash-content.css          `.slash-content` component layer — the only class name the editor core relies on
   server/collab-server.ts      Hocuspocus self-host recipe: Hocuspocus class bridged to Bun.serve via crossws
+  app/llms.txt/route.ts, app/llms-full.txt/route.ts, app/llms.mdx/  LLM-friendly docs endpoints generated from `lib/source.ts`
+  app/sitemap.ts, robots.ts, manifest.ts, opengraph-image.tsx  SEO/metadata routes
   server/tsconfig.json         Bun types scope, separate from the app's own tsconfig
-  app/layout.tsx                RootProvider + TooltipProvider (registry components need a Tooltip ancestor)
-  app/globals.css               Tailwind v4 entry: fumadocs preset, then `registry/theme.css` + `registry/slash-content.css` + `components/magicui/magicui.css`
+  app/layout.tsx                SiteProvider + TooltipProvider (registry components need a Tooltip ancestor)
+  components/site-provider.tsx  fumadocs RootProvider with a search hotkey that yields ⌘K/Ctrl+K to the editor's link editor when it already handled the key
+  app/globals.css               Tailwind v4 entry: fumadocs preset, then `registry/theme.css` + `registry/slash-content.css`, plus the landing `--brand` accent tokens and Geist Mono
   app/(home)/layout.tsx         HomeLayout (shared nav: Docs/Playground/GitHub, search, theme toggle) for landing + playground
-  app/(home)/page.tsx           landing page: hero + stats, live `PlaygroundDemo`, bento features, registry marquee, install terminal
+  app/(home)/page.tsx           landing page: split hero with live `PlaygroundDemo`, built-on logos, bento features, registry catalog + install command, closing CTA
   app/(home)/playground/page.tsx  the playground route: solo editor, or `?collab=<room>` via `RoomJoinForm`
   app/docs/layout.tsx           DocsLayout: sidebar/TOC from `lib/source.ts`'s page tree
   app/docs/[[...slug]]/page.tsx MDX page renderer
@@ -125,13 +147,17 @@ site/                          the one app: playground, docs site, landing page,
   components/playground/markdown-panel.tsx     solo editor's "Markdown" panel: live `getMarkdown()`, edit + apply, import/download `.md`
   components/playground/playground-editor.preview.tsx  `ssr: false` wrapper — same DOM-globals constraint as the demo previews
   components/playground/pages-editor.tsx  playground `?page=<id>` workspace: tree, header, editor per page
-  components/landing/feature-bento.tsx         landing page bento feature grid (cards, chip marquees)
-  components/landing/registry-marquee.tsx      landing page registry item catalog (two marquee rows)
-  components/magicui/*.tsx                     vendored MagicUI components (site chrome only, never registry source)
-  components/magicui/magicui.css               keyframes + `--animate-*` tokens those components need
+  components/landing/feature-bento.tsx         landing page asymmetric bento feature grid
+  components/landing/registry-catalog.tsx      landing page registry items grouped by job, with the kit install command
+  components/landing/built-on.tsx              logo wall (marks from `simple-icons`)
+  components/landing/{reveal,copy-command,link-button,spotlight-card,slash-marquee}.tsx  reduced-motion-safe entrance, copy-to-clipboard command, shared CTA button, pointer-glow card, scroll-driven slash marquee
+  components/landing/site-footer.tsx           landing page footer: link columns, license line, oversized wordmark
   content/docs/**/*.mdx         getting-started/, components/ (one per registry item + the kit), guides/, api/
   playwright.config.ts          testDir tests/e2e, webServer runs `bun run dev` + `collab:server`
   tests/e2e/support.ts          dragBlock(), pasteHtml(), focusTrailingParagraph() helpers
+  tests/e2e/bubble-toolbar.spec.ts      "Turn into" dropdown stays open and converts the block
+  tests/e2e/code-block.spec.ts          token highlighting, language selector, ```-typed block keeps its text
+  tests/e2e/emoji.spec.ts               `:` query filters, arrow keys move the highlight, Enter inserts an emoji node
   tests/e2e/insert.spec.ts      slash menu: alias insert, Escape, popover close
   tests/e2e/reorder.spec.ts     gutter-handle drag reorders a sibling
   tests/e2e/nest.spec.ts        rightward drag nests a block inside a list item
@@ -146,9 +172,11 @@ site/                          the one app: playground, docs site, landing page,
   tests/e2e/collab.spec.ts              two browsers converge + reconnect after offline edits; comment sidebar flow
   tests/e2e/table-of-contents.spec.ts   outline rows track the caret/scroll and jump to a heading
   tests/e2e/pages.spec.ts               create + navigate + breadcrumb, rename, @ page chip, trash/restore, backlinks
-.github/workflows/release.yml push-to-main release: Version Packages PR while changesets pend; then verify (build, `vp check`, tests, registry gate, packed manifests) and environment-gated npm publish via OIDC, tag, GitHub Release
-scripts/version-packages.ts   release version step: `changeset version` + root version, root CHANGELOG section, bun.lock refresh
+scripts/version-packages.ts   release version step (`bun run version-packages`): `changeset version` + root version, root CHANGELOG section, bun.lock refresh
 scripts/check-packs.ts        pre-publish gate: packed manifests at the release version, no `workspace:`/`catalog:` left
+.github/workflows/ci.yml      CI on pull requests and pushes to main
+.github/workflows/release.yml push-to-main release: Version Packages PR while changesets pend; then verify (build, `vp check`, tests, registry gate, packed manifests) and environment-gated npm publish via OIDC, tag, GitHub Release
+.changeset/                   pending changesets; `config.json` links core and react in lockstep
 docs/                         this documentation set
 tsconfig.json                 shared base config + workspace path aliases
 vite.config.ts                vite-plus config: pack, lint, fmt, staged hooks, vitest excludes site/tests/e2e

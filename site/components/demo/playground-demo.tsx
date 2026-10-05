@@ -46,7 +46,7 @@ export function PlaygroundDemo() {
     },
     editorProps: {
       attributes: {
-        class: "slash-content min-h-[50vh] pl-24 pr-8 py-8",
+        class: "slash-content min-h-[50vh] pl-6 pr-6 py-8 md:pl-24 md:pr-8",
         "aria-label": "Interactive demo",
       },
     },

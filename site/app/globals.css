@@ -1,7 +1,8 @@
 @import "tailwindcss";
-@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/shadcn.css";
 @import "fumadocs-ui/css/preset.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -10,8 +11,69 @@
 @import "../registry/theme.css";
 @import "../registry/slash-content.css";
 
-/* Animation tokens for the vendored MagicUI components (landing page only). */
-@import "../components/magicui/magicui.css";
+/* Landing accent. One hue, used identically everywhere on the page. */
+:root {
+  --brand: oklch(0.66 0.17 48);
+  --brand-soft: oklch(0.66 0.17 48 / 0.14);
+  --brand-foreground: oklch(0.16 0.01 48);
+}
+
+.dark {
+  --brand: oklch(0.74 0.16 52);
+  --brand-soft: oklch(0.74 0.16 52 / 0.16);
+  --brand-foreground: oklch(0.16 0.01 48);
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-foreground: var(--brand-foreground);
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Fumadocs adopts the shadcn tokens (shadcn.css preset). Its primary, used for
+   links and active items, is moved onto the brand accent. Light mode uses a
+   deeper orange so link text keeps contrast on white. */
+:root {
+  --color-fd-primary: oklch(0.55 0.17 48);
+  --color-fd-primary-foreground: oklch(0.985 0 0);
+  --color-fd-ring: var(--brand);
+}
+
+.dark {
+  --color-fd-primary: var(--brand);
+  --color-fd-primary-foreground: var(--brand-foreground);
+  --color-fd-ring: var(--brand);
+}
+
+/* Floating nav: a detached, blurred bar instead of a full-width strip. */
+[data-home] #nd-nav {
+  top: 0.75rem;
+  width: calc(100% - 2rem);
+  max-width: 1400px;
+  margin: 0.75rem auto 0;
+}
+
+[data-home] #nd-nav > div {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: color-mix(in oklab, var(--background) 72%, transparent);
+  box-shadow: 0 8px 30px -12px color-mix(in oklab, var(--foreground) 22%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+
+[data-home] #nd-nav nav {
+  padding-inline: 0.75rem;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-home] #nd-nav > div {
+    background: var(--background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
 
 html {
   scrollbar-gutter: stable;

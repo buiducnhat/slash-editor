@@ -11,10 +11,12 @@ main entry's module graph: `@slash-editor/core/markdown`, `@slash-editor/core/em
 // block-kit.ts
 function createBlockKit(options?: BlockKitOptions): Extensions;
 interface BlockKitOptions {
+  blockTypes?: BlockType[]; // block conversions shared by slash, bubble toolbar, and block menu; default defaultBlockTypes
   headingLevels?: HeadingLevel[]; // default [1, 2, 3]
   history?: boolean; // default true
   starterKit?: BlockKitStarterKitOptions; // default {}; forwarded to StarterKit.configure, e.g. { underline: false }
   slash?: Partial<SlashCommandOptions> | false;
+  placeholder?: PlaceholderOptions | false; // default {}
   blockId?: Partial<BlockIdOptions> | false; // default { types: "auto" }
   drag?: Partial<BlockDragOptions> | false; // default {}
   bubbleToolbar?: Partial<BubbleToolbarOptions> | false; // default { items: defaultBubbleToolbarItems }
@@ -36,6 +38,7 @@ interface BlockKitOptions {
   ai?: (Partial<AiKitOptions> & Pick<AiKitOptions, "adapter">) | false;
   collaboration?: CollaborationOptions | false; // no default; forces history:false when set
   comment?: Partial<CommentOptions> | false; // default {}
+  pages?: PagesOptions | false; // opt-in; host-owned PageStore (see Pages below)
   tableOfContents?: Partial<TableOfContentsOptions> | false; // default {}; outline store, scans only while subscribed
   toggle?: Partial<ToggleOptions>; // options only; default { persist: true }
   extend?: Extensions;
@@ -596,49 +599,115 @@ interface StreamContext {
   signal: AbortSignal; // aborted on retry or discard
 }
 interface AiRequest {
-  action: string; // the triggering slash action id, e.g. "continue-writing"
+  action: string; // the triggering action id, e.g. "continue-writing"
   prompt: string;
   context: string; // plain-text context the prompt operates on
+  scope: AiScope;
 }
 interface StreamAdapter {
   stream(request: AiRequest, context: StreamContext): AsyncIterable<string>;
 }
-// editor.commands.runAiAction({ action, prompt, context, adapter }) — inserts the transient node, starts streaming
+// editor.commands.runAiAction(RunAiActionOptions) — resolves the context from `scope`, inserts the transient node, starts streaming
 // editor.commands.retryAiAction(id) — replays the last request/adapter for this node from scratch
-// editor.commands.acceptAiAction(id) — replaces the node with real paragraph(s) built from its streamed text
+// editor.commands.acceptAiAction(id, { mode? }) — "replace" swaps the mapped source range for the result and drops the node; otherwise the node becomes real paragraph(s) in place
 // editor.commands.discardAiAction(id) — removes the node, aborting any in-flight stream
 // attrs: action, prompt, text (accumulated so far), status, error
 
 class PendingAiRegistry {
   // Per-node registry keyed by id; unlike PendingUploadRegistry, entries are KEPT on success too
   // (kept for "try again"), only dropped (aborting anything in flight) on discard/accept.
-  set(
-    id: string,
-    entry: { request: AiRequest; adapter: StreamAdapter; controller: AbortController },
-  ): void;
-  get(
-    id: string,
-  ): { request: AiRequest; adapter: StreamAdapter; controller: AbortController } | undefined;
+  // `source` is the range the action read from, mapped through later document changes; `deleted`
+  // once those edits remove it, which downgrades "replace" to a plain accept.
+  set(id: string, entry: PendingEntry): void; // aborts any previous entry for the id
+  get(id: string): PendingEntry | undefined;
   delete(id: string): void;
 }
+interface PendingEntry {
+  request: AiRequest;
+  adapter: StreamAdapter;
+  controller: AbortController;
+  source: { from: number; to: number; deleted: boolean } | null;
+}
 
-interface AiSlashAction {
+type AiScope = "cursor" | "selection" | "block";
+type AiActionContext = "slash" | "selection" | "block"; // surfaces an action is offered on
+type AiAcceptMode = "replace" | "insert"; // replace the mapped source range, or insert the result below it
+
+interface AiAction {
   id: string;
   title: string;
   description?: string;
   icon?: string;
   prompt: string; // instruction sent to the model
+  contexts: AiActionContext[];
 }
-const defaultAiSlashActions: AiSlashAction[]; // ids: continue-writing, summarize, brainstorm-ideas, fix-spelling-grammar
+const defaultAiActions: AiAction[]; // continue-writing, summarize, brainstorm-ideas, improve-writing, fix-spelling-grammar, make-shorter, make-longer
 
 interface AiKitOptions {
   adapter: StreamAdapter;
-  actions: AiSlashAction[]; // default defaultAiSlashActions
+  actions: AiAction[]; // default defaultAiActions
   node: boolean; // default true; false to opt out of the built-in NodeView registration (see below)
 }
-function createAiSlashItems(options: Pick<AiKitOptions, "adapter" | "actions">): SlashItem[];
-// Every generated item's context is the document text up to the slash trigger — a slash command
-// never carries a real user text selection the way a bubble-toolbar action does.
+interface AiStorage {
+  adapter: StreamAdapter;
+  actions: AiAction[];
+}
+const Ai: Extension<AiKitOptions, AiStorage>; // editor-level capability shared by slash, selection, and block surfaces
+function ai(options: Pick<AiKitOptions, "adapter"> & Partial<AiKitOptions>): Extension;
+
+interface RunAiActionOptions {
+  action: string;
+  prompt: string;
+  scope: AiScope;
+  pos?: number; // block position for block-scoped actions
+  adapter?: StreamAdapter; // overrides the editor-level adapter for one request
+}
+interface AcceptAiActionOptions {
+  mode?: AiAcceptMode;
+}
+
+function createAiSlashItems(actions: AiAction[]): SlashItem[]; // only actions whose `contexts` include "slash"
+// Slash items run with scope "cursor": a slash command never carries a real user text selection the
+// way a bubble-toolbar action does, so the context is the document text up to the slash trigger.
+// The adapter is resolved from `editor.storage.ai` when the item runs.
+```
+
+```ts
+// block-types.ts — one list of block conversions behind the slash menu, "Turn into", and the block menu.
+interface BlockType {
+  id: string;
+  title: string;
+  group: string;
+  description?: string;
+  aliases?: string[];
+  keywords?: string[];
+  shortcut?: string;
+  icon: string;
+  when?(editor: Editor): boolean; // hidden when the node is not in the schema
+  isActive(editor: Editor): boolean;
+  convert(context: { editor: Editor; pos?: number }): boolean; // pos omitted = block holding the selection
+}
+const defaultBlockTypes: BlockType[]; // paragraph, heading-1..3, bullet/ordered/task list, blockquote, callout, toggle, code-block, toggle-heading-1..3, mermaid
+const BlockTypes: Extension<{ types: BlockType[] }, BlockTypesStorage>; // editor.storage.blockTypes.types
+function blockTypes(types?: BlockType[]): Extension;
+function blockTypeSlashItems(types: BlockType[]): SlashItem[]; // delete the trigger range, then convert
+function activeBlockType(types: BlockType[], editor: Editor): BlockType | null;
+
+// block-menu.ts — the block grip's context menu
+interface BlockMenuItem {
+  id: string;
+  title: string;
+  icon: string;
+  group: string;
+  variant?: "default" | "destructive";
+  when?(context: BlockMenuContext): boolean;
+  run(context: BlockMenuContext): void | Promise<void>;
+}
+interface BlockMenuContext {
+  editor: Editor;
+  target: BlockTarget;
+}
+const defaultBlockMenuItems: BlockMenuItem[]; // duplicate, delete
 ```
 
 ```ts
@@ -926,8 +995,27 @@ interface TableOfContents extends TableOfContentsState {
 }
 
 function useBlockTypes(editor: Editor | null): BlockTypes;
+interface BlockTypes {
+  items: BlockType[]; // editor.storage.blockTypes.types, falling back to defaultBlockTypes
+  active: BlockType | null; // first item whose `when` passes and `isActive` is true
+  convert(type: BlockType, pos?: number): boolean;
+}
+
 function useAiActions(editor: Editor | null, context: AiActionContext): AiActions;
+interface AiActions {
+  actions: AiAction[]; // editor.storage.ai.actions filtered by `contexts`
+  run(action: AiAction, options?: { pos?: number }): boolean; // runAiAction with scope = slash ? "cursor" : context
+}
+
 function useBlockMenu(editor: Editor | null): BlockMenu;
+interface BlockMenu {
+  items: BlockMenuItem[]; // defaultBlockMenuItems, localized and filtered by `when` for the open target
+  target: BlockTarget | null;
+  anchor: BlockDragAnchor | null;
+  close(): void;
+  handleProps: BlockDrag["handleProps"];
+}
+
 // Display URL for a media node view: `useResolvedSrc(node.attrs.src, node, extension.options.resolveSrc)`.
 // No src → null; no resolver → src. Sync results return on the same render; async results yield
 // null until settled (the raw URL is never requested meanwhile); throw/reject → raw src. Re-resolves

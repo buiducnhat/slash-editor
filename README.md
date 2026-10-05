@@ -48,11 +48,13 @@
 ## Features
 
 - **Block UX:** slash menu, drag handle with live preview, nested reorder, block menu (turn into, duplicate, delete)
-- **Blocks:** headings, lists, task lists, toggles, callouts, quotes, columns, tables, Mermaid diagrams
+- **Blocks:** headings, lists, task lists, toggles, callouts, quotes, columns, tables, syntax-highlighted code, Mermaid diagrams
 - **Media:** image, video, file, embed, with an upload adapter for your own storage
 - **Collaboration:** Yjs (Hocuspocus, y-websocket, or WebRTC), presence avatars, block-anchored comments
 - **AI:** slash, selection, and block actions through a stream adapter (bring your own model)
-- **Documents:** table of contents, read-only mode, markdown import/export and shortcuts
+- **Documents:** Notion-style pages (sub-pages, page links, tree, backlinks over your own store), table of contents, read-only mode, markdown import/export and shortcuts
+- **Inline:** `@`-mentions, `:` emoji picker, link editor
+- **Localization:** translate slash items, menus, toolbar, and placeholders with the `messages` option
 - **Ownership:** behavior updates via npm, markup lives in your repo via `shadcn add`
 
 ## Try it
@@ -141,10 +143,10 @@ Visit the online documentation at [**slasheditor.dev/docs**](https://slasheditor
 bun install          # install workspace dependencies
 bun run dev          # playground + docs on http://localhost:3000
 bun run test         # unit tests (Node, no DOM)
-bun run test:e2e    # browser regression suite (Playwright)
-bun run check       # format, lint, typecheck
-bun run check --fix # auto-fix formatting/lint issues
-bun run build       # build packages (core then react)
+bun run test:e2e     # browser regression suite (Playwright)
+bun run check        # format, lint, typecheck
+bun run check --fix  # auto-fix formatting/lint issues
+bun run build        # build packages (core then react)
 ```
 
 ## Contributing

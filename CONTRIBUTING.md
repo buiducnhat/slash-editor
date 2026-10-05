@@ -110,11 +110,11 @@ Never bump versions or push release tags by hand.
 
 ### Unit tests
 
-Place file-specific unit tests next to the file they cover:
+Unit tests for `@slash-editor/core` live in `packages/core/tests/`, one file per source module:
 
 ```
 packages/core/src/slash-items.ts
-packages/core/src/__tests__/slash-items.test.ts
+packages/core/tests/slash-items.test.ts
 ```
 
 Run: `bun run test`

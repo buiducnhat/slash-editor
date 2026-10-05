@@ -74,6 +74,7 @@
       "dependencies": {
         "@base-ui/react": "^1.8.0",
         "@fontsource-variable/geist": "^5.3.0",
+        "@fontsource-variable/geist-mono": "^5.3.0",
         "@hocuspocus/provider": "^4.7.0",
         "@slash-editor/core": "workspace:*",
         "@slash-editor/react": "workspace:*",
@@ -96,6 +97,7 @@
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
         "shadcn": "^4.21.0",
+        "simple-icons": "^16.34.0",
         "tailwind-merge": "^3.7.0",
         "y-protocols": "^1.0.6",
         "y-webrtc": "^10.3.0",
@@ -305,6 +307,8 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.12", "", {}, "sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww=="],
 
     "@fontsource-variable/geist": ["@fontsource-variable/geist@5.3.0", "", {}, "sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA=="],
+
+    "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.3.0", "", {}, "sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw=="],
 
     "@fuma-translate/react": ["@fuma-translate/react@1.0.2", "", { "peerDependencies": { "@types/react": "*", "react": "^19.2.0", "react-dom": "^19.2.0" }, "optionalPeers": ["@types/react"] }, "sha512-uOiOtBx3nRXR8Nu1GzBf1tApgF1FErDBTHxRIAQeyQdyOoZbrNRN6H4kDCWObY4qyGeGbHydG0DHzgeUgFDMIw=="],
 
@@ -1987,6 +1991,8 @@
     "siginfo": ["siginfo@2.0.0", "", {}, "sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g=="],
 
     "signal-exit": ["signal-exit@4.1.0", "", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
+
+    "simple-icons": ["simple-icons@16.34.0", "", {}, "sha512-UTxKn0PVspk84B2hHF3Dqiqht1yDjJmDc/t4cO7PyCQxCMk6OjEu95pnpGjhLaGeQ4qBrGASbefTIe/+czrX7g=="],
 
     "simple-peer": ["simple-peer@9.11.1", "", { "dependencies": { "buffer": "^6.0.3", "debug": "^4.3.2", "err-code": "^3.0.1", "get-browser-rtc": "^1.1.0", "queue-microtask": "^1.2.3", "randombytes": "^2.1.0", "readable-stream": "^3.6.0" } }, "sha512-D1SaWpOW8afq1CZGWB8xTfrT3FekjQmPValrqncJMX7QFl8YwhrPTZvMCANLtgBwwdS+7zURyqxDDEmY558tTw=="],
 

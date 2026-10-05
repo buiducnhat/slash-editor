@@ -12,6 +12,10 @@ Status legend: **Done** · **In progress** · **Not started**
 | M5 — Distribution      | ✅ Done |
 | M6 — Docs site         | ✅ Done |
 | M7 — Single app        | ✅ Done |
+| M8 — Live demo         | ✅ Done |
+| M9 — Markdown          | ✅ Done |
+| M10 — Mermaid          | ✅ Done |
+| M11 — Pages            | ✅ Done |
 
 ---
 
@@ -319,7 +323,7 @@ without leaving the document._
 
 _Landed:_ Full design: [`mermaid-design-brief.md`](mermaid-design-brief.md).
 
-## M11 — Pages
+## M11 — Pages ✅
 
 _Done when: a user can create a sub-page, navigate into it, link to it from another page, and see
 its title, place in the tree, and backlinks stay current after a rename — against a host-owned
@@ -339,6 +343,17 @@ _Landed:_ `PagesOptions.nodeViews` lets a UI layer attach renderers without re-r
 nodes. Options are stored by reference in `editor.storage.pages` because `configure` deep-clones.
 The watcher nets sub-page counts across a whole dispatch, so moves and converted pastes report
 nothing.
+
+## Shipped between milestones
+
+Features that landed as their own releases without a numbered milestone; the root
+[`CHANGELOG.md`](../../CHANGELOG.md) is the record.
+
+| Release | Feature                                                                                                                                                 | Design                                                                   |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 0.5.0   | Table of contents (`tableOfContents`, `useTableOfContents`) and read-only documents                                                                     | [`table-of-contents-design-brief.md`](table-of-contents-design-brief.md) |
+| 0.6.0   | Emoji picker (`emoji`, `/emoji`, `useEmoji`), syntax-highlighted code blocks (`codeBlock` option), localization (`messages` option), Notion-style pages | Pages: [`pages-design-brief.md`](pages-design-brief.md)                  |
+| 0.7.0   | `@slash-editor/core/emoji` and `/code-block` subpaths (breaking), media `toAttrs`/`resolveSrc` + `useResolvedSrc`, `starterKit` option                  | —                                                                        |
 
 ---
 
