@@ -5,15 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
-    "@slash-editor/core": "0.5.1",
-    "@slash-editor/react": "0.5.1",
-    "@tiptap/core": "3.31.3",
-    "@tiptap/pm": "3.31.3",
-    "@tiptap/react": "3.31.3",
+    "@slash-editor/core": "0.7.0",
+    "@slash-editor/react": "0.7.0",
+    "@tiptap/core": "3.31.4",
+    "@tiptap/pm": "3.31.4",
+    "@tiptap/react": "3.31.4",
     "class-variance-authority": "0.7.1",
     "cmdk": "1.1.1",
     "cn": "0.4.0",
@@ -22,6 +23,8 @@
     "next": "16.3.7",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "y-protocols": "1.0.6",
+    "y-webrtc": "10.3.0",
     "yjs": "13.6.33"
   },
   "devDependencies": {

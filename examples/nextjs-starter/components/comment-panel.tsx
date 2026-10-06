@@ -2,9 +2,9 @@ import { useComments } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import { cn } from "cn";
 
 export function CommentPanel({ editor, className }: { editor: Editor; className?: string }) {
   const comments = useComments(editor);

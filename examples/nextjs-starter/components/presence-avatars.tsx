@@ -1,6 +1,6 @@
 import type { PresenceProvider } from "@slash-editor/react";
 import { usePresence } from "@slash-editor/react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 /** Renders connected peers (excluding the local user) as a row of colored initials. */
 export function PresenceAvatars({ provider }: { provider: PresenceProvider }) {

@@ -1,10 +1,10 @@
 import { useLinkEditor } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import { ExternalLinkIcon, TrashIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Popover, PopoverContent } from "@/components/ui/popover.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 
 export function LinkEditorPopover({ editor }: { editor: Editor }) {
   const link = useLinkEditor(editor);

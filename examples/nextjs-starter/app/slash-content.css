@@ -57,6 +57,70 @@
     @apply bg-transparent p-0;
   }
 
+  /*
+   * Syntax highlighting (`syntaxHighlight`). Tokens are `hljs-*` classes from
+   * lowlight. Each hue mixes a chart token toward the foreground so it stays
+   * legible whatever palette the host's shadcn theme defines.
+   */
+  .slash-content pre code {
+    color: var(--foreground);
+  }
+
+  .slash-content .hljs-comment,
+  .slash-content .hljs-quote {
+    color: var(--muted-foreground);
+    font-style: italic;
+  }
+
+  .slash-content .hljs-keyword,
+  .slash-content .hljs-doctag,
+  .slash-content .hljs-selector-tag {
+    color: color-mix(in oklab, var(--chart-1) 65%, var(--foreground));
+  }
+
+  .slash-content .hljs-string,
+  .slash-content .hljs-regexp,
+  .slash-content .hljs-addition,
+  .slash-content .hljs-meta-string {
+    color: color-mix(in oklab, var(--chart-2) 65%, var(--foreground));
+  }
+
+  .slash-content .hljs-number,
+  .slash-content .hljs-literal,
+  .slash-content .hljs-symbol,
+  .slash-content .hljs-bullet {
+    color: color-mix(in oklab, var(--chart-3) 65%, var(--foreground));
+  }
+
+  .slash-content .hljs-title,
+  .slash-content .hljs-section,
+  .slash-content .hljs-name {
+    color: color-mix(in oklab, var(--chart-4) 65%, var(--foreground));
+  }
+
+  .slash-content .hljs-attr,
+  .slash-content .hljs-attribute,
+  .slash-content .hljs-variable,
+  .slash-content .hljs-template-variable,
+  .slash-content .hljs-type,
+  .slash-content .hljs-built_in,
+  .slash-content .hljs-selector-class,
+  .slash-content .hljs-selector-id {
+    color: color-mix(in oklab, var(--chart-5) 65%, var(--foreground));
+  }
+
+  .slash-content .hljs-deletion {
+    color: var(--destructive);
+  }
+
+  .slash-content .hljs-emphasis {
+    font-style: italic;
+  }
+
+  .slash-content .hljs-strong {
+    font-weight: 600;
+  }
+
   .slash-content hr {
     @apply border-border my-8;
   }
@@ -278,6 +342,11 @@
 
   .slash-content [data-type="mention"] {
     @apply bg-primary/10 text-primary rounded px-1 py-0.5 font-medium;
+  }
+
+  /* Emoji without a native glyph render a fallback <img>; size it to the line. */
+  .slash-content [data-type="emoji"] img {
+    @apply inline-block size-[1.2em] align-text-bottom;
   }
 
   .slash-content [data-type="aiBlock"] {

@@ -7,18 +7,18 @@ import {
   RemoveFormattingIcon,
   SparklesIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { resolveIcon } from "@/lib/icons";
-import { cn } from "@/lib/utils.ts";
+} from "@/components/ui/dropdown-menu.tsx";
+import { Popover, PopoverContent } from "@/components/ui/popover.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { resolveIcon } from "@/lib/icons.ts";
+import { cn } from "cn";
 
 function BlockTypeDropdown({ editor }: { editor: Editor }) {
   const blockTypes = useBlockTypes(editor).items;

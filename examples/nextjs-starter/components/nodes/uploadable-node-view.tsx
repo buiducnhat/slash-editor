@@ -3,7 +3,7 @@ import { useResolvedSrc } from "@slash-editor/react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { RotateCcwIcon, UploadIcon, type LucideIcon } from "lucide-react";
 import { useRef, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 
 interface UploadableNodeAttrs {
   id: string;

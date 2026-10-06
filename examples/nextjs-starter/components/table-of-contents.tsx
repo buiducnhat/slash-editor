@@ -1,7 +1,7 @@
 import { useTableOfContents } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import type { ReactNode, RefObject } from "react";
-import { cn } from "@/lib/utils.ts";
+import { cn } from "cn";
 
 /**
  * Left padding per depth below the shallowest heading — a static record because

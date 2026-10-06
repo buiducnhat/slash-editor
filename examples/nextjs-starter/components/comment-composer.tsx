@@ -1,9 +1,9 @@
 import { useComments } from "@slash-editor/react";
 import type { Editor } from "@tiptap/core";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button.tsx";
+import { Popover, PopoverContent } from "@/components/ui/popover.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 
 export function CommentComposer({ editor }: { editor: Editor }) {
   const comments = useComments(editor);

@@ -1,7 +1,7 @@
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CheckIcon, Loader2Icon, RotateCcwIcon, SparklesIcon, Trash2Icon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 
 export function AiBlockNodeView({ node, editor }: NodeViewProps) {
   const id = node.attrs.id as string;
