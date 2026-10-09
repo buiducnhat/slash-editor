@@ -4,6 +4,8 @@ import type { JSONContent } from "@tiptap/core";
 /** What the demo persists: page metadata, document bodies, and the backlinks index. */
 interface Snapshot {
   pages: Record<string, PageMeta>;
+  /** Every page id in sibling order: a page's siblings are the ids sharing its `parentId`, in this order. */
+  order: string[];
   content: Record<string, JSONContent>;
   refs: Record<string, PageRefs>;
 }
@@ -13,8 +15,8 @@ export interface DemoPageStore extends PageStore {
   getContent(pageId: string): JSONContent | undefined;
   /** Stores a body and re-indexes the pages it references, the way a host would on save. */
   setContent(pageId: string, content: JSONContent): void;
-  /** Moves pages to (or out of) the trash; unknown ids are ignored. */
   setTrashed(pageIds: readonly string[], trashed: boolean): void;
+  move(id: string, target: { parentId: string | null; index: number }): void;
 }
 
 export const PAGES_STORAGE_KEY = "slash-editor-starter:notes:pages";
@@ -94,6 +96,7 @@ function seed(): Snapshot {
 
   return {
     pages: Object.fromEntries([home, guide, ideas, roadmap].map((page) => [page.id, page])),
+    order: [home.id, guide.id, ideas.id, roadmap.id],
     content,
     refs: Object.fromEntries(
       Object.entries(content).map(([id, doc]) => [id, collectPageRefs(doc)]),
@@ -107,7 +110,7 @@ const isObject = (value: unknown): value is object => typeof value === "object" 
 function isSnapshot(value: unknown): value is Snapshot {
   if (!isObject(value)) return false;
 
-  const { pages, content, refs } = value as Partial<Record<keyof Snapshot, unknown>>;
+  const { pages, order, content, refs } = value as Partial<Record<keyof Snapshot, unknown>>;
 
   return (
     isObject(pages) &&
@@ -115,6 +118,7 @@ function isSnapshot(value: unknown): value is Snapshot {
       (page: Partial<PageMeta> | null) =>
         typeof page?.id === "string" && typeof page.title === "string",
     ) &&
+    (order === undefined || (Array.isArray(order) && order.every((id) => typeof id === "string"))) &&
     isObject(content) &&
     isObject(refs) &&
     Object.values(refs).every(
@@ -131,7 +135,12 @@ function load(storage: Storage | undefined): Snapshot {
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
 
-      if (isSnapshot(parsed)) return parsed;
+      if (isSnapshot(parsed)) {
+        // Snapshots saved before ordering existed have no `order`; ids it lacks or no longer has are repaired.
+        const known = (parsed.order ?? []).filter((id) => id in parsed.pages);
+
+        return { ...parsed, order: [...new Set([...known, ...Object.keys(parsed.pages)])] };
+      }
     }
   } catch {
     // Unreadable or blocked storage: start from the seed rather than fail the demo.
@@ -188,13 +197,25 @@ export function createDemoPageStore(
       snapshot.pages[id] = { ...current, ...patch };
     }
   };
-  const all = () => Object.values(snapshot.pages);
+  const all = () => snapshot.order.flatMap((id) => snapshot.pages[id] ?? []);
+  // True when `id` is `ancestorId` or sits below it; the `seen` guard survives a hand-edited cycle.
+  const isInside = (id: string | null, ancestorId: string) => {
+    const seen = new Set<string>();
+
+    for (let at = id; at !== null && !seen.has(at); at = snapshot.pages[at]?.parentId ?? null) {
+      if (at === ancestorId) return true;
+      seen.add(at);
+    }
+
+    return false;
+  };
 
   return {
     create: ({ parentId, title }) => {
       const page: PageMeta = { id: crypto.randomUUID().slice(0, 8), parentId, title: title ?? "" };
 
       snapshot.pages[page.id] = page;
+      snapshot.order.push(page.id);
       commit();
 
       return page;
@@ -240,6 +261,20 @@ export function createDemoPageStore(
 
     setTrashed: (pageIds, trashed) => {
       pageIds.forEach((id) => replace(id, { trashed }));
+      commit();
+    },
+
+    move: (id, { parentId, index }) => {
+      if (!snapshot.pages[id]) return;
+      if (parentId !== null && (!snapshot.pages[parentId] || isInside(parentId, id))) return;
+
+      const rest = snapshot.order.filter((other) => other !== id);
+      const siblings = rest.filter((other) => snapshot.pages[other]?.parentId === parentId);
+      const before = siblings[Math.min(Math.max(index, 0), siblings.length)];
+
+      rest.splice(before === undefined ? rest.length : rest.indexOf(before), 0, id);
+      snapshot.order = rest;
+      replace(id, { parentId });
       commit();
     },
   };

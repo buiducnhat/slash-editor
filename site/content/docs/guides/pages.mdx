@@ -49,8 +49,7 @@ export function createMemoryPageStore(initial: PageMeta[] = []): PageStore {
     },
     peek: (id) => pages.get(id),
     load: async (id) => pages.get(id),
-    listChildren: (parentId) =>
-      [...pages.values()].filter((page) => page.parentId === parentId && !page.trashed),
+    listChildren: (parentId) => [...pages.values()].filter((page) => page.parentId === parentId),
     search: (query) =>
       [...pages.values()].filter(
         (page) => !page.trashed && page.title.toLowerCase().includes(query.toLowerCase()),
@@ -146,6 +145,22 @@ Only the **local** edit reports: remote transactions are skipped, so the collabo
 the block is the one who trashes the page. A Yjs undo/redo counts as local. Counting is net per
 dispatch, so moving a block (`moveBlock`) or cut-and-paste within one transaction fires nothing.
 The node view shows a "missing / in trash" state for a trashed page and never removes the node.
+
+## Trashing and reordering
+
+`PageStore` has two optional methods for the tree. The library never calls them — they are the
+shape your own UI (and `onSubPagesDetached`/`onSubPagesAttached`) calls into:
+
+```ts
+store.setTrashed?.(["a1b2"], true); // restore with `false`; unknown ids are ignored
+store.move?.("a1b2", { parentId: "c3d4", index: 0 }); // re-parent and/or reorder
+```
+
+Sibling order is whatever `listChildren(parentId)` returns, trashed pages included, and
+`usePageTree` renders it as-is. `move` takes `index` among that list once the page itself is
+removed from it (like `splice`, clamped); moving a page into itself or a descendant is a no-op.
+Both must notify `subscribe` listeners so the tree refetches. `createDemoPageStore` in the
+registry is a working reference, ordering siblings with an `order` list.
 
 ## One parent per page
 

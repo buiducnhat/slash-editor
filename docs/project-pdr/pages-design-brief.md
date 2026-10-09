@@ -107,7 +107,11 @@ interface PageStore {
   peek(id: string): PageMeta | undefined;
   /** Fills the cache on a miss. */
   load(id: string): Promise<PageMeta | undefined>;
+  /** Children in sibling order, trashed included. */
   listChildren(parentId: string | null): PageMeta[] | Promise<PageMeta[]>;
+  /** Optional tree mutations; the library never calls them. */
+  setTrashed?(ids: readonly string[], trashed: boolean): void | Promise<void>;
+  move?(id: string, target: { parentId: string | null; index: number }): void | Promise<void>;
   search(query: string, context: { signal: AbortSignal }): PageMeta[] | Promise<PageMeta[]>;
   /** Host-owned index, fed by `collectPageRefs`. */
   backlinks?(id: string): string[] | Promise<string[]>;

@@ -51,7 +51,22 @@ export interface PageStore {
   peek(id: string): PageMeta | undefined;
   /** Fills the cache on a miss. Resolves `undefined` for an unknown page. */
   load(id: string): Promise<PageMeta | undefined>;
+  /** Children of `parentId` in sibling order, trashed pages included. */
   listChildren(parentId: string | null): PageMeta[] | Promise<PageMeta[]>;
+  /**
+   * Moves pages to (or out of) the trash; unknown ids are ignored. The library
+   * never calls it: `onSubPagesDetached`/`onSubPagesAttached` tell the host
+   * when a sub-page block left or entered a document, and the host decides.
+   */
+  setTrashed?(ids: readonly string[], trashed: boolean): void | Promise<void>;
+  /**
+   * Re-parents and/or reorders a page. `index` is the position among
+   * `listChildren(parentId)` once the page itself is taken out of it, so moving
+   * within one parent behaves like `splice`; it is clamped to the list.
+   * Moving a page into itself or a descendant is a no-op. Page ownership by a
+   * `subPage` block is the host's concern: the library never calls this either.
+   */
+  move?(id: string, target: { parentId: string | null; index: number }): void | Promise<void>;
   /** Backs the page entries of the `@` menu. */
   search(query: string, context: { signal: AbortSignal }): PageMeta[] | Promise<PageMeta[]>;
   /** Ids of the pages referencing `id`, from an index the host keeps with `collectPageRefs`. */
