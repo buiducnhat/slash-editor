@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- `bun run version-packages` adds each release's section from its changesets; edit it in the Version Packages PR. -->
 
+## [0.8.0] — 2026-10-09
+
+Page tree operations (`@slash-editor/core`, `@slash-editor/react`):
+
+- **Optional `PageStore.setTrashed(ids, trashed)` and `PageStore.move(id, { parentId, index })`.** Trash/restore pages and re-parent or reorder them. The library never calls them; they are the contract for your page-tree UI and for `onSubPagesDetached`/`onSubPagesAttached`. `listChildren` is now documented as returning siblings in order (trashed included), which `usePageTree` renders as-is. `move`'s `index` counts among `listChildren(parentId)` without the moved page, clamped; moving a page into itself or a descendant is a no-op.
+- The registry `createDemoPageStore` implements both and persists sibling order.
+
 ## [0.7.0] — 2026-10-04
 
 Emoji and highlighted code blocks move to their own entries (`@slash-editor/core`, `@slash-editor/react`):
