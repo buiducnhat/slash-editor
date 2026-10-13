@@ -45,7 +45,7 @@
     "marked": "^17.0.1"
   },
   "devDependencies": {
-    "@tiptap/core": "^3.31.3",
+    "@tiptap/core": "^3.31.4",
     "@tiptap/pm": "^3.31.3",
     "yjs": "^13.6.0"
   },

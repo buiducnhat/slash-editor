@@ -20,7 +20,7 @@
     "@hocuspocus/provider": "^4.7.0",
     "@slash-editor/core": "workspace:*",
     "@slash-editor/react": "workspace:*",
-    "@tiptap/core": "^3.31.3",
+    "@tiptap/core": "^3.31.4",
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@vercel/analytics": "^2.0.1",
