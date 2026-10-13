@@ -55,7 +55,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/ws": "^8.18.1",
-    "crossws": "^0.4.12",
+    "crossws": "^0.4.15",
     "fumadocs-typescript": "^5.4.1",
     "playwright": "^1.63.0",
     "postcss": "^8.5.28",
