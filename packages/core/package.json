@@ -29,7 +29,7 @@
     "dev": "vp pack src/index.ts src/markdown.ts src/emoji.ts src/code-block.ts --watch"
   },
   "dependencies": {
-    "@tiptap/extension-blockquote": "^3.31.3",
+    "@tiptap/extension-blockquote": "^3.31.4",
     "@tiptap/extension-code-block": "^3.31.3",
     "@tiptap/extension-code-block-lowlight": "^3.31.3",
     "@tiptap/extension-collaboration": "^3.31.3",
