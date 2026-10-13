@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@tiptap/core": "^3.31.3",
-    "@tiptap/extension-link": "^3.31.3",
+    "@tiptap/extension-link": "^3.31.4",
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@types/react": "^19.3.0",
