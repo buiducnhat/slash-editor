@@ -12,6 +12,18 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    # One PR per ecosystem instead of one per dependency. Majors are grouped
+    # separately so they can be reviewed (and fail) without blocking the rest.
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+      major:
+        update-types: ["major"]
+    ignore:
+      # @tiptap/markdown pins marked ^17; a second major in core breaks the
+      # `marked` instance type handed to it. Revisit when tiptap moves to 18.
+      - dependency-name: "marked"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -22,3 +34,6 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
+    groups:
+      actions:
+        patterns: ["*"]
