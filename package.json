@@ -31,7 +31,7 @@
     "@types/node": "^26.1.1",
     "typescript": "^7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
-    "vite-plus": "^0.2.4"
+    "vite-plus": "^1.1.0"
   },
   "overrides": {
     "fumadocs-core": "16.15.12",
