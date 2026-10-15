@@ -47,11 +47,11 @@
   "devDependencies": {
     "@tiptap/core": "^3.32.0",
     "@tiptap/pm": "^3.32.0",
-    "yjs": "^13.6.0"
+    "yjs": "^13.6.33"
   },
   "peerDependencies": {
     "@tiptap/core": "^3.31.0",
     "@tiptap/pm": "^3.31.0",
-    "yjs": "^13.6.0"
+    "yjs": "^13.6.33"
   }
 }

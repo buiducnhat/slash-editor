@@ -28,13 +28,12 @@
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.6.5",
     "typescript": "^7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
     "vite-plus": "^1.1.0"
   },
   "overrides": {
-    "fumadocs-core": "16.15.12",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"
   },
   "devEngines": {
