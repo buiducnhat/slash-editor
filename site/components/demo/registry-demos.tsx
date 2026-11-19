@@ -240,8 +240,22 @@ export function TableOfContentsDemo() {
 <p>Mark each junction as you pass it so the walk out is easy to follow.</p>
 <h3>Creek crossing</h3>
 <p>The stones are slick after rain; the log bridge is the better bet.</p>
+<details data-level="2">
+  <summary>Packing list</summary>
+  <div data-type="detailsContent">
+    <p>Open this toggle, or pick a row in the outline to open it for you.</p>
+    <h3>Footwear</h3>
+    <p>Boots broken in beforehand, and a spare pair of dry socks.</p>
+    <details data-level="3">
+      <summary>Repair kit</summary>
+      <div data-type="detailsContent"><p>Tape, cord, and a patch for the tent.</p></div>
+    </details>
+  </div>
+</details>
 <h2>Back at camp</h2>
 <p>Hang the pack, bank the fire, and note anything the next hiker should know.</p>`,
+    // Headings inside toggles join the outline; picking one opens the toggles around it.
+    blockKit: { tableOfContents: { includeToggles: true } },
     editorProps: { attributes: { class: EDITOR_CLASS, "aria-label": "Document" } },
   });
   if (!editor) return null;

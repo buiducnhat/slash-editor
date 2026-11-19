@@ -26,6 +26,9 @@ const TOC_DEMO_HEADINGS = [
   "Before you go",
   "On the trail",
   "Creek crossing",
+  "Packing list",
+  "Footwear",
+  "Repair kit",
   "Back at camp",
 ];
 
@@ -39,8 +42,9 @@ test.describe("table of contents", () => {
     // With labels and order asserted at once, a reshuffled outline, a stale
     // label, or a row per the wrong block all fail immediately.
     await expect(tocRows(page)).toHaveText(TOC_DEMO_HEADINGS);
-    // The outline mirrors the document itself, element for element.
-    await expect(editor(page).locator("h1, h2, h3")).toHaveText(TOC_DEMO_HEADINGS);
+    // The outline mirrors the document itself, element for element: real headings
+    // plus the demo's two toggle headings (a toggle title is a `summary`, not an `h*`).
+    await expect(editor(page).locator("h1, h2, h3, summary")).toHaveText(TOC_DEMO_HEADINGS);
   });
 
   test("the active row follows the caret", async ({ page }) => {
@@ -83,6 +87,9 @@ test.describe("table of contents", () => {
       "Before you go",
       "On the trail",
       "Creek crossing",
+      "Packing list",
+      "Footwear",
+      "Repair kit",
       "Base camp",
     ]);
 
@@ -98,6 +105,9 @@ test.describe("table of contents", () => {
       "Before you go",
       "On the trail",
       "Creek crossing",
+      "Packing list",
+      "Footwear",
+      "Repair kit",
       "Base camp",
       "Extra mile",
     ]);
@@ -140,6 +150,38 @@ test.describe("table of contents", () => {
         { timeout: 10_000 },
       )
       .toBeLessThan(8);
+  });
+
+  test("a row inside closed toggles opens every toggle around it and scrolls to the heading", async ({
+    page,
+  }) => {
+    await page.goto("/docs/components/table-of-contents");
+    await expect(tocRows(page)).toHaveText(TOC_DEMO_HEADINGS);
+
+    const pane = page.locator("div.max-h-64.overflow-y-auto");
+    const doc = editor(page);
+    const packing = doc.locator('[data-type="details"]', { hasText: "Packing list" }).first();
+    const target = doc.locator("summary", { hasText: "Repair kit" });
+
+    // Toggles start closed, so the target is laid out nowhere.
+    await expect(target).toBeHidden();
+
+    await tocRows(page).filter({ hasText: "Repair kit" }).click();
+
+    // The outer toggle opened (the inner one is only reachable through it)...
+    await expect(packing).toHaveClass(/is-open/);
+    await expect(target).toBeVisible();
+    // ...and the heading was scrolled into the pane rather than left off-screen.
+    await expect
+      .poll(async () => {
+        const box = await target.boundingBox();
+        const paneBox = await pane.boundingBox();
+        return box && paneBox
+          ? box.y >= paneBox.y - 1 && box.y < paneBox.y + paneBox.height
+          : false;
+      })
+      .toBe(true);
+    await expect(activeTocRow(page)).toHaveText("Repair kit");
   });
 
   test("the read-only document is inert to typing but keeps its interactions", async ({
