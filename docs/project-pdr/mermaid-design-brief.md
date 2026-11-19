@@ -83,7 +83,7 @@ indentation) while overriding everything that would collide with the real `codeB
   - Theme: reads token values from `getComputedStyle(element)`, converts each to hex by painting it
     on a 1×1 canvas over `--card`, the view's surface (tokens are `oklch()`, sometimes with alpha, which Mermaid's
     colour maths cannot parse), and calls `initialize({ theme: "base", themeVariables, securityLevel:
-"strict" })` only when the resolved variables change.
+    "strict" })` only when the resolved variables change.
   - Cleans up the temporary `#d<id>` element Mermaid leaves in `<body>` when a render throws.
 - `registry/components/nodes/mermaid-node-view.tsx` — `MermaidNodeView`:
   - `editing` = the selection lies strictly inside the node (`useEditorState`).
