@@ -31,6 +31,8 @@ export const BLOCK_KIT = {
   emoji: emoji(),
   ai: { adapter: streamAdapter, node: false },
   mention: { items: searchMentions },
+  // The outline also lists headings inside toggles, opening one on click.
+  tableOfContents: { includeToggles: true },
   extend: KIT_EXTENSIONS,
 } satisfies NonNullable<Exclude<UseSlashEditorOptions["blockKit"], false>>;
 

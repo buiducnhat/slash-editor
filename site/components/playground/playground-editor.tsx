@@ -171,6 +171,8 @@ const BLOCK_KIT_DEFAULTS = {
     items: (query: string, { signal }: { signal: AbortSignal }) =>
       mockMentionProvider(query, signal),
   },
+  // The outline also lists headings inside toggles, opening one on click.
+  tableOfContents: { includeToggles: true },
   extend: EXTENSIONS,
 } as const;
 

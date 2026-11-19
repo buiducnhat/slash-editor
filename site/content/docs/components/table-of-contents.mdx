@@ -15,6 +15,18 @@ import { TableOfContentsDemo } from "~/components/demo/registry-demos.preview.ts
 
 <InstallCommand item="table-of-contents" />
 
+## Headings inside toggles
+
+By default the outline lists only top-level headings. Pass `includeToggles` to the kit to also list a
+toggle's own title (when it has a heading level) and the headings in its body, nested toggles included:
+
+```ts
+useSlashEditor({ blockKit: { tableOfContents: { includeToggles: true } } });
+```
+
+Picking a row inside a closed toggle opens that toggle and every toggle around it, then scrolls to the
+heading. Callouts, columns, and table cells stay out of the outline either way.
+
 ## How the active row is chosen
 
 While the editor is editable and focused, the active row follows the caret: move into a heading
