@@ -798,6 +798,7 @@ interface TableOfContentsItem {
   level: HeadingLevel;
   text: string; // heading text, whitespace collapsed
   pos: number; // doc position of the heading node — the scroll/selection target
+  togglePos?: number; // nearest ancestor toggle that must open for this item to show; set only with includeToggles
 }
 interface TableOfContentsState {
   items: TableOfContentsItem[]; // eligible headings, in document order
@@ -809,9 +810,11 @@ interface TableOfContentsStorage {
 }
 interface TableOfContentsOptions {
   maxLevel: HeadingLevel; // default 6 — deeper headings are skipped
+  includeToggles: boolean; // default false — include a toggle's own leveled title and headings in its body
 }
 interface ScrollToHeadingOptions {
   behavior: ScrollBehavior; // default "smooth"
+  togglePos?: number; // opens this toggle first when closed (pass item.togglePos)
 }
 
 // Pure and DOM-free — no Editor, no live view — so the scan is unit-testable in Node and
@@ -834,15 +837,20 @@ function pickActiveByScroll(
 // to the top of its nearest scroll container (falls back to `scrollIntoView` at the document)
 ```
 
-The scan is top-level only (`doc.forEach`, never `descendants`): a heading nested inside a toggle,
-callout, column, or table cell is part of its parent block, not page structure. `id` is the heading's
-`blockId` attribute and `null` when `blockId` is opted out — `pos` always addresses the node, so rows
-still key, select, and scroll without ids. A document change triggers no scan unless someone is subscribed
-(a subscriber attaching after edits gets one scan before its first read, so it never observes a stale
-outline), and `setState` compares items by `(id, level, text, pos)` and skips notification when the
-outline is unchanged — caret-only transactions never churn the list. It is default-on in
-`createBlockKit` (`tableOfContents: false` opts out) and registers no slash item: an outline is not
-an insertable block.
+The scan is top-level only (`doc.forEach`, never `descendants`): a heading nested inside a callout,
+column, or table cell is part of its parent block, not page structure, and always excluded. A toggle is
+the one exception, gated by `includeToggles` (default off): when on, a toggle's own title counts as an
+item if its `level` is non-zero, and headings in its body are scanned too — recursing into nested
+toggles the same way. Every item reached this way carries `togglePos`, the position of the immediate
+toggle that must be open for it to render; `select`/`scrollToHeading` use it to open a closed toggle
+(as its own dispatch, or by flipping the node view's class when `persist: false`) before scrolling.
+`id` is the heading's `blockId` attribute and `null` when `blockId` is opted out — `pos` always
+addresses the node, so rows still key, select, and scroll without ids. A document change triggers no
+scan unless someone is subscribed (a subscriber attaching after edits gets one scan before its first
+read, so it never observes a stale outline), and `setState` compares items by
+`(id, level, text, pos, togglePos)` and skips notification when the outline is unchanged — caret-only
+transactions never churn the list. It is default-on in `createBlockKit` (`tableOfContents: false` opts
+out) and registers no slash item: an outline is not an insertable block.
 
 ### Pages (`pages.ts`)
 

@@ -102,6 +102,107 @@ test("headings nested inside containers stay out of the outline", () => {
   expect(computeTableOfContents(doc).map((item) => item.text)).toEqual(["Top"]);
 });
 
+test("includeToggles adds a toggle's own leveled title and the headings in its body", () => {
+  const schema = schemaWithDocs();
+  const heading = (text: string) => ({
+    type: "heading",
+    attrs: { id: null, level: 2 },
+    content: [{ type: "text", text }],
+  });
+  const doc = schema.nodeFromJSON({
+    type: "doc",
+    content: [
+      heading("Top"),
+      {
+        type: "details",
+        attrs: { id: "toggle-a", open: false, level: 2 },
+        content: [
+          { type: "detailsSummary", content: [{ type: "text", text: "Toggle title" }] },
+          { type: "detailsContent", content: [heading("In a toggle")] },
+        ],
+      },
+      // A plain toggle (level 0) contributes no title row, body headings still count.
+      {
+        type: "details",
+        attrs: { id: null, open: true, level: 0 },
+        content: [
+          { type: "detailsSummary", content: [{ type: "text", text: "Plain toggle" }] },
+          { type: "detailsContent", content: [heading("In a plain toggle")] },
+        ],
+      },
+      {
+        type: "callout",
+        attrs: { id: null, icon: "💡" },
+        content: [heading("In a callout")],
+      },
+    ],
+  });
+
+  const items = computeTableOfContents(doc, { includeToggles: true });
+
+  expect(items.map((item) => ({ text: item.text, togglePos: item.togglePos }))).toEqual([
+    { text: "Top", togglePos: undefined },
+    { text: "Toggle title", togglePos: items[1]!.pos },
+    { text: "In a toggle", togglePos: items[1]!.pos },
+    { text: "In a plain toggle", togglePos: items[3]!.togglePos },
+  ]);
+  // The toggle title's own position is the `details` node itself.
+  expect(doc.nodeAt(items[1]!.pos)?.type.name).toBe("details");
+  expect(items[1]!.id).toBe("toggle-a");
+});
+
+test("includeToggles still excludes headings in other containers and recurses into nested toggles", () => {
+  const schema = schemaWithDocs();
+  const heading = (text: string) => ({
+    type: "heading",
+    attrs: { id: null, level: 2 },
+    content: [{ type: "text", text }],
+  });
+  const doc = schema.nodeFromJSON({
+    type: "doc",
+    content: [
+      {
+        type: "details",
+        attrs: { id: null, open: true, level: 1 },
+        content: [
+          { type: "detailsSummary", content: [{ type: "text", text: "Outer" }] },
+          {
+            type: "detailsContent",
+            content: [
+              {
+                type: "details",
+                attrs: { id: null, open: false, level: 2 },
+                content: [
+                  { type: "detailsSummary", content: [{ type: "text", text: "Inner" }] },
+                  { type: "detailsContent", content: [heading("Nested heading")] },
+                ],
+              },
+              {
+                type: "table",
+                content: [
+                  {
+                    type: "tableRow",
+                    content: [{ type: "tableCell", content: [heading("In a table cell")] }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  const items = computeTableOfContents(doc, { includeToggles: true });
+
+  expect(items.map((item) => item.text)).toEqual(["Outer", "Inner", "Nested heading"]);
+  // The nested heading's togglePos is the inner toggle, not the outer one.
+  const inner = items.find((item) => item.text === "Inner")!;
+  const nested = items.find((item) => item.text === "Nested heading")!;
+  expect(inner.togglePos).toBe(inner.pos);
+  expect(nested.togglePos).toBe(inner.pos);
+});
+
 test("maxLevel drops headings deeper than it", () => {
   const schema = schemaWithDocs();
   const doc = schema.nodeFromJSON({

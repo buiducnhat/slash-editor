@@ -59,14 +59,18 @@ export function useTableOfContents(
       return;
     }
     // Items without rendered DOM leave no rect, so the rects and their items
-    // stay parallel over the rendered subset only.
+    // stay parallel over the rendered subset only. A heading inside a closed
+    // toggle keeps its DOM node (the toggle hides it with CSS rather than
+    // unmounting it), so it is skipped the same way: `getClientRects()` is
+    // empty for anything not actually laid out, unlike `getBoundingClientRect()`
+    // which still returns a zeroed rect that would wrongly read as "above".
     const rects: { top: number }[] = [];
     const rendered: TableOfContentsItem[] = [];
     for (const item of items) {
       // A node view may hand back a text node; its parent is the element.
       const node = editor.view.nodeDOM(item.pos);
       const element = node instanceof Element ? node : (node?.parentElement ?? null);
-      if (!element) {
+      if (!element || element.getClientRects().length === 0) {
         continue;
       }
       rects.push({ top: element.getBoundingClientRect().top });
@@ -138,8 +142,13 @@ export function useTableOfContents(
       // (see Tiptap's `focus`), and that nearest-edge scroll cancels a running
       // animation, parking the heading at the container's bottom edge instead
       // of its top. Scrolling before the caret moves makes every later scroll
-      // a no-op — heading and caret are both already visible.
-      editor.commands.scrollToHeading(item.pos, { behavior: "auto" });
+      // a no-op — heading and caret are both already visible. When the item
+      // sits inside a closed toggle (`includeToggles`), the command opens it
+      // first so the heading is visible before it measures anything.
+      editor.commands.scrollToHeading(item.pos, {
+        behavior: "auto",
+        togglePos: item.togglePos,
+      });
       if (editor.isEditable) {
         editor
           .chain()

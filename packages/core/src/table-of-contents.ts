@@ -3,6 +3,7 @@ import { Extension } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { HeadingLevel } from "./block-kit.ts";
 import { findScrollParent } from "./block-drag.ts";
+import type { ToggleOptions } from "./toggle.ts";
 
 export interface TableOfContentsItem {
   /** The heading's `blockId` attribute, or `null` when `blockId` is opted out. */
@@ -13,6 +14,12 @@ export interface TableOfContentsItem {
   text: string;
   /** Document position of the heading node — the scroll/selection target. */
   pos: number;
+  /**
+   * Position of the nearest ancestor toggle (`details` node) that must be
+   * open for this item to be visible, or `undefined` when it sits outside
+   * every toggle. Only ever set when `includeToggles` is on.
+   */
+  togglePos?: number;
 }
 
 export interface TableOfContentsState {
@@ -37,11 +44,25 @@ export interface TableOfContentsStorage {
 export interface TableOfContentsOptions {
   /** Highest heading level kept; deeper headings are skipped. @default 6 */
   maxLevel: HeadingLevel;
+  /**
+   * Includes headings nested inside toggles: both a toggle's own title (when
+   * its `level` is non-zero) and headings inside its body. Other containers
+   * (callout, columns, table cell) stay excluded regardless of this option.
+   * `select`/`scrollToHeading` open a closed toggle on the way to an item
+   * found this way. @default false
+   */
+  includeToggles: boolean;
 }
 
 export interface ScrollToHeadingOptions {
   /** @default "smooth" */
   behavior?: ScrollBehavior;
+  /**
+   * Position of a toggle (`details` node) to open first when closed, so a
+   * heading hidden inside it is visible before the scroll measures it. Pass
+   * `TableOfContentsItem.togglePos`.
+   */
+  togglePos?: number;
 }
 
 declare module "@tiptap/core" {
@@ -60,36 +81,112 @@ const EMPTY: TableOfContentsState = Object.freeze({
   items: Object.freeze([]) as unknown as TableOfContentsItem[],
 });
 
+function headingItem(
+  node: ProseMirrorNode,
+  pos: number,
+  maxLevel: HeadingLevel,
+  togglePos?: number,
+): TableOfContentsItem | null {
+  const level = node.attrs.level as number | undefined;
+  if (typeof level !== "number" || level > maxLevel) {
+    return null;
+  }
+  return {
+    id: typeof node.attrs.id === "string" ? node.attrs.id : null,
+    level: level as HeadingLevel,
+    text: node.textBetween(0, node.content.size, " "),
+    pos,
+    ...(togglePos === undefined ? {} : { togglePos }),
+  };
+}
+
 /**
- * The heading outline of `doc`: top-level headings only, in document order.
+ * Items contributed by one toggle (`details` node) at `pos`: its own title,
+ * when leveled, followed by the headings in its body — recursing into a
+ * nested toggle the same way. `togglePos` on every item is `pos` itself, so a
+ * title or body heading one level down still records the toggle right above
+ * it; a heading inside a nested toggle keeps pointing at *its* immediate
+ * toggle, not the outer one, since opening the inner one is all it needs.
+ */
+function toggleItems(
+  details: ProseMirrorNode,
+  pos: number,
+  maxLevel: HeadingLevel,
+): TableOfContentsItem[] {
+  const items: TableOfContentsItem[] = [];
+  const summary = details.firstChild;
+  const level = details.attrs.level as number | undefined;
+
+  if (summary && typeof level === "number" && level > 0 && level <= maxLevel) {
+    items.push({
+      id: typeof details.attrs.id === "string" ? details.attrs.id : null,
+      level: level as HeadingLevel,
+      text: summary.textBetween(0, summary.content.size, " "),
+      pos,
+      togglePos: pos,
+    });
+  }
+
+  const content = details.lastChild;
+  if (!content) {
+    return items;
+  }
+  // `pos` is the toggle; +1 enters it to the summary, +summary.nodeSize lands
+  // on the content node, +1 enters that to its first child.
+  const contentStart = pos + 1 + (summary?.nodeSize ?? 0) + 1;
+  content.forEach((node, offset) => {
+    items.push(...scanBlock(node, contentStart + offset, maxLevel, pos));
+  });
+
+  return items;
+}
+
+/** Items contributed by one top-level (or toggle-body) block. */
+function scanBlock(
+  node: ProseMirrorNode,
+  pos: number,
+  maxLevel: HeadingLevel,
+  togglePos?: number,
+): TableOfContentsItem[] {
+  if (node.type.name === "heading") {
+    const item = headingItem(node, pos, maxLevel, togglePos);
+    return item ? [item] : [];
+  }
+  if (node.type.name === "details") {
+    return toggleItems(node, pos, maxLevel);
+  }
+  return [];
+}
+
+/**
+ * The heading outline of `doc`: top-level headings only, in document order —
+ * plus, with `includeToggles`, the headings reachable by opening toggles
+ * along the way.
  *
  * Pure and DOM-free — no `Editor`, no live view — so the scan is unit-testable
  * and usable outside React (a host rendering its own outline calls it straight
- * on `editor.state.doc`). Headings nested inside a container node (toggle,
- * callout, columns, table cell) are deliberately excluded: they are part of
+ * on `editor.state.doc`). Headings nested inside any other container node
+ * (callout, columns, table cell) are deliberately excluded: they are part of
  * their parent block, not of the page structure.
  */
 export function computeTableOfContents(
   doc: ProseMirrorNode,
-  options: Partial<Pick<TableOfContentsOptions, "maxLevel">> = {},
+  options: Partial<Pick<TableOfContentsOptions, "maxLevel" | "includeToggles">> = {},
 ): TableOfContentsItem[] {
   const maxLevel = options.maxLevel ?? 6;
   const items: TableOfContentsItem[] = [];
 
   doc.forEach((node, offset) => {
-    if (node.type.name !== "heading") {
+    if (node.type.name === "heading") {
+      const item = headingItem(node, offset, maxLevel);
+      if (item) {
+        items.push(item);
+      }
       return;
     }
-    const level = node.attrs.level as number | undefined;
-    if (typeof level !== "number" || level > maxLevel) {
-      return;
+    if (options.includeToggles && node.type.name === "details") {
+      items.push(...toggleItems(node, offset, maxLevel));
     }
-    items.push({
-      id: typeof node.attrs.id === "string" ? node.attrs.id : null,
-      level: level as HeadingLevel,
-      text: node.textBetween(0, node.content.size, " "),
-      pos: offset,
-    });
   });
 
   return items;
@@ -146,7 +243,8 @@ function sameItems(left: readonly TableOfContentsItem[], right: readonly TableOf
       item.id === right[index]!.id &&
       item.level === right[index]!.level &&
       item.text === right[index]!.text &&
-      item.pos === right[index]!.pos,
+      item.pos === right[index]!.pos &&
+      item.togglePos === right[index]!.togglePos,
   );
 }
 
@@ -167,7 +265,7 @@ export const TableOfContents = Extension.create<TableOfContentsOptions, TableOfC
   name: "tableOfContents",
 
   addOptions() {
-    return { maxLevel: 6 };
+    return { maxLevel: 6, includeToggles: false };
   },
 
   // Methods read and write through `this` because Tiptap hands each editor its
@@ -223,12 +321,22 @@ export const TableOfContents = Extension.create<TableOfContentsOptions, TableOfC
     return {
       scrollToHeading:
         (pos: number, options: ScrollToHeadingOptions = {}) =>
-        ({ editor }: { editor: Editor }) => {
+        ({ editor, dispatch }) => {
+          // Opened as its own, already-dispatched transaction: the command
+          // below only ever reads the DOM, and a toggle's node view applies
+          // `open`/the class synchronously inside `view.dispatch`, so the
+          // element is already visible and measurable by the time the
+          // `scrollIntoView` call two lines down runs.
+          if (options.togglePos !== undefined && dispatch) {
+            openToggle(editor, options.togglePos);
+          }
           const element = headingElement(editor, pos);
           if (!element) {
             return false;
           }
-          scrollIntoView(element, options.behavior ?? "smooth");
+          if (dispatch) {
+            scrollIntoView(element, options.behavior ?? "smooth");
+          }
           return true;
         },
     };
@@ -245,6 +353,42 @@ function headingElement(editor: Editor, pos: number): Element | null {
     return dom;
   }
   return dom?.parentElement ?? null;
+}
+
+/**
+ * Opens the toggle at `pos` when it is closed, dispatching immediately so a
+ * caller reading the DOM right after this call sees it already open.
+ *
+ * With `persist` (an `open` node attr present) this runs as its own
+ * transaction, separate from the scroll/selection that follows — mirroring
+ * how `select` already scrolls before moving the caret, each step its own
+ * dispatch. With `persist: false`, `open` isn't an attribute at all — the
+ * node view tracks it alone via a class — so the class is flipped directly
+ * on the rendered element, the same escape hatch the toggle's own `Enter`
+ * handler uses.
+ */
+function openToggle(editor: Editor, pos: number): void {
+  const node = editor.state.doc.nodeAt(pos);
+  if (!node || node.type.name !== "details") {
+    return;
+  }
+  if ("open" in node.attrs) {
+    if (!node.attrs.open) {
+      editor.view.dispatch(
+        editor.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, open: true }),
+      );
+    }
+    return;
+  }
+  const dom = editor.view.nodeDOM(pos);
+  const element = dom instanceof Element ? dom : null;
+  const details = editor.extensionManager.extensions.find(
+    (extension) => extension.name === "details",
+  );
+  const openClassName = (details?.options as Partial<ToggleOptions> | undefined)?.openClassName;
+  if (element && openClassName) {
+    element.classList.add(openClassName);
+  }
 }
 
 /**
