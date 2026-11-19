@@ -798,7 +798,7 @@ interface TableOfContentsItem {
   level: HeadingLevel;
   text: string; // heading text, whitespace collapsed
   pos: number; // doc position of the heading node — the scroll/selection target
-  togglePos?: number; // nearest ancestor toggle that must open for this item to show; set only with includeToggles
+  togglePos?: number; // nearest enclosing toggle that must open for this item to show (a title points at the toggle around it); set only with includeToggles
 }
 interface TableOfContentsState {
   items: TableOfContentsItem[]; // eligible headings, in document order
@@ -814,7 +814,7 @@ interface TableOfContentsOptions {
 }
 interface ScrollToHeadingOptions {
   behavior: ScrollBehavior; // default "smooth"
-  togglePos?: number; // opens this toggle first when closed (pass item.togglePos)
+  togglePos?: number; // opens this toggle and every toggle around it first (pass item.togglePos)
 }
 
 // Pure and DOM-free — no Editor, no live view — so the scan is unit-testable in Node and
@@ -841,9 +841,11 @@ The scan is top-level only (`doc.forEach`, never `descendants`): a heading neste
 column, or table cell is part of its parent block, not page structure, and always excluded. A toggle is
 the one exception, gated by `includeToggles` (default off): when on, a toggle's own title counts as an
 item if its `level` is non-zero, and headings in its body are scanned too — recursing into nested
-toggles the same way. Every item reached this way carries `togglePos`, the position of the immediate
-toggle that must be open for it to render; `select`/`scrollToHeading` use it to open a closed toggle
-(as its own dispatch, or by flipping the node view's class when `persist: false`) before scrolling.
+toggles the same way. Every item reached this way carries `togglePos`, the position of the nearest enclosing
+toggle that must be open for it to render (a toggle's own title shows while the toggle is closed, so it
+points at the toggle around it). `select`/`scrollToHeading` open that toggle and every toggle above it —
+as steps on the command's own transaction, or by clicking the disclosure button when `persist: false` —
+and scroll after the open has landed.
 `id` is the heading's `blockId` attribute and `null` when `blockId` is opted out — `pos` always
 addresses the node, so rows still key, select, and scroll without ids. A document change triggers no
 scan unless someone is subscribed (a subscriber attaching after edits gets one scan before its first

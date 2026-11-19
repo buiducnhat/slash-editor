@@ -142,10 +142,12 @@ test("includeToggles adds a toggle's own leveled title and the headings in its b
 
   expect(items.map((item) => ({ text: item.text, togglePos: item.togglePos }))).toEqual([
     { text: "Top", togglePos: undefined },
-    { text: "Toggle title", togglePos: items[1]!.pos },
+    // A title shows while its toggle is closed, so a top-level one needs no opening.
+    { text: "Toggle title", togglePos: undefined },
     { text: "In a toggle", togglePos: items[1]!.pos },
     { text: "In a plain toggle", togglePos: items[3]!.togglePos },
   ]);
+  expect(items[3]!.togglePos).toBeDefined();
   // The toggle title's own position is the `details` node itself.
   expect(doc.nodeAt(items[1]!.pos)?.type.name).toBe("details");
   expect(items[1]!.id).toBe("toggle-a");
@@ -196,10 +198,13 @@ test("includeToggles still excludes headings in other containers and recurses in
   const items = computeTableOfContents(doc, { includeToggles: true });
 
   expect(items.map((item) => item.text)).toEqual(["Outer", "Inner", "Nested heading"]);
-  // The nested heading's togglePos is the inner toggle, not the outer one.
+  const outer = items.find((item) => item.text === "Outer")!;
   const inner = items.find((item) => item.text === "Inner")!;
   const nested = items.find((item) => item.text === "Nested heading")!;
-  expect(inner.togglePos).toBe(inner.pos);
+  // The inner title needs the outer toggle open; the nested heading needs the inner one
+  // (scrollToHeading walks up to the outer from there).
+  expect(outer.togglePos).toBeUndefined();
+  expect(inner.togglePos).toBe(outer.pos);
   expect(nested.togglePos).toBe(inner.pos);
 });
 

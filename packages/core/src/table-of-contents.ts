@@ -1,6 +1,7 @@
 import type { Editor } from "@tiptap/core";
 import { Extension } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Transaction } from "@tiptap/pm/state";
 import type { HeadingLevel } from "./block-kit.ts";
 import { findScrollParent } from "./block-drag.ts";
 import type { ToggleOptions } from "./toggle.ts";
@@ -15,9 +16,11 @@ export interface TableOfContentsItem {
   /** Document position of the heading node — the scroll/selection target. */
   pos: number;
   /**
-   * Position of the nearest ancestor toggle (`details` node) that must be
+   * Position of the nearest enclosing toggle (`details` node) that must be
    * open for this item to be visible, or `undefined` when it sits outside
-   * every toggle. Only ever set when `includeToggles` is on.
+   * every toggle. A toggle's own title is visible while the toggle is closed,
+   * so it points at the toggle around it, not itself. Outer toggles are found
+   * from there. Only ever set when `includeToggles` is on.
    */
   togglePos?: number;
 }
@@ -103,15 +106,16 @@ function headingItem(
 /**
  * Items contributed by one toggle (`details` node) at `pos`: its own title,
  * when leveled, followed by the headings in its body — recursing into a
- * nested toggle the same way. `togglePos` on every item is `pos` itself, so a
- * title or body heading one level down still records the toggle right above
- * it; a heading inside a nested toggle keeps pointing at *its* immediate
- * toggle, not the outer one, since opening the inner one is all it needs.
+ * nested toggle the same way. A body heading records this toggle as its
+ * `togglePos`; the title records `parentTogglePos`, since it shows while this
+ * toggle is closed. Outer toggles are not recorded: `scrollToHeading` walks
+ * up from the one named.
  */
 function toggleItems(
   details: ProseMirrorNode,
   pos: number,
   maxLevel: HeadingLevel,
+  parentTogglePos?: number,
 ): TableOfContentsItem[] {
   const items: TableOfContentsItem[] = [];
   const summary = details.firstChild;
@@ -123,7 +127,7 @@ function toggleItems(
       level: level as HeadingLevel,
       text: summary.textBetween(0, summary.content.size, " "),
       pos,
-      togglePos: pos,
+      ...(parentTogglePos === undefined ? {} : { togglePos: parentTogglePos }),
     });
   }
 
@@ -153,7 +157,7 @@ function scanBlock(
     return item ? [item] : [];
   }
   if (node.type.name === "details") {
-    return toggleItems(node, pos, maxLevel);
+    return toggleItems(node, pos, maxLevel, togglePos);
   }
   return [];
 }
@@ -321,21 +325,30 @@ export const TableOfContents = Extension.create<TableOfContentsOptions, TableOfC
     return {
       scrollToHeading:
         (pos: number, options: ScrollToHeadingOptions = {}) =>
-        ({ editor, dispatch }) => {
-          // Opened as its own, already-dispatched transaction: the command
-          // below only ever reads the DOM, and a toggle's node view applies
-          // `open`/the class synchronously inside `view.dispatch`, so the
-          // element is already visible and measurable by the time the
-          // `scrollIntoView` call two lines down runs.
-          if (options.togglePos !== undefined && dispatch) {
-            openToggle(editor, options.togglePos);
-          }
+        ({ editor, tr, dispatch }) => {
           const element = headingElement(editor, pos);
           if (!element) {
             return false;
           }
-          if (dispatch) {
-            scrollIntoView(element, options.behavior ?? "smooth");
+          if (!dispatch) {
+            return true;
+          }
+          // Opening rides on the command's own transaction: Tiptap captured
+          // `tr` before this callback and dispatches it after, so dispatching a
+          // second transaction here would make that one "mismatched".
+          const pending =
+            options.togglePos !== undefined && openToggles(editor, tr, options.togglePos);
+          const behavior = options.behavior ?? "smooth";
+          if (pending) {
+            // The open lands when the command returns, so measure after it.
+            queueMicrotask(() => {
+              const opened = headingElement(editor, pos);
+              if (opened) {
+                scrollIntoView(opened, behavior);
+              }
+            });
+          } else {
+            scrollIntoView(element, behavior);
           }
           return true;
         },
@@ -356,39 +369,58 @@ function headingElement(editor: Editor, pos: number): Element | null {
 }
 
 /**
- * Opens the toggle at `pos` when it is closed, dispatching immediately so a
- * caller reading the DOM right after this call sees it already open.
+ * Opens the toggle at `togglePos` and every toggle around it, so a heading
+ * buried in nested toggles is visible — an open inner toggle inside a closed
+ * outer one still shows nothing.
  *
- * With `persist` (an `open` node attr present) this runs as its own
- * transaction, separate from the scroll/selection that follows — mirroring
- * how `select` already scrolls before moving the caret, each step its own
- * dispatch. With `persist: false`, `open` isn't an attribute at all — the
- * node view tracks it alone via a class — so the class is flipped directly
- * on the rendered element, the same escape hatch the toggle's own `Enter`
- * handler uses.
+ * With `persist` (an `open` node attr present) the opens are steps on `tr`,
+ * applied when the caller's command dispatches; returns `true` when any step
+ * was added. With `persist: false`, `open` isn't an attribute — the node view
+ * owns it — so each closed toggle is opened through its own disclosure button,
+ * which flips the class, the body's `hidden` attribute and the button state
+ * together. That only clicks toggles that are closed, so it never closes one.
+ * It takes effect immediately and returns `false`.
  */
-function openToggle(editor: Editor, pos: number): void {
-  const node = editor.state.doc.nodeAt(pos);
-  if (!node || node.type.name !== "details") {
-    return;
+function openToggles(editor: Editor, tr: Transaction, togglePos: number): boolean {
+  const { doc } = tr;
+  if (doc.nodeAt(togglePos)?.type.name !== "details") {
+    return false;
   }
-  if ("open" in node.attrs) {
-    if (!node.attrs.open) {
-      editor.view.dispatch(
-        editor.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, open: true }),
-      );
+  const $pos = doc.resolve(togglePos);
+  const positions = [togglePos];
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    if ($pos.node(depth).type.name === "details") {
+      positions.unshift($pos.before(depth));
     }
-    return;
   }
-  const dom = editor.view.nodeDOM(pos);
-  const element = dom instanceof Element ? dom : null;
+
   const details = editor.extensionManager.extensions.find(
     (extension) => extension.name === "details",
   );
-  const openClassName = (details?.options as Partial<ToggleOptions> | undefined)?.openClassName;
-  if (element && openClassName) {
-    element.classList.add(openClassName);
+  const openClassName =
+    (details?.options as Partial<ToggleOptions> | undefined)?.openClassName ?? "is-open";
+  let stepped = false;
+
+  // Outermost first, so each inner toggle's node view is already visible.
+  for (const pos of positions) {
+    const node = doc.nodeAt(pos);
+    if (!node) {
+      continue;
+    }
+    if ("open" in node.attrs) {
+      if (!node.attrs.open) {
+        tr.setNodeMarkup(pos, undefined, { ...node.attrs, open: true });
+        stepped = true;
+      }
+      continue;
+    }
+    const dom = editor.view.nodeDOM(pos);
+    if (dom instanceof HTMLElement && !dom.classList.contains(openClassName)) {
+      dom.querySelector<HTMLButtonElement>(":scope > button")?.click();
+    }
   }
+
+  return stepped;
 }
 
 /**
