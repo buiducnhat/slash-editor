@@ -200,7 +200,7 @@ export function useTableOfContents(
 - Returns `null` when the document has no headings above `maxLevel`; the consumer owns any
   empty state.
 - `registry.json` item: `type: "registry:component"`, `dependencies:
-["@slash-editor/core", "@slash-editor/react"]`, no `registryDependencies` (no shadcn
+  ["@slash-editor/core", "@slash-editor/react"]`, no `registryDependencies` (no shadcn
   primitive, no icons), and added to `slash-editor-kit`'s `registryDependencies` list.
 
 ### Read-only documentation — `content/docs/guides/read-only.mdx` (new)
